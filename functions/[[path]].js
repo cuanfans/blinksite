@@ -1,43 +1,27 @@
 import { Hono } from 'hono'
 import { handle } from 'hono/cloudflare-pages'
+import { setCookie, getCookie, deleteCookie } from 'hono/cookie' // WAJIB ADA
+import { sign, verify } from 'hono/jwt' // WAJIB ADA
 import { sha256, encryptJSON } from '../src/utils'
 import { executePayment } from '../src/engine'
 import { uploadImage } from '../src/modules/cloudinary'
 import { checkShipping } from '../src/modules/shipping'
 
 const app = new Hono()
+const JWT_SECRET = 'RAHASIA_NEGARA_GANTI_DENGAN_ENV_VAR' // Harusnya dari c.env.APP_SECRET
 
 // ===============================================
-// 0. GLOBAL CONFIG & HELPERS
+// 0. GLOBAL CONFIG
 // ===============================================
-
-// Middleware: Log Request
 app.use('*', async (c, next) => {
-    // eslint-disable-next-line no-console
-    console.log(`[${c.req.method}] ${c.req.url}`);
     await next();
 });
 
-// Error Handler
 app.onError((err, c) => {
-    // eslint-disable-next-line no-console
     console.error(`[ERROR] ${err.message}`, err.stack);
-    return c.json({ success: false, message: 'Internal Server Error', debug: err.message }, 500);
+    return c.json({ success: false, message: 'Internal Server Error' }, 500);
 });
 
-// Helper: Baca cookie
-function getCookieFromHeader(req, name) {
-    const cookieHeader = req.header ? req.header('Cookie') : null;
-    if (!cookieHeader) return null;
-    const cookies = cookieHeader.split(';').map(c => c.trim());
-    for (const c of cookies) {
-        const [k, ...v] = c.split('=');
-        if (k === name) return decodeURIComponent(v.join('='));
-    }
-    return null;
-}
-
-// Helper: Fetch Asset (Aman dari error 404/500 internal worker)
 async function serveAsset(c, path) {
     try {
         const url = new URL(path, c.req.url);
@@ -48,37 +32,98 @@ async function serveAsset(c, path) {
 }
 
 // ===============================================
-// 1. AUTH MIDDLEWARE (Hanya untuk /api/admin/*)
+// 1. AUTH MIDDLEWARE (PENJAGA PINTU UTAMA)
 // ===============================================
-app.use('/api/admin/*', async (c, next) => {
-    const inputPass = c.req.header('Authorization');
-    if(!inputPass) return c.json({error: 'Unauthorized'}, 401);
+// Mencegat SEMUA akses ke /admin... dan /api/admin...
+app.use(['/admin*', '/api/admin*'], async (c, next) => {
+    const path = new URL(c.req.url).pathname;
 
+    // 1. Whitelist: Biarkan halaman login dan asset lewat
+    if (path === '/admin/login' || path === '/api/login' || path.includes('.')) {
+        await next();
+        return;
+    }
+
+    // 2. Ambil Cookie
+    const token = getCookie(c, 'auth_token');
+
+    // 3. Jika tidak ada token -> TENDANG KELUAR
+    if (!token) {
+        // Jika request API, balas JSON error
+        if (path.startsWith('/api/')) {
+            return c.json({ error: 'Unauthorized: No Token' }, 401);
+        }
+        // Jika akses halaman HTML, Redirect ke login
+        return c.redirect('/login');
+    }
+
+    // 4. Verifikasi Token JWT
     try {
+        const payload = await verify(token, c.env.APP_MASTER_KEY || JWT_SECRET);
+        // Token valid, lanjut
+        c.set('jwtPayload', payload);
+        await next();
+    } catch (e) {
+        // Token palsu/expired -> Hapus cookie & Tendang
+        deleteCookie(c, 'auth_token');
+        if (path.startsWith('/api/')) {
+            return c.json({ error: 'Unauthorized: Invalid Token' }, 401);
+        }
+        return c.redirect('/login');
+    }
+});
+
+// ===============================================
+// 2. AUTH ROUTES (LOGIN & LOGOUT)
+// ===============================================
+
+// LOGIN: Cek Password DB -> Buat JWT -> Set Cookie
+app.post('/api/login', async (c) => {
+    try {
+        const { password } = await c.req.json();
+        
+        // Ambil password hash dari DB
         const dbSetting = await c.env.DB.prepare("SELECT value FROM settings WHERE key = 'admin_password'").first();
         const realHash = dbSetting ? dbSetting.value : '';
-        const inputHash = await sha256(inputPass);
-        
-        if (inputHash !== realHash) return c.json({error: 'Password Salah'}, 401);
+        const inputHash = await sha256(password);
+
+        if (inputHash !== realHash) {
+            return c.json({ success: false, message: 'Password Salah' }, 401);
+        }
+
+        // BUAT JWT
+        const payload = {
+            role: 'admin',
+            exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // Expire 24 jam
+        };
+        const secret = c.env.APP_MASTER_KEY || JWT_SECRET;
+        const token = await sign(payload, secret);
+
+        // SET COOKIE (HttpOnly agar tidak bisa dibaca JS nakal)
+        setCookie(c, 'auth_token', token, {
+            path: '/',
+            secure: true,
+            httpOnly: true,
+            maxAge: 60 * 60 * 24,
+            sameSite: 'Lax',
+        });
+
+        return c.json({ success: true });
     } catch (e) {
-        return c.json({error: 'Database Error'}, 500);
+        return c.json({ success: false, error: e.message }, 500);
     }
-    await next();
-})
+});
+
+// LOGOUT: Hapus Cookie
+app.get('/api/logout', (c) => {
+    deleteCookie(c, 'auth_token');
+    return c.redirect('/login');
+});
 
 // ===============================================
-// 2. EXPLICIT HTML ROUTES (PRIORITAS TINGGI)
+// 3. PROTECTED ADMIN PAGES (Hanya bisa diakses jika lolos Middleware di atas)
 // ===============================================
-
-// A. Halaman Login (PENTING: Di-mapping ke /login.html di root)
-app.get('/login', (c) => serveAsset(c, '/login.html'));
-app.get('/login.html', (c) => serveAsset(c, '/login.html'));
-app.get('/admin/login', (c) => serveAsset(c, '/login.html')); // Alias
-
-// B. Halaman Admin (Protected Logic di Client-side via layout.js, tapi kita redirect root admin)
 app.get('/admin', (c) => c.redirect('/admin/dashboard'));
-
-// C. Admin Pages Mapping
 app.get('/admin/dashboard', (c) => serveAsset(c, '/admin/dashboard.html'));
 app.get('/admin/pages', (c) => serveAsset(c, '/admin/pages.html'));
 app.get('/admin/editor', (c) => serveAsset(c, '/admin/editor.html'));
@@ -86,24 +131,51 @@ app.get('/admin/reports', (c) => serveAsset(c, '/admin/reports.html'));
 app.get('/admin/analytics', (c) => serveAsset(c, '/admin/analytics.html'));
 app.get('/admin/settings', (c) => serveAsset(c, '/admin/settings.html'));
 
+
 // ===============================================
-// 3. API ROUTES
+// 4. PUBLIC ROUTES
 // ===============================================
 
-// Login Check
-app.post('/api/login', async (c) => {
+// Login Page (Public)
+app.get('/login', (c) => serveAsset(c, '/login.html'));
+app.get('/login.html', (c) => serveAsset(c, '/login.html'));
+
+// Homepage & Dynamic Pages
+app.get('/', async (c) => {
     try {
-        const { password } = await c.req.json();
-        const dbSetting = await c.env.DB.prepare("SELECT value FROM settings WHERE key = 'admin_password'").first();
-        const inputHash = await sha256(password);
-        return c.json({ success: inputHash === dbSetting.value });
-    } catch (e) {
-        return c.json({ success: false, error: e.message }, 500);
-    }
-})
+        const s = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
+        if (s && s.value) {
+            const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug = ?").bind(s.value).first();
+            if (page) return renderPage(c, page);
+        }
+    } catch (e) {}
+    return serveAsset(c, '/index.html');
+});
 
-// Save Page
+app.get('/:slug', async (c) => {
+    const slug = c.req.param('slug');
+    if (slug.includes('.')) return c.env.ASSETS.fetch(c.req.raw); // Asset fallback
+
+    try {
+        const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
+        if(!page) return c.text('404 Not Found', 404);
+        
+        // Analytics
+        c.env.DB.prepare("INSERT INTO analytics (page_id, event_type, referrer) VALUES (?, 'view', ?)").bind(page.id, c.req.header('Referer') || 'direct').run().catch(()=>{});
+        
+        return renderPage(c, page);
+    } catch(e) {
+        return c.env.ASSETS.fetch(c.req.raw);
+    }
+});
+
+// ===============================================
+// 5. API LOGIC (PROTECTED BY MIDDLEWARE)
+// ===============================================
+// Note: Route /api/admin/* sudah dijaga oleh middleware di atas
+
 app.post('/api/admin/pages', async (c) => {
+    // Logic simpan halaman...
     const { slug, title, html, css, product_config, product_type } = await c.req.json();
     try {
         await c.env.DB.prepare(
@@ -115,7 +187,6 @@ app.post('/api/admin/pages', async (c) => {
     } catch(e) { return c.json({ error: e.message }, 500); }
 });
 
-// Get Page Data
 app.get('/api/admin/pages/:slug', async (c) => {
     const slug = c.req.param('slug');
     const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
@@ -123,14 +194,12 @@ app.get('/api/admin/pages/:slug', async (c) => {
     return c.json(page || {});
 });
 
-// Set Homepage
 app.post('/api/admin/set-homepage', async (c) => {
     const { slug } = await c.req.json();
     await c.env.DB.prepare("INSERT INTO settings (key, value) VALUES ('homepage_slug', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(slug).run();
     return c.json({ success: true });
 });
 
-// Dashboard Stats
 app.get('/api/admin/analytics-data', async (c) => {
     try {
         const visitors = await c.env.DB.prepare("SELECT COUNT(*) as c FROM analytics WHERE event_type='view'").first().catch(() => ({c:0}));
@@ -140,15 +209,12 @@ app.get('/api/admin/analytics-data', async (c) => {
             revenue: sales.s || 0,
             conversion: visitors.c > 0 ? ((sales.s > 0 ? 1 : 0) / visitors.c * 100).toFixed(1) : 0
         });
-    } catch (e) {
-        return c.json({ visitors: 0, revenue: 0, conversion: 0 });
-    }
+    } catch (e) { return c.json({ visitors: 0, revenue: 0, conversion: 0 }); }
 });
 
-// Credentials & Upload
 app.post('/api/admin/credentials', async (c) => {
     const { provider, data } = await c.req.json();
-    const { encrypted, iv } = await encryptJSON(data, c.env.APP_MASTER_KEY);
+    const { encrypted, iv } = await encryptJSON(data, c.env.APP_MASTER_KEY || JWT_SECRET);
     await c.env.DB.prepare(
         `INSERT INTO credentials (provider_slug, encrypted_data, iv) VALUES (?, ?, ?)
          ON CONFLICT(provider_slug) DO UPDATE SET encrypted_data=excluded.encrypted_data, iv=excluded.iv`
@@ -158,7 +224,7 @@ app.post('/api/admin/credentials', async (c) => {
 
 app.post('/api/admin/upload-image', uploadImage);
 
-// Public API
+// PUBLIC API
 app.post('/api/shipping/check', checkShipping);
 app.post('/api/check-coupon', async (c) => {
     const { page_id, code } = await c.req.json();
@@ -199,46 +265,6 @@ app.post('/api/checkout', async (c) => {
     } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 
-// ===============================================
-// 4. PUBLIC & DYNAMIC ROUTES (LOW PRIORITY)
-// ===============================================
-
-// A. Homepage
-app.get('/', async (c) => {
-    try {
-        const s = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
-        if (s && s.value) {
-            const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug = ?").bind(s.value).first();
-            if (page) return renderPage(c, page);
-        }
-    } catch (e) {}
-    return serveAsset(c, '/index.html');
-})
-
-// B. Dynamic Slug (Landing Pages)
-app.get('/:slug', async (c) => {
-    const slug = c.req.param('slug');
-    
-    // PENTING: Jika slug mengandung titik (misal: main.js, style.css),
-    // jangan anggap ini halaman, tapi langsung lempar ke Asset Fetcher.
-    if (slug.includes('.')) {
-        return c.env.ASSETS.fetch(c.req.raw);
-    }
-
-    try {
-        const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
-        if(!page) return c.text('404 Not Found', 404);
-
-        // Track Visit
-        c.env.DB.prepare("INSERT INTO analytics (page_id, event_type, referrer) VALUES (?, 'view', ?)").bind(page.id, c.req.header('Referer') || 'direct').run().catch(()=>{});
-        
-        return renderPage(c, page);
-    } catch(e) {
-        // Fallback jika DB error atau apapun, coba cari di aset static
-        return c.env.ASSETS.fetch(c.req.raw);
-    }
-});
-
 // Helper Render
 function renderPage(c, page) {
     const config = JSON.parse(page.product_config_json || '{}');
@@ -246,11 +272,7 @@ function renderPage(c, page) {
     return c.html(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${page.title}</title><script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script><script src="https://cdn.tailwindcss.com"></script><style>${page.css_content}</style>${scriptInject}</head><body>${page.html_content}</body></html>`);
 }
 
-// ===============================================
-// 5. CATCH-ALL STATIC ASSETS (WAJIB ADA)
-// ===============================================
-// Menangani request CSS, JS, Image, dan file statis lainnya 
-// yang tidak tertangkap oleh route di atas.
+// ASSET FALLBACK
 app.get('*', (c) => c.env.ASSETS.fetch(c.req.raw));
 
 export const onRequest = handle(app)
