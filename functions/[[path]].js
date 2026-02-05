@@ -19,7 +19,7 @@ function getCookieFromHeader(req, name) {
     return null;
 }
 
-// Helper: fetch asset with graceful error handling
+// Helper: fetch asset with graceful error handling (Mencegah Blank Page jika asset 404)
 async function safeAssetFetch(c, assetPath) {
     try {
         // assetPath is a path like '/admin/login.html' OR you can call with null to use c.req.raw
