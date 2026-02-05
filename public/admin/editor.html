@@ -175,6 +175,41 @@
                     this.loading=false;
                 },
 
+                // LOGIKA UNTUK MENAMBAH BARIS OTOMATIS
+                const addTableLogic = (editor) => {
+                    editor.DomComponents.addType('comparison-table-wrapper', {
+                        model: {
+                            defaults: {
+                                traits: [
+                                    {
+                                        type: 'button',
+                                        text: '+ Tambah Baris Baru',
+                                        full: true,
+                                        command: (editor) => {
+                                            const selected = editor.getSelected();
+                                            const tbody = selected.find('tbody')[0];
+                                            if (tbody) {
+                                                tbody.append(`
+                                                    <div style="display:flex; padding:20px; border-bottom:1px solid #f1f5f9; align-items:center; text-align:center;">
+                                                        <div style="flex:1; text-align:left; font-weight:bold; color:#475569; padding-left:10px;">Fitur Baru</div>
+                                                        <div style="flex:1; color:#16a34a; font-weight:bold; display:flex; flex-direction:column; align-items:center;">
+                                                            <i class="ph ph-check-circle" style="font-size:24px;"></i>
+                                                            <span style="font-size:12px;">Kelebihan</span>
+                                                        </div>
+                                                        <div style="flex:1; color:#94a3b8; display:flex; flex-direction:column; align-items:center;">
+                                                            <i class="ph ph-x-circle" style="font-size:24px;"></i>
+                                                            <span style="font-size:12px;">Kekurangan</span>
+                                                        </div>
+                                                    </div>
+                                                `);
+                                            }
+                                        },
+                                    }
+                                ],
+                            },
+                        },
+                    });
+                };
                 initGrapes() {
                     setTimeout(() => {
                         window.editor = grapesjs.init({
@@ -216,7 +251,7 @@
                                 }
                             }
                         });
-
+                        addTableLogic(window.editor);
                         // ------------------------------------
                         // CUSTOM BLOCKS (HEADER IMAGE LOGO)
                         // ------------------------------------
@@ -344,6 +379,37 @@
                             </section>`
                         });
 
+                        // Head to Head
+                        bm.add('comparison-head-to-head', {
+                        label: 'Comparison Modern',
+                        category: 'Templates',
+                        attributes: { class: 'ph ph-shield-check' },
+                        content: {
+                            type: 'comparison-table-wrapper', // Menghubungkan ke logika tombol tadi
+                            content: `<section style="padding:80px 20px; background:#f8fafc; width:100%; box-sizing:border-box;">
+                                <div style="max-width:800px; margin:0 auto; background:#fff; border-radius:30px; overflow:hidden; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);">
+                                    <div style="display:flex; background:#1e293b; color:#fff; padding:25px; text-align:center;">
+                                        <div style="flex:1; font-weight:bold; font-size:18px;">FITUR</div>
+                                        <div style="flex:1; font-weight:bold; font-size:18px; color:#3b82f6;">KAMI</div>
+                                        <div style="flex:1; font-weight:bold; font-size:18px; opacity:0.5;">LAIN</div>
+                                    </div>
+                                    <div class="table-body-area">
+                                        <div style="display:flex; padding:20px; border-bottom:1px solid #f1f5f9; align-items:center; text-align:center;">
+                                            <div style="flex:1; text-align:left; font-weight:bold; color:#475569; padding-left:10px;">Contoh Fitur</div>
+                                            <div style="flex:1; color:#16a34a; font-weight:bold; display:flex; flex-direction:column; align-items:center;">
+                                                <i class="ph ph-check-circle" style="font-size:24px;"></i>
+                                                <span style="font-size:12px;">Ya</span>
+                                            </div>
+                                            <div style="flex:1; color:#94a3b8; display:flex; flex-direction:column; align-items:center;">
+                                                <i class="ph ph-x-circle" style="font-size:24px;"></i>
+                                                <span style="font-size:12px;">Tidak</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>`
+                        }
+                    });
                         // WIDGETS
                         bm.add('video-yt', { label: 'YouTube', category: 'Media', attributes:{class:'ph ph-youtube-logo'}, content: { type: 'video', provider: 'yt', style: { height: '350px', width: '100%' } } });
                         bm.add('custom-code-blk', { label: 'Custom HTML', category: 'Extra', attributes:{class:'ph ph-code'}, content: { type: 'custom-code', content: '' } });
