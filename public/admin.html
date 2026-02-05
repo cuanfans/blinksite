@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Builder Pro</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
+    <script src="https://unpkg.com/grapesjs"></script>
+    <script src="https://unpkg.com/grapesjs-preset-webpage"></script>
+
+    <style>
+        /* Tweaks untuk GrapesJS agar pas di layout */
+        .gjs-cv-canvas { width: 100%; height: 100%; top: 0; }
+        .gjs-one-bg { background-color: #1f2937; }
+        .gjs-two-color { color: #e5e7eb; }
+        body, html { height: 100%; margin: 0; overflow: hidden; }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans" x-data="app()">
+
+    <div x-show="!isLoggedIn" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900">
+        <div class="bg-gray-800 p-8 rounded-xl shadow-2xl w-96 border border-gray-700">
+            <h1 class="text-2xl font-bold mb-6 text-center text-blue-400">Admin Login</h1>
+            <form @submit.prevent="login">
+                <input type="password" x-model="auth.password" placeholder="Password Admin" 
+                    class="w-full bg-gray-700 border border-gray-600 rounded p-3 mb-4 text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition">
+                    MASUK
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div x-show="isLoggedIn" x-cloak class="flex flex-col h-full">
+        
+        <header class="h-14 bg-gray-800 border-b border-gray-700 flex justify-between items-center px-4">
+            <div class="flex items-center gap-4">
+                <span class="font-bold text-lg text-blue-400">🚀 LandingPro</span>
+                <input x-model="page.slug" placeholder="Slug URL (ex: promo)" class="bg-gray-700 border border-gray-600 text-sm px-2 py-1 rounded w-40">
+                <input x-model="page.title" placeholder="Page Title" class="bg-gray-700 border border-gray-600 text-sm px-2 py-1 rounded w-40">
+            </div>
+
+            <div class="flex gap-2">
+                <button @click="modal = 'product'" class="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded text-sm font-bold flex items-center gap-2">
+                    📦 Data Produk <span class="bg-white text-yellow-800 text-xs px-1 rounded-full" x-text="page.config.variants.length">0</span>
+                </button>
+                <button @click="modal = 'settings'" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm">⚙️ Credentials</button>
+                <button @click="savePage" class="bg-green-600 hover:bg-green-700 px-4 py-1 rounded text-sm font-bold flex items-center gap-2">
+                    <span x-show="loading">...</span>
+                    <span>SIMPAN</span>
+                </button>
+                <button @click="previewPage" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm">👁️ View</button>
+                <button @click="logout" class="bg-red-900 hover:bg-red-800 px-3 py-1 rounded text-sm">Logout</button>
+            </div>
+        </header>
+
+        <div id="gjs" class="flex-grow bg-gray-100"></div>
+
+    </div>
+
+    <div x-show="modal === 'product'" x-cloak class="fixed inset-0 z-40 bg-black bg-opacity-70 flex items-center justify-center">
+        <div class="bg-white text-gray-800 w-3/4 h-3/4 rounded-lg shadow-xl flex overflow-hidden">
+            
+            <div class="w-48 bg-gray-100 border-r p-4 space-y-2">
+                <h3 class="font-bold text-gray-500 mb-4 text-xs uppercase tracking-wider">Konfigurasi</h3>
+                <button @click="tab='variants'" :class="tab==='variants' ? 'bg-blue-100 text-blue-700' : ''" class="w-full text-left px-3 py-2 rounded text-sm font-medium">1. Varian Produk</button>
+                <button @click="tab='bump'" :class="tab==='bump' ? 'bg-blue-100 text-blue-700' : ''" class="w-full text-left px-3 py-2 rounded text-sm font-medium">2. Order Bump</button>
+                <button @click="tab='coupons'" :class="tab==='coupons' ? 'bg-blue-100 text-blue-700' : ''" class="w-full text-left px-3 py-2 rounded text-sm font-medium">3. Kupon Diskon</button>
+            </div>
+
+            <div class="flex-grow p-6 overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Pengaturan Produk</h2>
+                    <button @click="modal = null" class="text-gray-500 hover:text-red-500 text-2xl">&times;</button>
+                </div>
+
+                <div x-show="tab === 'variants'">
+                    <div class="mb-4 flex justify-between">
+                        <p class="text-sm text-gray-500">Tambahkan paket penjualan (misal: Satuan, Paket Bundling).</p>
+                        <button @click="addVariant" class="bg-blue-600 text-white text-xs px-3 py-1 rounded">+ Tambah Varian</button>
+                    </div>
+                    <div class="space-y-3">
+                        <template x-for="(v, idx) in page.config.variants" :key="idx">
+                            <div class="border p-3 rounded flex gap-3 items-start bg-gray-50">
+                                <div class="flex-grow grid grid-cols-2 gap-2">
+                                    <input x-model="v.name" placeholder="Nama Paket (ex: 2 Botol)" class="border p-1 rounded text-sm">
+                                    <input x-model="v.price" type="number" placeholder="Harga (Rp)" class="border p-1 rounded text-sm">
+                                    <input x-model="v.desc" placeholder="Deskripsi singkat" class="col-span-2 border p-1 rounded text-sm">
+                                </div>
+                                <button @click="page.config.variants.splice(idx, 1)" class="text-red-500 text-sm font-bold">Hapus</button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div x-show="tab === 'bump'">
+                    <div class="flex items-center gap-3 mb-4">
+                        <input type="checkbox" x-model="page.config.order_bump.active" class="w-5 h-5">
+                        <label class="font-bold">Aktifkan Order Bump?</label>
+                    </div>
+                    <div x-show="page.config.order_bump.active" class="space-y-3 border p-4 rounded bg-yellow-50">
+                        <div>
+                            <label class="block text-xs font-bold mb-1">Nama Produk Bump</label>
+                            <input x-model="page.config.order_bump.product_name" class="w-full border p-2 rounded">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold mb-1">Harga Tambahan (Rp)</label>
+                            <input x-model="page.config.order_bump.price" type="number" class="w-full border p-2 rounded">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold mb-1">Deskripsi Penawaran (Persuasif)</label>
+                            <textarea x-model="page.config.order_bump.description" class="w-full border p-2 rounded h-20"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="tab === 'coupons'">
+                    <div class="mb-4 flex justify-between">
+                        <p class="text-sm text-gray-500">Buat kode diskon untuk marketing.</p>
+                        <button @click="addCoupon" class="bg-green-600 text-white text-xs px-3 py-1 rounded">+ Buat Kupon</button>
+                    </div>
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-2">Kode</th>
+                                <th class="p-2">Tipe</th>
+                                <th class="p-2">Nilai</th>
+                                <th class="p-2">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="(c, idx) in page.config.coupons" :key="idx">
+                                <tr class="border-b">
+                                    <td class="p-2"><input x-model="c.code" class="border p-1 w-full uppercase" placeholder="KODE"></td>
+                                    <td class="p-2">
+                                        <select x-model="c.type" class="border p-1 w-full">
+                                            <option value="percent">Persen (%)</option>
+                                            <option value="fixed">Potongan (Rp)</option>
+                                        </select>
+                                    </td>
+                                    <td class="p-2"><input x-model="c.value" type="number" class="border p-1 w-full"></td>
+                                    <td class="p-2"><button @click="page.config.coupons.splice(idx, 1)" class="text-red-500">x</button></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div x-show="modal === 'settings'" x-cloak class="fixed inset-0 z-40 bg-black bg-opacity-70 flex items-center justify-center">
+        <div class="bg-white text-gray-800 w-96 p-6 rounded shadow-lg">
+            <h2 class="font-bold text-lg mb-4">Pengaturan API Global</h2>
+            
+            <div class="mb-4">
+                <label class="block text-xs font-bold mb-1">Provider</label>
+                <select x-model="cred.provider" class="w-full border p-2 rounded">
+                    <option value="midtrans">Midtrans</option>
+                    <option value="cloudinary">Cloudinary</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-xs font-bold mb-1">Config JSON</label>
+                <p class="text-xs text-gray-500 mb-1">Format: {"server_key": "..."} atau {"cloud_name":"...", "api_key":"...", "api_secret":"..."}</p>
+                <textarea x-model="cred.data" class="w-full border p-2 rounded h-32 font-mono text-xs"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <button @click="modal = null" class="text-gray-500 text-sm">Tutup</button>
+                <button @click="saveCreds" class="bg-blue-600 text-white px-4 py-2 rounded text-sm">Simpan Aman</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Init Alpine Logic
+        function app() {
+            return {
+                isLoggedIn: false,
+                loading: false,
+                modal: null, // 'product' | 'settings' | null
+                tab: 'variants', // 'variants' | 'bump' | 'coupons'
+                
+                auth: { password: '' },
+                
+                // Data Halaman Aktif
+                page: {
+                    slug: '',
+                    title: '',
+                    config: {
+                        variants: [], 
+                        coupons: [], 
+                        order_bump: { active: false, price: 0, product_name: '', description: '' }
+                    }
+                },
+
+                // Data Credential Temp
+                cred: { provider: 'midtrans', data: '' },
+
+                init() {
+                    const pass = localStorage.getItem('admin_pass');
+                    if(pass) {
+                        this.auth.password = pass;
+                        this.verifyLogin();
+                    }
+                },
+
+                async login() {
+                    if(!this.auth.password) return alert('Isi Password');
+                    await this.verifyLogin();
+                },
+
+                async verifyLogin() {
+                    try {
+                        const res = await fetch('/api/login', {
+                            method: 'POST',
+                            body: JSON.stringify({ password: this.auth.password })
+                        });
+                        const data = await res.json();
+                        if(data.success) {
+                            this.isLoggedIn = true;
+                            localStorage.setItem('admin_pass', this.auth.password);
+                            this.initEditor();
+                        } else {
+                            alert('Password Salah');
+                            localStorage.removeItem('admin_pass');
+                        }
+                    } catch(e) { alert('Gagal Login'); }
+                },
+
+                logout() {
+                    this.isLoggedIn = false;
+                    localStorage.removeItem('admin_pass');
+                    location.reload();
+                },
+
+                // CRUD Helper Functions
+                addVariant() {
+                    this.page.config.variants.push({ id: Date.now(), name: '', price: 0, desc: '' });
+                },
+                addCoupon() {
+                    this.page.config.coupons.push({ code: '', type: 'percent', value: 0 });
+                },
+
+                // API Calls
+                async saveCreds() {
+                    try {
+                        const parsedData = JSON.parse(this.cred.data);
+                        const res = await fetch('/api/admin/credentials', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': this.auth.password },
+                            body: JSON.stringify({ provider: this.cred.provider, data: parsedData })
+                        });
+                        if((await res.json()).success) { alert('Disimpan!'); this.modal = null; }
+                    } catch(e) { alert('JSON Invalid'); }
+                },
+
+                async savePage() {
+                    if(!this.page.slug) return alert('Isi Slug URL!');
+                    this.loading = true;
+                    
+                    const html = editor.getHtml();
+                    const css = editor.getCss();
+                    
+                    const payload = {
+                        slug: this.page.slug,
+                        title: this.page.title,
+                        html: html,
+                        css: css,
+                        product_config: this.page.config
+                    };
+
+                    const res = await fetch('/api/admin/pages', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': this.auth.password },
+                        body: JSON.stringify(payload)
+                    });
+
+                    this.loading = false;
+                    if((await res.json()).success) alert('Halaman Berhasil Disimpan!');
+                    else alert('Gagal Menyimpan');
+                },
+
+                previewPage() {
+                    if(this.page.slug) window.open('/' + this.page.slug, '_blank');
+                },
+
+                // GrapesJS Initialization
+                initEditor() {
+                    // Cek jika ada data lama di load (optional: fetch by slug logic here)
+                    // Untuk simplifikasi, user ketik slug manual untuk load/save
+                    
+                    setTimeout(() => {
+                        window.editor = grapesjs.init({
+                            container: '#gjs',
+                            height: '100%',
+                            storageManager: false, // Kita save manual
+                            plugins: ['gjs-preset-webpage'],
+                            assetManager: {
+                                upload: false,
+                                uploadText: 'Drag gambar ke sini'
+                            }
+                        });
+
+                        // 1. Setup Upload ke Cloudinary
+                        editor.on('asset:upload', async (obj) => {
+                            const file = obj.dataTransfer ? obj.dataTransfer.files[0] : obj.target.files[0];
+                            if(!file) return;
+
+                            const reader = new FileReader();
+                            reader.readAsDataURL(file);
+                            reader.onload = async () => {
+                                const base64 = reader.result;
+                                try {
+                                    // Panggil API Cloudinary Module kita
+                                    const res = await fetch('/api/admin/upload-image', {
+                                        method: 'POST',
+                                        body: JSON.stringify({ image: base64, filename: file.name.split('.')[0] })
+                                    });
+                                    const data = await res.json();
+                                    if(data.success) {
+                                        editor.AssetManager.add(data.url);
+                                    } else {
+                                        alert('Gagal Upload: Cek Credential Cloudinary');
+                                    }
+                                } catch(e) { alert('Error Upload'); }
+                            };
+                        });
+                        
+                        // 2. Load Data Halaman (Jika slug diisi dan di-Enter)
+                        // Simple logic: Load saat blur dari input slug
+                        document.querySelector('input[placeholder*="Slug"]').addEventListener('blur', async (e) => {
+                            const slug = e.target.value;
+                            if(slug) {
+                                const res = await fetch('/api/admin/pages/' + slug);
+                                const data = await res.json();
+                                if(data.id) {
+                                    this.page.title = data.title;
+                                    this.page.config = data.product_config_json || this.page.config;
+                                    editor.setComponents(data.html_content);
+                                    editor.setStyle(data.css_content);
+                                    console.log('Page Loaded');
+                                }
+                            }
+                        });
+
+                        // 3. DAFTARKAN BLOCK "CHECKOUT SUPER" (Sesuai Prompt Sebelumnya)
+                        this.registerBlocks();
+
+                    }, 100);
+                },
+
+                registerBlocks() {
+                    editor.Blocks.add('advanced-checkout', {
+                        label: '🛒 Checkout Form (OrderOnline Style)',
+                        category: 'Landing Pro',
+                        attributes: { class: 'fa fa-shopping-cart' },
+                        content: `
+                        <div x-data="checkoutWidget()" class="max-w-md mx-auto bg-white border rounded-xl shadow-lg p-6 font-sans mt-8">
+                            <h3 class="font-bold text-xl mb-4 text-center border-b pb-2">Form Pemesanan</h3>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Paket:</label>
+                                <div class="space-y-2">
+                                    <template x-for="v in variants" :key="v.id">
+                                        <div @click="selected = v" 
+                                            class="border-2 rounded p-3 cursor-pointer flex justify-between hover:bg-blue-50"
+                                            :class="selected.id == v.id ? 'border-blue-600 bg-blue-50' : 'border-gray-200'">
+                                            <div>
+                                                <div class="font-bold text-sm" x-text="v.name"></div>
+                                                <div class="text-xs text-gray-500" x-text="v.desc"></div>
+                                            </div>
+                                            <div class="font-bold text-blue-600 text-sm">Rp <span x-text="format(v.price)"></span></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 mb-4">
+                                <input x-model="form.name" class="w-full border p-2 rounded text-sm" placeholder="Nama Lengkap">
+                                <input x-model="form.whatsapp" class="w-full border p-2 rounded text-sm" placeholder="No. WhatsApp">
+                            </div>
+
+                            <template x-if="bump.active">
+                                <div class="mb-4 border-2 border-dashed border-red-400 bg-red-50 p-3 rounded relative">
+                                    <div class="absolute -top-3 right-2 bg-red-600 text-white text-[10px] px-2 rounded animate-pulse font-bold">PROMO TERBATAS</div>
+                                    <label class="flex gap-2 cursor-pointer items-center">
+                                        <input type="checkbox" x-model="withBump" class="w-5 h-5 accent-red-600">
+                                        <div class="text-sm">
+                                            <div class="font-bold text-gray-800">
+                                                YA! Tambah <span x-text="bump.product_name"></span>
+                                            </div>
+                                            <div class="text-red-600 font-bold text-xs">+ Rp <span x-text="format(bump.price)"></span></div>
+                                        </div>
+                                    </label>
+                                    <p class="text-xs text-gray-600 mt-1 ml-7" x-text="bump.description"></p>
+                                </div>
+                            </template>
+
+                            <div class="mb-4 flex gap-2">
+                                <input x-model="couponCode" class="border p-2 w-full rounded text-sm uppercase" placeholder="Kode Promo">
+                                <button @click="checkCoupon" class="bg-gray-800 text-white px-3 rounded text-xs">Cek</button>
+                            </div>
+                            <div x-show="couponMsg" class="text-xs mb-2 font-bold" :class="couponValid ? 'text-green-600' : 'text-red-500'" x-text="couponMsg"></div>
+
+                            <div class="border-t pt-2 mt-2 space-y-1 text-sm">
+                                <div class="flex justify-between"><span>Subtotal</span> <span x-text="format(selected.price || 0)"></span></div>
+                                <div x-show="withBump" class="flex justify-between text-red-600"><span>+ Bump</span> <span x-text="format(bump.price)"></span></div>
+                                <div x-show="discount > 0" class="flex justify-between text-green-600"><span>- Diskon</span> <span x-text="format(discount)"></span></div>
+                                <div class="flex justify-between font-bold text-lg mt-2 pt-2 border-t border-dashed">
+                                    <span>Total</span> <span class="text-blue-700">Rp <span x-text="format(total)"></span></span>
+                                </div>
+                            </div>
+
+                            <button @click="process" :disabled="loading || !selected.id" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded font-bold mt-4 shadow disabled:opacity-50">
+                                <span x-text="loading ? 'Memproses...' : 'BELI SEKARANG'"></span>
+                            </button>
+
+                            <script>
+                                function checkoutWidget() {
+                                    return {
+                                        variants: window.PRODUCT_VARIANTS || [],
+                                        bump: window.ORDER_BUMP || { active: false },
+                                        selected: {},
+                                        form: { name: '', whatsapp: '' },
+                                        withBump: false,
+                                        couponCode: '',
+                                        couponValid: false,
+                                        couponMsg: '',
+                                        discount: 0,
+                                        appliedCoupon: null,
+                                        loading: false,
+
+                                        init() { 
+                                            if(this.variants.length > 0) this.selected = this.variants[0];
+                                            // Load Snap JS Lazy
+                                            if(!document.getElementById('snap-js')) {
+                                                let s = document.createElement('script');
+                                                s.id = 'snap-js'; s.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+                                                s.setAttribute('data-client-key', 'CLIENT-KEY-OPTIONAL'); // Backend handles token anyway
+                                                document.head.appendChild(s);
+                                            }
+                                        },
+
+                                        get total() {
+                                            let t = (this.selected.price || 0);
+                                            if(this.withBump && this.bump.active) t += this.bump.price;
+                                            t -= this.discount;
+                                            return t < 0 ? 0 : t;
+                                        },
+
+                                        format(n) { return (n || 0).toLocaleString('id-ID'); },
+
+                                        async checkCoupon() {
+                                            if(!this.couponCode) return;
+                                            const res = await fetch('/api/check-coupon', {
+                                                method:'POST', body: JSON.stringify({ page_id: window.PAGE_ID, code: this.couponCode })
+                                            });
+                                            const d = await res.json();
+                                            this.couponMsg = d.message;
+                                            if(d.success) {
+                                                this.couponValid = true;
+                                                this.appliedCoupon = d;
+                                                this.calcDiscount();
+                                            } else {
+                                                this.couponValid = false; this.discount = 0;
+                                            }
+                                        },
+
+                                        calcDiscount() {
+                                            if(!this.appliedCoupon) return;
+                                            let base = (this.selected.price || 0);
+                                            if(this.withBump && this.bump.active) base += this.bump.price;
+                                            
+                                            if(this.appliedCoupon.type === 'percent') this.discount = Math.round(base * this.appliedCoupon.value / 100);
+                                            else this.discount = this.appliedCoupon.value;
+                                        },
+
+                                        async process() {
+                                            if(!this.form.name || !this.form.whatsapp) return alert('Isi Data Diri');
+                                            this.loading = true;
+                                            try {
+                                                const res = await fetch('/api/checkout', {
+                                                    method: 'POST',
+                                                    body: JSON.stringify({
+                                                        page_id: window.PAGE_ID,
+                                                        provider: 'midtrans',
+                                                        variant_id: this.selected.id,
+                                                        with_bump: this.withBump,
+                                                        coupon_code: this.couponValid ? this.couponCode : null,
+                                                        customer: this.form
+                                                    })
+                                                });
+                                                const d = await res.json();
+                                                if(d.token && window.snap) window.snap.pay(d.token);
+                                                else if(d.redirect_url) window.location.href = d.redirect_url;
+                                                else alert(d.message || 'Gagal');
+                                            } catch(e) { alert('Error'); }
+                                            this.loading = false;
+                                        }
+                                    }
+                                }
+                            <\/script>
+                        </div>
+                        `
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
