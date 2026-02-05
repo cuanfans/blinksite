@@ -266,10 +266,61 @@
                                 { name: 'Layout', open: false, buildProps: ['display', 'flex-direction', 'justify-content', 'align-items', 'gap'] },
                                 { name: 'Decorations', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'] }
                             ]},
+
                             assetManager: { 
-                                upload: '/api/admin/upload-image', uploadName: 'file', 
-                                headers: { 'Authorization': this.authPass }, autoAdd: true 
+                                // Matikan upload default
+                                upload: false, 
+                                uploadName: 'file',
+                                autoAdd: true,
+                                
+                                // CUSTOM UPLOADER (BASE64 to JSON)
+                                // Ini kuncinya! Kita cegah default behavior dan kirim JSON
+                                uploadFile: async (e) => {
+                                    const files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+                                    const authPass = localStorage.getItem('admin_pass'); // Ambil token
+                            
+                                    for (let i = 0; i < files.length; i++) {
+                                        const file = files[i];
+                                        
+                                        // 1. Baca File ke Base64
+                                        const reader = new FileReader();
+                                        reader.readAsDataURL(file);
+                                        
+                                        reader.onload = async () => {
+                                            const base64Str = reader.result;
+                                            
+                                            try {
+                                                // 2. Kirim ke Backend via JSON
+                                                const req = await fetch('/api/admin/upload-image', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'Authorization': authPass
+                                                    },
+                                                    body: JSON.stringify({
+                                                        image: base64Str,
+                                                        filename: file.name
+                                                    })
+                                                });
+                            
+                                                const res = await req.json();
+                            
+                                                if (res.data) {
+                                                    // 3. Tambahkan ke Asset Manager GrapesJS
+                                                    window.editor.AssetManager.add(res.data);
+                                                } else {
+                                                    alert("Gagal Upload: " + (res.message || 'Unknown Error'));
+                                                }
+                                            } catch (err) {
+                                                console.error(err);
+                                                alert("Error Upload: Koneksi Gagal");
+                                            }
+                                        };
+                                    }
+                                }
                             }
+                            
+                            //...
                         });
 
                         // ----------------------------------------------------
