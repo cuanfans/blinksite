@@ -7,6 +7,52 @@ import { checkShipping } from '../src/modules/shipping'
 
 const app = new Hono()
 
+// Helper: baca cookie sederhana dari header Cookie
+function getCookieFromHeader(req, name) {
+    const cookieHeader = req.header ? req.header('Cookie') : null;
+    if (!cookieHeader) return null;
+    const cookies = cookieHeader.split(';').map(c => c.trim());
+    for (const c of cookies) {
+        const [k, ...v] = c.split('=');
+        if (k === name) return decodeURIComponent(v.join('='));
+    }
+    return null;
+}
+
+// ===============================================
+// 0. AUTH FOR ADMIN PAGES (Protect HTML pages)
+// ===============================================
+// Sebelumnya admin HTML disajikan langsung dari ASSETS tanpa pengecekan.
+// Middleware berikut memastikan akses ke route /admin dan /admin/*
+app.use(['/admin', '/admin/*'], async (c, next) => {
+    const pathname = new URL(c.req.url).pathname;
+    // izinkan akses ke halaman login jika ada (mis. /admin/login.html)
+    if (pathname.startsWith('/admin/login')) {
+        await next();
+        return;
+    }
+
+    // Periksa Authorization header (plain password) atau cookie admin_pass
+    const inputPass = c.req.header('Authorization') || getCookieFromHeader(c.req, 'admin_pass');
+    if (!inputPass) {
+        // Redirect ke halaman login (harus ada file /admin/login.html di ASSETS)
+        return c.redirect('/admin/login.html');
+    }
+
+    // cek password di tabel SETTINGS (disimpan dalam bentuk hash)
+    const dbSetting = await c.env.DB.prepare("SELECT value FROM settings WHERE key = 'admin_password'").first();
+    const realHash = dbSetting ? dbSetting.value : '';
+    const inputHash = await sha256(inputPass);
+
+    if (inputHash !== realHash) {
+        // jika salah, arahkan juga ke halaman login
+        return c.redirect('/admin/login.html');
+    }
+
+    // Lolos validasi
+    await next();
+});
+
 // ===============================================
 // 1. STATIC ASSETS (PRIORITAS PERTAMA)
 // ===============================================
@@ -21,16 +67,17 @@ app.get('/images/*', (c) => c.env.ASSETS.fetch(c.req.raw));
 // Redirect /admin ke dashboard
 app.get('/admin', (c) => c.redirect('/admin/dashboard'));
 
-// Load file HTML Admin secara eksplisit].js]
+// Load file HTML Admin secara eksplisit
 app.get('/admin/dashboard', (c) => c.env.ASSETS.fetch(new URL('/admin/dashboard.html', c.req.url)));
 app.get('/admin/pages', (c) => c.env.ASSETS.fetch(new URL('/admin/pages.html', c.req.url)));
 app.get('/admin/editor', (c) => c.env.ASSETS.fetch(new URL('/admin/editor.html', c.req.url)));
 app.get('/admin/reports', (c) => c.env.ASSETS.fetch(new URL('/admin/reports.html', c.req.url)));
 app.get('/admin/analytics', (c) => c.env.ASSETS.fetch(new URL('/admin/analytics.html', c.req.url)));
 app.get('/admin/settings', (c) => c.env.ASSETS.fetch(new URL('/admin/settings.html', c.req.url)));
+app.get('/admin/login', (c) => c.env.ASSETS.fetch(new URL('/admin/login.html', c.req.url)));
 
 // ===============================================
-// 3. MIDDLEWARE & AUTH
+// 3. MIDDLEWARE & AUTH (API-level)
 // ===============================================
 app.use('/api/admin/*', async (c, next) => {
     const inputPass = c.req.header('Authorization');
