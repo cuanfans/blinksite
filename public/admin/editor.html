@@ -146,7 +146,7 @@
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-gray-500">CUSTOM HEAD SCRIPT</label>
-                            <textarea x-model="page.config.settings.custom_head" class="w-full border rounded p-1.5 text-xs font-mono bg-gray-50 h-20 focus:ring-1 focus:ring-blue-400 outline-none"></textarea>
+                            <textarea x-model="page.config.settings.custom_head" class="w-full border rounded p-1.5 text-xs font-mono bg-gray-50 h-20 focus:ring-1 focus:ring-blue-400 outline-none" placeholder="<script>..."></textarea>
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-gray-500">CUSTOM BODY SCRIPT</label>
@@ -160,7 +160,7 @@
                             <div class="flex gap-1 mb-1 items-center bg-gray-50 p-2 rounded border">
                                 <input x-model="v.name" class="flex-1 border rounded px-2 py-1 text-xs">
                                 <input x-model="v.price" type="number" class="w-16 border rounded px-2 py-1 text-xs">
-                                <button @click="page.config.variants.splice(i,1)" class="text-red-500"><i class="ph ph-trash"></i></button>
+                                <button @click="page.config.variants.splice(i,1)" class="text-red-500 hover:text-red-700 transition p-1"><i class="ph ph-trash"></i></button>
                             </div>
                         </template>
                         <button @click="addVariant" class="w-full border-2 border-dashed border-gray-200 py-2 text-[10px] font-bold text-blue-600 rounded transition uppercase">+ Tambah Varian</button>
@@ -268,7 +268,7 @@
                                                 const json = await res.json();
                                                 if(json.data) window.editor.AssetManager.add(json.data);
                                                 else alert(json.message);
-                                            } catch(err) { alert('Upload Gagal'); }
+                                            } catch(err) { alert('Upload Failed'); }
                                         };
                                     }
                                 }
@@ -282,16 +282,20 @@
                         bm.add('container-fluid', { label: 'Container (Fluid)', category: 'Layout', attributes: {class:'ph ph-arrows-out-line-horizontal'}, content: `<div style="width:90%; max-width:1200px; margin:0 auto; padding:20px; min-height:50px;"></div>` });
                         bm.add('section-std', { label: 'Section', category: 'Layout', attributes: {class:'ph ph-square'}, content: `<section style="padding:60px 0; background-color:#fff;"><div style="width:90%; max-width:1100px; margin:0 auto;"></div></section>` });
 
-                        // HEADERS (LOGOS AS IMAGE)
-                        bm.add('header-simple', { label: 'Header Logo', category: 'Headers', attributes:{class:'ph ph-list'}, content: `<header style="padding:10px 20px; border-bottom:1px solid #eee; display:flex; justify-content:center; align-items:center;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" alt="Logo" /></header>` });
-                        bm.add('header-left', { label: 'Header Left', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, content: `<header style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" alt="Logo" /><nav><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Home</a><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Contact</a></nav></header>` });
+                        // 4 VARIASI HEADERS (LENGKAP)
+                        bm.add('header-simple', { label: 'Header Logo Center', category: 'Headers', attributes:{class:'ph ph-list'}, content: `<header style="padding:10px 20px; border-bottom:1px solid #eee; display:flex; justify-content:center; align-items:center;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" alt="Logo" /></header>` });
+                        bm.add('header-left', { label: 'Header Logo Left', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, content: `<header style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" alt="Logo" /><nav><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Home</a><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Contact</a></nav></header>` });
+                        bm.add('header-right', { label: 'Header Logo Right', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, content: `<header style="padding:15px 20px; display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" alt="Logo" /><nav><a href="#" style="margin-right:15px; color:#333; text-decoration:none;">Home</a></nav></header>` });
+                        bm.add('header-full-center', { label: 'Header Logo Above', category: 'Headers', attributes:{class:'ph ph-align-center-horizontal-simple'}, content: `<header style="padding:15px; text-align:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:50px; margin-bottom:10px; object-fit:contain;" alt="Logo" /><nav style="display:block;"><a href="#" style="margin:0 10px; color:#333;">Home</a><a href="#" style="margin:0 10px; color:#333;">About</a></nav></header>` });
 
-                        // CONTENT TEMPLATES
+                        // CONTENT TEMPLATES (LENGKAP)
                         bm.add('hero-tpl', { label: 'Hero Section', category: 'Templates', attributes:{class:'ph ph-layout'}, content: `<section style="padding:80px 20px; text-align:center; background:#f8fafc;"><h1 style="font-size:3rem; margin-bottom:20px; color:#1e293b; font-weight:800;">Judul Hero</h1><p style="font-size:1.2rem; color:#64748b; margin-bottom:30px; max-width:700px; margin-left:auto; margin-right:auto;">Subjudul deskripsi produk Anda.</p><a href="#" style="padding:12px 30px; background:#2563eb; color:white; border-radius:5px; text-decoration:none; font-weight:bold;">Call to Action</a></section>` });
+                        bm.add('features-tpl', { label: 'Features 3-Col', category: 'Templates', attributes:{class:'ph ph-grid-three'}, content: `<section style="padding:60px 20px;"><div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:30px;"><div style="text-align:center; padding:20px; border:1px solid #eee; border-radius:8px;"><h3>Fitur 1</h3><p>Deskripsi singkat.</p></div><div style="text-align:center; padding:20px; border:1px solid #eee; border-radius:8px;"><h3>Fitur 2</h3><p>Deskripsi singkat.</p></div><div style="text-align:center; padding:20px; border:1px solid #eee; border-radius:8px;"><h3>Fitur 3</h3><p>Deskripsi singkat.</p></div></div></section>` });
 
                         // WIDGETS
                         bm.add('video-yt', { label: 'YouTube', category: 'Media', attributes:{class:'ph ph-youtube-logo'}, content: { type: 'video', provider: 'yt', style: { height: '350px', width: '100%', 'max-width':'800px', margin: '0 auto' } } });
                         bm.add('checkout-pro', { label: 'Form Checkout', category: 'E-Commerce', attributes:{class:'ph ph-shopping-cart'}, content: `<div data-gjs-type="checkout-widget" style="padding:20px; border:2px dashed #3b82f6; background:#eff6ff; text-align:center; border-radius:8px;"><strong style="color:#1e40af;">[ FORM CHECKOUT ]</strong><p style="font-size:12px; color:#64748b;">Akan muncul saat halaman live.</p></div>` });
+                        bm.add('custom-code-blk', { label: 'Custom HTML', category: 'Extra', attributes:{class:'ph ph-code'}, content: { type: 'custom-code', content: '' } });
 
                         editor.on('load', () => {
                             const body = editor.Canvas.getBody();
