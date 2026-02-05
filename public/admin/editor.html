@@ -148,34 +148,7 @@
     </div>
 
     <script>
-        function editorApp() {
-            return {
-                loading: false, showSettings: false, device: 'desktop', tab: 'blocks',
-                page: { slug: '', title: '', product_type: 'physical', config: { variants:[], shipping:{weight:1000}, settings:{} } },
-                cred: { provider: 'midtrans', data: '' },
-                authPass: localStorage.getItem('admin_pass'),
-
-                init() {
-                    const params = new URLSearchParams(window.location.search);
-                    this.page.slug = params.get('slug');
-                    if(!this.authPass) window.location.href='/login';
-                    this.initGrapes();
-                },
-
-                setDevice(d) { this.device=d; window.editor.setDevice(d); },
-                cmd(c) { window.editor.runCommand(c); },
-                addVariant() { this.page.config.variants.push({id:Date.now(), name:'', price:0}) },
-                
-                async saveCreds() {
-                    try { await fetch('/api/admin/credentials', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({provider:this.cred.provider, data:JSON.parse(this.cred.data)})}); alert('Tersimpan!'); } catch(e){ alert('JSON Salah'); }
-                },
-                async savePage() {
-                    this.loading=true;
-                    try { await fetch('/api/admin/pages', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({slug:this.page.slug, title:this.page.title, product_type:this.page.product_type, html:editor.getHtml(), css:editor.getCss(), product_config:this.page.config})}); alert('Berhasil!'); } catch(e){ alert('Gagal'); }
-                    this.loading=false;
-                },
-
-                // LOGIKA UNTUK MENAMBAH BARIS OTOMATIS
+        // LOGIKA UNTUK MENAMBAH BARIS OTOMATIS
                 const addTableLogic = (editor) => {
                     editor.DomComponents.addType('comparison-table-wrapper', {
                         model: {
@@ -210,6 +183,33 @@
                         },
                     });
                 };
+        function editorApp() {
+            return {
+                loading: false, showSettings: false, device: 'desktop', tab: 'blocks',
+                page: { slug: '', title: '', product_type: 'physical', config: { variants:[], shipping:{weight:1000}, settings:{} } },
+                cred: { provider: 'midtrans', data: '' },
+                authPass: localStorage.getItem('admin_pass'),
+
+                init() {
+                    const params = new URLSearchParams(window.location.search);
+                    this.page.slug = params.get('slug');
+                    if(!this.authPass) window.location.href='/login';
+                    this.initGrapes();
+                },
+
+                setDevice(d) { this.device=d; window.editor.setDevice(d); },
+                cmd(c) { window.editor.runCommand(c); },
+                addVariant() { this.page.config.variants.push({id:Date.now(), name:'', price:0}) },
+                
+                async saveCreds() {
+                    try { await fetch('/api/admin/credentials', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({provider:this.cred.provider, data:JSON.parse(this.cred.data)})}); alert('Tersimpan!'); } catch(e){ alert('JSON Salah'); }
+                },
+                async savePage() {
+                    this.loading=true;
+                    try { await fetch('/api/admin/pages', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({slug:this.page.slug, title:this.page.title, product_type:this.page.product_type, html:editor.getHtml(), css:editor.getCss(), product_config:this.page.config})}); alert('Berhasil!'); } catch(e){ alert('Gagal'); }
+                    this.loading=false;
+                },
+                
                 initGrapes() {
                     setTimeout(() => {
                         window.editor = grapesjs.init({
