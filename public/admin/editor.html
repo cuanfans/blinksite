@@ -492,7 +492,7 @@
                         bm.add('container-box', { label: 'Boxed Container', category: 'Layout', content: `<div style="max-width:1200px; width:100%; margin:0 auto; padding:20px; box-sizing:border-box; min-height:50px;"></div>` });
                         bm.add('section-std', { label: 'Standard Section', category: 'Layout', content: `<section style="padding:60px 0; width:100%; box-sizing:border-box;"><div style="max-width:1100px; margin:0 auto; padding:0 20px; box-sizing:border-box;"></div></section>` });
 
-                        // HEADERS (4 VARIANT)
+                        // HEADERS
                         bm.add('header-s', { label: 'Logo Center', category: 'Headers', content: `<header style="padding:15px 20px; border-bottom:1px solid #eee; display:flex; justify-content:center; align-items:center; width:100%; box-sizing:border-box;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /></header>` });
                         bm.add('header-l', { label: 'Logo Left', category: 'Headers', content: `<header style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; flex-wrap:wrap; width:100%; box-sizing:border-box;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:35px; object-fit:contain;" /><nav style="display:flex; gap:15px;"><a href="#" style="color:#333; text-decoration:none; font-size:14px;">Home</a><a href="#" style="color:#333; text-decoration:none; font-size:14px;">Contact</a></nav></header>` });
                         bm.add('header-r', { label: 'Logo Right', category: 'Headers', content: `<header style="padding:15px 20px; display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; flex-wrap:wrap; width:100%; box-sizing:border-box;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:35px; object-fit:contain;" /><nav style="display:flex; gap:15px;"><a href="#" style="color:#333; text-decoration:none; font-size:14px;">Home</a></nav></header>` });
@@ -507,6 +507,7 @@
                             </div></section>` });
 
                         // WIDGETS
+                        bm.add('video', { label: 'Video YouTube', category: 'Media', content: { type: 'video', src: 'https://www.youtube.com/embed/dQw4w9WgXcQ', style: { width: '100%', height: '350px', 'max-width': '800px', margin: '0 auto' } } });
                         bm.add('checkout-pro', { label: 'Checkout Widget', category: 'E-Commerce', content: `<div data-gjs-type="checkout-widget" style="padding:20px; border:2px dashed #3b82f6; background:#eff6ff; text-align:center; border-radius:8px;"><strong style="color:#1e40af;">[ FORM CHECKOUT & ORDER BUMP ]</strong></div>` });
                         bm.add('custom-code-blk', { label: 'Embed Code', category: 'Extra', content: { type: 'custom-code', content: '' } });
 
