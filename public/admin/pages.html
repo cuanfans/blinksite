@@ -65,6 +65,7 @@
                 <table x-show="pages.length > 0" class="w-full text-left">
                     <thead class="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600 text-gray-500 dark:text-gray-300 text-xs uppercase tracking-wider">
                         <tr>
+                            <th class="p-4 w-10 text-center">Home</th>
                             <th class="p-4">Judul / Slug</th>
                             <th class="p-4">Tipe Produk</th>
                             <th class="p-4">Tanggal Dibuat</th>
@@ -74,6 +75,12 @@
                     <tbody class="divide-y dark:divide-gray-700 text-sm">
                         <template x-for="p in pages" :key="p.id">
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition group">
+                                <td class="p-4 text-center">
+                                    <button @click="setHomepage(p.slug)" class="transition transform hover:scale-110" :title="homepageSlug === p.slug ? 'Ini adalah Homepage' : 'Set sebagai Homepage'">
+                                        <i class="ph-fill ph-star text-yellow-400 text-xl" x-show="homepageSlug === p.slug"></i>
+                                        <i class="ph ph-star text-gray-300 hover:text-yellow-400 text-xl" x-show="homepageSlug !== p.slug"></i>
+                                    </button>
+                                </td>
                                 <td class="p-4">
                                     <div class="font-bold text-gray-800 dark:text-white text-base" x-text="p.title"></div>
                                     <a :href="'/' + p.slug" target="_blank" class="text-blue-500 hover:underline flex items-center gap-1 mt-1">
@@ -109,18 +116,24 @@
             function pagesList() {
                 return {
                     pages: [],
+                    homepageSlug: null, // Menyimpan slug homepage saat ini
                     loading: true,
                     creating: false,
                     openCreate: false,
                     newPage: { slug: '', title: '', type: 'physical' },
 
-                    // 1. Ambil Data Real dari Database
                     async init() {
                         this.loading = true;
                         try {
-                            const res = await fetch('/api/admin/pages');
-                            if(res.ok) {
-                                this.pages = await res.json();
+                            // 1. Ambil List Halaman
+                            const resPages = await fetch('/api/admin/pages');
+                            // 2. Ambil Info Homepage (ENDPOINT SUDAH ADA KEMBALI)
+                            const resHome = await fetch('/api/admin/homepage-slug');
+                            
+                            if(resPages.ok) this.pages = await resPages.json();
+                            if(resHome.ok) {
+                                const dataHome = await resHome.json();
+                                this.homepageSlug = dataHome.slug;
                             }
                         } catch(e) {
                             console.error("Gagal mengambil data", e);
@@ -128,27 +141,46 @@
                         this.loading = false;
                     },
 
-                    // 2. Helper Generate Slug Otomatis
+                    // Fungsi Set Homepage
+                    async setHomepage(slug) {
+                        if(!confirm('Jadikan halaman ini sebagai Homepage utama?')) return;
+                        
+                        try {
+                            const res = await fetch('/api/admin/set-homepage', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ slug: slug })
+                            });
+                            
+                            if(res.ok) {
+                                this.homepageSlug = slug; // Update UI langsung
+                                alert('Homepage berhasil diubah!');
+                            } else {
+                                alert('Gagal mengubah homepage');
+                            }
+                        } catch(e) {
+                            alert('Error koneksi');
+                        }
+                    },
+
                     generateSlug() {
                         this.newPage.slug = this.newPage.title
                             .toLowerCase()
-                            .replace(/[^a-z0-9\s-]/g, '') // Hapus karakter aneh
+                            .replace(/[^a-z0-9\s-]/g, '')
                             .trim()
-                            .replace(/\s+/g, '-'); // Spasi jadi dash
+                            .replace(/\s+/g, '-');
                     },
 
-                    // 3. Logic Buat Halaman Baru -> Save DB -> Redirect Editor
                     async createPage() {
                         if (!this.newPage.slug || !this.newPage.title) return alert('Mohon isi Slug dan Judul');
                         
                         this.creating = true;
                         try {
-                            // Siapkan Template Dasar HTML
                             const defaultHtml = `
-                                <section class="py-20 px-4 text-center bg-gray-100">
-                                    <h1 class="text-4xl font-bold mb-4 text-gray-800">${this.newPage.title}</h1>
-                                    <p class="text-xl text-gray-600 mb-8">Tulis penawaran menarik Anda di sini...</p>
-                                    <div data-gjs-type="checkout-pro"></div>
+                                <section style="padding: 50px 20px; text-align: center; font-family: sans-serif;">
+                                    <h1 style="font-size: 2.5rem; margin-bottom: 1rem; color: #1e293b;">${this.newPage.title}</h1>
+                                    <p style="font-size: 1.25rem; color: #64748b; margin-bottom: 2rem;">Tulis penawaran menarik Anda di sini...</p>
+                                    <div data-gjs-type="checkout-widget"></div>
                                 </section>
                             `;
 
@@ -158,7 +190,7 @@
                                 product_type: this.newPage.type,
                                 html: defaultHtml, 
                                 css: '',
-                                product_config: { variants: [], order_bump: { active: false } }
+                                product_config: { variants: [], order_bump: { active: false }, shipping: { weight: 1000 } }
                             };
 
                             const res = await fetch('/api/admin/pages', {
@@ -170,7 +202,6 @@
                             const data = await res.json();
 
                             if (res.ok && data.success) {
-                                // Redirect langsung ke Editor
                                 window.location.href = '/admin/editor?slug=' + this.newPage.slug;
                             } else {
                                 alert('Gagal: ' + (data.error || 'Terjadi kesalahan'));
