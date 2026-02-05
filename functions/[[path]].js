@@ -212,7 +212,14 @@ app.get('/admin/reports', (c) => c.env.ASSETS.fetch(new URL('/admin/reports.html
 app.get('/admin/analytics', (c) => c.env.ASSETS.fetch(new URL('/admin/analytics.html', c.req.url)));
 app.get('/admin/settings', (c) => c.env.ASSETS.fetch(new URL('/admin/settings.html', c.req.url)));
 
+// ===============================================
+// FIX: STATIC ASSETS ROUTING (PENTING!)
+// ===============================================
 
+// Biarkan Cloudflare mengambil file JS, CSS, atau Gambar dari folder public
+app.get('/js/*', (c) => c.env.ASSETS.fetch(c.req.raw));
+app.get('/css/*', (c) => c.env.ASSETS.fetch(c.req.raw));
+app.get('/images/*', (c) => c.env.ASSETS.fetch(c.req.raw));
 // ===============================================
 // 5. PUBLIC ROUTER & RENDERER
 // ===============================================
