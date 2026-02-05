@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LandingBuilder Pro - Editor</title>
+    <title>Editor - LandingBuilder</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -17,155 +17,211 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* --- STYLE SAMA SEPERTI SEBELUMNYA (DIPERSINGKAT UNTUK FOKUS KONTEKS) --- */
-        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: #f8fafc; color: #334155; }
+        /* --- RESET & UI FRAMEWORK --- */
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: #ffffff; color: #1e293b; }
         [x-cloak] { display: none !important; }
+
+        /* Sembunyikan Panel Bawaan GrapesJS */
         .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-panels, .gjs-pn-buttons { display: none !important; }
+        
+        /* Canvas Area - Netral Abu-abu */
         .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f1f5f9; }
-        .gjs-frame-wrapper { margin: 0 auto; background: white; box-shadow: 0 10px 40px -10px rgba(30, 58, 138, 0.15); transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .panel-tabs { display: flex; background: white; border-bottom: 1px solid #e0f2fe; }
-        .panel-tabs button { flex: 1; padding: 14px; color: #64748b; position: relative; transition: all 0.2s; font-size: 18px; }
-        .panel-tabs button.active { color: #2563eb; background: #eff6ff; }
-        .panel-tabs button.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background: #2563eb; }
-        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        
+        /* --- PANEL KANAN (CLEAN LOOK) --- */
+        .panel-tabs { display: flex; border-bottom: 1px solid #e2e8f0; background: #fff; }
+        .panel-tabs button { 
+            flex: 1; padding: 12px; color: #64748b; font-size: 20px; 
+            transition: all 0.2s; border-bottom: 2px solid transparent; 
+        }
+        .panel-tabs button:hover { color: #0f172a; background: #f8fafc; }
+        .panel-tabs button.active { color: #2563eb; border-bottom-color: #2563eb; background: #eff6ff; }
+
+        /* Block Manager Grid - FIX ICON SIZE */
+        .gjs-blocks-c { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
+        .gjs-block { 
+            width: 100% !important; min-height: auto !important; padding: 12px 8px !important; margin: 0 !important;
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02); cursor: grab; transition: all 0.15s;
+        }
+        .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 2px; color: inherit; }
+        
+        /* FIX: Batasi ukuran ikon agar tidak raksasa */
+        .gjs-block svg, .gjs-block i, .gjs-block .fa { 
+            width: 20px; height: 20px; font-size: 20px; line-height: 1; fill: currentColor; display: block;
+        }
+
+        /* Category Header */
+        .gjs-block-category .gjs-title { 
+            background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; 
+            padding: 8px 12px; font-size: 10px; font-weight: 700; color: #64748b; 
+            text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer;
+        }
+
+        /* Style Manager Inputs */
+        .gjs-field { background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; color: #334155; }
+        .gjs-field:focus-within { border-color: #3b82f6; ring: 1px solid #3b82f6; }
+        .gjs-field input, .gjs-field select { font-size: 11px; color: #334155; width: 100%; background: transparent; }
+        
+        .gjs-sm-sector { border-bottom: 1px solid #e2e8f0; }
+        .gjs-sm-title { 
+            background: #f8fafc; font-size: 11px; font-weight: 600; color: #475569; 
+            padding: 10px 12px; border-top: 1px solid #e2e8f0; cursor: pointer; display: flex; justify-content: space-between; 
+        }
+        .gjs-sm-properties { padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .gjs-sm-property { width: 100%; margin-bottom: 0; }
+        .gjs-sm-property__name { font-size: 10px; margin-bottom: 3px; color: #64748b; }
+        
+        /* Helper Widths */
+        .gjs-sm-property--width, .gjs-sm-property--height, 
+        .gjs-sm-property--font-size, .gjs-sm-property--font-weight,
+        .gjs-sm-property--margin-top, .gjs-sm-property--margin-bottom, 
+        .gjs-sm-property--padding-top, .gjs-sm-property--padding-bottom,
+        .gjs-sm-property--color, .gjs-sm-property--background-color { width: 48%; }
+
+        /* Layers */
+        .gjs-layer-item { padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-size: 11px; }
+        .gjs-layer-item.gjs-selected { background: #eff6ff; color: #2563eb; border-left: 2px solid #2563eb; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        
+        /* Frame Wrapper Shadow */
+        .gjs-frame-wrapper { box-shadow: 0 0 20px rgba(0,0,0,0.1); }
     </style>
 </head>
 
 <body x-data="editorApp()">
 
-    <header class="h-14 bg-white border-b border-blue-100 flex justify-between items-center px-4 z-50 relative shadow-sm shrink-0">
-        <div class="flex items-center gap-4">
-            <a href="/admin/pages" class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition">
-                <i class="ph ph-arrow-left text-lg"></i> <span class="text-xs font-bold uppercase">Back</span>
+    <header class="h-12 bg-white border-b border-gray-200 flex justify-between items-center px-4 z-50 relative shrink-0">
+        <div class="flex items-center gap-3">
+            <a href="/admin/pages" class="text-gray-500 hover:text-blue-600 transition p-1.5 rounded hover:bg-gray-100" title="Kembali ke Dashboard">
+                <i class="ph ph-arrow-left text-lg"></i>
             </a>
-            <div class="h-6 w-px bg-slate-200"></div>
-            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
-                <span class="text-slate-400 text-xs mr-2 font-mono font-bold">/</span>
-                <input x-model="page.slug" class="bg-transparent text-sm font-bold text-slate-700 outline-none w-32" placeholder="slug-halaman">
+            <div class="h-5 w-px bg-gray-200"></div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-400 font-mono">SLUG:</span>
+                <input x-model="page.slug" class="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs font-bold text-gray-700 outline-none w-32 focus:border-blue-400 transition" placeholder="nama-halaman">
             </div>
         </div>
 
-        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-white rounded-xl border border-slate-200 p-1 shadow-sm">
-            <button @click="setDevice('desktop')" :class="device=='desktop' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'" class="p-2 rounded-lg transition"><i class="ph ph-desktop text-xl"></i></button>
-            <button @click="setDevice('tablet')" :class="device=='tablet' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'" class="p-2 rounded-lg transition"><i class="ph ph-device-tablet text-xl"></i></button>
-            <button @click="setDevice('mobile')" :class="device=='mobile' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'" class="p-2 rounded-lg transition"><i class="ph ph-device-mobile text-xl"></i></button>
-            <div class="w-px h-5 bg-slate-200 mx-3"></div>
-            <button @click="cmd('core:undo')" class="text-slate-400 hover:text-blue-600 p-2"><i class="ph ph-arrow-u-up-left text-xl"></i></button>
-            <button @click="cmd('core:redo')" class="text-slate-400 hover:text-blue-600 p-2"><i class="ph ph-arrow-u-up-right text-xl"></i></button>
-            <button @click="cmd('core:preview')" class="text-slate-400 hover:text-blue-600 p-2"><i class="ph ph-eye text-xl"></i></button>
+        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-50 rounded-lg border border-gray-200 p-0.5">
+            <button @click="setDevice('desktop')" :class="device=='desktop' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition" title="Desktop"><i class="ph ph-desktop text-lg"></i></button>
+            <button @click="setDevice('tablet')" :class="device=='tablet' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition" title="Tablet"><i class="ph ph-device-tablet text-lg"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition" title="Mobile"><i class="ph ph-device-mobile text-lg"></i></button>
+            
+            <div class="w-px h-4 bg-gray-300 mx-2"></div>
+            
+            <button @click="cmd('core:undo')" class="text-gray-500 hover:text-black p-1.5 transition"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
+            <button @click="cmd('core:redo')" class="text-gray-500 hover:text-black p-1.5 transition"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
+            <button @click="cmd('core:preview')" class="text-gray-500 hover:text-blue-600 p-1.5 transition" title="Preview"><i class="ph ph-eye text-lg"></i></button>
         </div>
 
-        <div class="flex items-center gap-2">
-            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 shadow-lg shadow-blue-200">
+        <div class="flex items-center gap-3">
+            <div x-data="{saved: false}" @page-saved.window="saved=true; setTimeout(()=>saved=false, 2000)">
+                <span x-show="saved" x-transition class="text-xs text-green-600 font-bold flex items-center gap-1"><i class="ph ph-check-circle"></i> Saved</span>
+            </div>
+            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-xs font-bold transition flex items-center gap-2 disabled:opacity-50">
                 <i x-show="loading" class="ph ph-spinner animate-spin"></i>
-                <span x-text="loading ? 'Menyimpan...' : 'Simpan Halaman'"></span>
+                <span x-text="loading ? 'Saving...' : 'SIMPAN'"></span>
             </button>
         </div>
     </header>
 
-    <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+    <div class="flex h-[calc(100vh-3rem)] overflow-hidden">
         
-        <div class="flex-1 relative bg-slate-100 flex flex-col items-center justify-center p-8 overflow-hidden">
-            <div id="gjs" class="flex-1 w-full h-full shadow-xl rounded-lg overflow-hidden border border-slate-200 bg-white"></div>
+        <div class="flex-1 relative bg-gray-100 flex flex-col items-center justify-center p-8 overflow-hidden">
+            <div id="gjs" class="flex-1 w-full h-full shadow-lg rounded-sm overflow-hidden border border-gray-300 bg-white"></div>
         </div>
 
-        <div class="w-[340px] bg-white border-l border-blue-100 flex flex-col z-20 shrink-0 shadow-lg">
+        <div class="w-[300px] bg-white border-l border-gray-200 flex flex-col z-20 shrink-0 shadow-lg">
             
             <div class="panel-tabs">
-                <button @click="tab='blocks'" :class="tab=='blocks' ? 'active' : ''" title="Add"><i class="ph ph-plus-square text-2xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles' ? 'active' : ''" title="Style"><i class="ph ph-paint-brush text-2xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers' ? 'active' : ''" title="Layers"><i class="ph ph-list-dashes text-2xl"></i></button>
-                <button @click="tab='settings'" :class="tab=='settings' ? 'active' : ''" title="Page Config"><i class="ph ph-gear text-2xl"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks' ? 'active' : ''" title="Blocks"><i class="ph ph-plus-square"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles' ? 'active' : ''" title="Styles"><i class="ph ph-paint-brush"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers' ? 'active' : ''" title="Layers"><i class="ph ph-list-dashes"></i></button>
+                <button @click="tab='settings'" :class="tab=='settings' ? 'active' : ''" title="Settings"><i class="ph ph-gear"></i></button>
             </div>
 
             <div class="flex-1 overflow-y-auto bg-white relative custom-scroll">
-                <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-20"></div>
                 
+                <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-10"></div>
+
                 <div x-show="tab=='styles'">
-                    <div id="selectors-container" class="p-3 border-b border-gray-100"></div>
-                    <div id="styles-container" class="pb-20"></div>
+                    <div id="selectors-container" class="p-2 border-b border-gray-100"></div>
+                    <div id="styles-container" class="pb-10"></div>
                 </div>
 
-                <div x-show="tab=='layers'" id="layers-container" class="absolute inset-0 pb-20"></div>
+                <div x-show="tab=='layers'" id="layers-container" class="absolute inset-0 pb-10"></div>
 
-                <div x-show="tab=='settings'" class="p-5 space-y-6 pb-20">
+                <div x-show="tab=='settings'" class="p-4 space-y-6 pb-20">
                     
-                    <div class="border border-slate-200 rounded-xl overflow-hidden">
-                        <div class="bg-slate-50 p-3 border-b border-slate-200"><h3 class="text-xs font-bold text-slate-600 uppercase">Produk & Harga</h3></div>
-                        <div class="p-4 space-y-4">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Tipe Produk</label>
-                                <div class="flex bg-slate-100 p-1 rounded-lg">
-                                    <button @click="page.product_type = 'physical'" :class="page.product_type=='physical' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'" class="flex-1 py-1.5 rounded-md text-xs font-bold transition">Fisik (Kirim)</button>
-                                    <button @click="page.product_type = 'digital'" :class="page.product_type=='digital' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500'" class="flex-1 py-1.5 rounded-md text-xs font-bold transition">Digital</button>
+                    <div>
+                        <h3 class="text-xs font-bold uppercase text-gray-400 mb-3 border-b pb-1 tracking-wider">Produk & Harga</h3>
+                        
+                        <div class="mb-4">
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Jenis Produk</label>
+                            <div class="flex bg-gray-100 p-1 rounded">
+                                <button @click="page.product_type = 'physical'" :class="page.product_type=='physical' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'" class="flex-1 py-1 rounded text-xs font-bold transition">Fisik</button>
+                                <button @click="page.product_type = 'digital'" :class="page.product_type=='digital' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500'" class="flex-1 py-1 rounded text-xs font-bold transition">Digital</button>
+                            </div>
+                        </div>
+
+                        <div x-show="page.product_type === 'physical'" class="mb-4 bg-blue-50 p-3 rounded border border-blue-100">
+                            <label class="block text-[10px] font-bold text-blue-600 mb-1">Berat Paket (Gram) *</label>
+                            <input x-model="page.config.shipping.weight" type="number" class="w-full border border-blue-200 rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-400 outline-none" placeholder="1000">
+                        </div>
+
+                        <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <label class="text-xs font-bold text-gray-600 block mb-2 flex justify-between">
+                                <span>Daftar Varian</span>
+                                <button @click="addVariant" class="text-blue-600 hover:underline">+ Add</button>
+                            </label>
+                            <template x-for="(v, i) in page.config.variants">
+                                <div class="flex gap-1 mb-1">
+                                    <input x-model="v.name" class="w-full border rounded px-2 py-1 text-xs" placeholder="Nama">
+                                    <input x-model="v.price" type="number" class="w-20 border rounded px-2 py-1 text-xs" placeholder="Rp">
+                                    <button @click="page.config.variants.splice(i,1)" class="text-red-400 px-1 hover:text-red-600"><i class="ph ph-trash"></i></button>
                                 </div>
-                            </div>
-                            <div x-show="page.product_type === 'physical'">
-                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Berat (Gram)</label>
-                                <input x-model="page.config.shipping.weight" type="number" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="1000">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 mb-1 flex justify-between"><span>Varian</span> <span @click="addVariant" class="text-blue-500 cursor-pointer">+ Add</span></label>
-                                <template x-for="(v, i) in page.config.variants">
-                                    <div class="flex gap-1 mb-1">
-                                        <input x-model="v.name" class="w-full border rounded p-1 text-xs" placeholder="Nama">
-                                        <input x-model="v.price" type="number" class="w-20 border rounded p-1 text-xs" placeholder="Rp">
-                                        <button @click="page.config.variants.splice(i,1)" class="text-red-400 px-1"><i class="ph ph-trash"></i></button>
-                                    </div>
-                                </template>
-                            </div>
+                            </template>
+                            <div x-show="page.config.variants.length === 0" class="text-center text-[10px] text-gray-400 italic py-1">Belum ada varian</div>
                         </div>
                     </div>
 
-                    <div class="border border-slate-200 rounded-xl overflow-hidden">
-                        <div class="bg-slate-50 p-3 border-b border-slate-200"><h3 class="text-xs font-bold text-slate-600 uppercase">SEO & Metadata</h3></div>
-                        <div class="p-4 space-y-3">
+                    <div>
+                        <h3 class="text-xs font-bold uppercase text-gray-400 mb-3 border-b pb-1 tracking-wider">SEO & Tracking</h3>
+                        <div class="space-y-3">
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Judul Halaman (Browser Title)</label>
-                                <input x-model="page.config.settings.seo_title" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="Jual Sepatu Murah...">
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Judul SEO (Meta Title)</label>
+                                <input x-model="page.config.settings.seo_title" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="Judul di Google...">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Deskripsi (Meta Desc)</label>
-                                <textarea x-model="page.config.settings.seo_description" rows="2" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="Dapatkan promo terbatas..."></textarea>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Deskripsi SEO</label>
+                                <textarea x-model="page.config.settings.seo_description" rows="2" class="w-full border border-gray-300 rounded p-1.5 text-xs"></textarea>
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Favicon URL</label>
-                                <input x-model="page.config.settings.favicon" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="https://...">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="border border-slate-200 rounded-xl overflow-hidden">
-                        <div class="bg-slate-50 p-3 border-b border-slate-200"><h3 class="text-xs font-bold text-slate-600 uppercase">Pixel & Scripts</h3></div>
-                        <div class="p-4 space-y-3">
                             <div>
                                 <label class="block text-[10px] font-bold text-blue-600 mb-1">Facebook Pixel ID</label>
-                                <input x-model="page.config.settings.fb_pixel_id" class="w-full border border-blue-200 bg-blue-50 rounded p-2 text-xs" placeholder="1234567890">
+                                <input x-model="page.config.settings.fb_pixel_id" class="w-full border border-blue-200 bg-blue-50/50 rounded p-1.5 text-xs" placeholder="1234567890">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-800 mb-1">TikTok Pixel ID</label>
-                                <input x-model="page.config.settings.tiktok_pixel_id" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="CXXXXXXXXX">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Custom Head HTML</label>
-                                <textarea x-model="page.config.settings.custom_head" rows="3" class="w-full border border-slate-300 rounded p-2 text-xs font-mono text-slate-600" placeholder="<script>..."></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Custom Footer HTML</label>
-                                <textarea x-model="page.config.settings.custom_footer" rows="3" class="w-full border border-slate-300 rounded p-2 text-xs font-mono text-slate-600" placeholder="<script>..."></textarea>
+                                <label class="block text-[10px] font-bold text-gray-800 mb-1">TikTok Pixel ID</label>
+                                <input x-model="page.config.settings.tiktok_pixel_id" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="CXXXXXXXX">
                             </div>
                         </div>
                     </div>
 
-                    <div class="border border-slate-200 rounded-xl overflow-hidden">
-                        <div class="bg-slate-50 p-3 border-b border-slate-200"><h3 class="text-xs font-bold text-slate-600 uppercase">Koneksi API</h3></div>
-                        <div class="p-4 space-y-3">
-                            <select x-model="cred.provider" class="w-full border border-slate-300 rounded text-xs p-2 bg-white">
-                                <option value="midtrans">Midtrans</option>
-                                <option value="cloudinary">Cloudinary</option>
+                    <div>
+                        <h3 class="text-xs font-bold uppercase text-gray-400 mb-3 border-b pb-1 tracking-wider">Integrasi API</h3>
+                        <div class="bg-gray-50 p-3 rounded border border-gray-200 space-y-2">
+                            <select x-model="cred.provider" class="w-full border rounded text-xs p-1.5 bg-white">
+                                <option value="midtrans">Midtrans Payment</option>
+                                <option value="cloudinary">Cloudinary Image</option>
                             </select>
-                            <textarea x-model="cred.data" class="w-full border border-slate-300 rounded text-xs p-2 font-mono h-16" placeholder='{"server_key":"..."}'></textarea>
-                            <button @click="saveCreds" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2 rounded text-xs font-bold">Simpan Key</button>
+                            <textarea x-model="cred.data" class="w-full border rounded text-xs p-2 font-mono h-16 text-gray-600" placeholder='{"server_key":"..."}'></textarea>
+                            <button @click="saveCreds" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-1.5 rounded text-xs font-bold transition">Simpan Key</button>
                         </div>
                     </div>
 
@@ -181,25 +237,12 @@
                 device: 'desktop', 
                 tab: 'blocks',
                 
-                // STATE DATA LENGKAP
+                // Data State
                 page: { 
-                    slug: '', 
-                    title: '', 
-                    product_type: 'physical',
+                    slug: '', title: '', product_type: 'physical',
                     config: { 
-                        variants:[], 
-                        coupons:[], 
-                        order_bump:{active:false},
-                        shipping: { weight: 1000 },
-                        settings: { // METADATA BARU
-                            seo_title: '',
-                            seo_description: '',
-                            favicon: '',
-                            fb_pixel_id: '',
-                            tiktok_pixel_id: '',
-                            custom_head: '',
-                            custom_footer: ''
-                        }
+                        variants:[], coupons:[], order_bump:{active:false}, shipping: { weight: 1000 },
+                        settings: { seo_title: '', seo_description: '', fb_pixel_id: '', tiktok_pixel_id: '' }
                     } 
                 },
                 cred: { provider: 'midtrans', data: '' },
@@ -233,10 +276,6 @@
 
                 async savePage() {
                     if(!this.page.slug) return alert('Slug wajib diisi!');
-                    
-                    // Pastikan settings object ada (untuk data lama)
-                    if(!this.page.config.settings) this.page.config.settings = {};
-
                     this.loading = true;
                     try {
                         await fetch('/api/admin/pages', {
@@ -251,7 +290,7 @@
                                 product_config: this.page.config
                             })
                         });
-                        alert('Berhasil Disimpan!');
+                        window.dispatchEvent(new CustomEvent('page-saved'));
                     } catch(e) { alert('Gagal menyimpan.'); }
                     this.loading = false;
                 },
@@ -263,12 +302,22 @@
                             height: '100%',
                             fromElement: false,
                             storageManager: false,
+                            
+                            // PLUGINS STANDARD
                             plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'gjs-preset-webpage'],
                             pluginsOpts: {
                                 'gjs-blocks-basic': { flexGrid: true },
                                 'grapesjs-plugin-forms': {},
-                                'gjs-preset-webpage': { blocks: [], formsOpts: false, navbarOpts: false, countdownOpts: false }
+                                'gjs-preset-webpage': { 
+                                    modalImportTitle: 'Import Code',
+                                    modalImportLabel: '',
+                                    modalImportContent: '',
+                                    blocks: [], // Matikan blocks preset agar tidak duplikat
+                                    formsOpts: false, navbarOpts: false, countdownOpts: false 
+                                }
                             },
+                            
+                            // DEVICE MANAGER
                             deviceManager: {
                                 devices: [
                                     { id: 'desktop', name: 'Desktop', width: '' },
@@ -276,48 +325,76 @@
                                     { id: 'mobile', name: 'Mobile', width: '375px', widthMedia: '480px' },
                                 ],
                             },
+
+                            // PANEL MAPPING
                             blockManager: { appendTo: '#blocks-container' },
                             layerManager: { appendTo: '#layers-container' },
                             selectorManager: { appendTo: '#selectors-container' },
-                            styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'color', 'line-height', 'text-align'] }, { name: 'Layout', open: false, buildProps: ['display', 'flex-direction', 'justify-content', 'align-items', 'width', 'height', 'padding', 'margin'] }, { name: 'Background', open: false, buildProps: ['background-color', 'background-image'] }, { name: 'Border & Effects', open: false, buildProps: ['border', 'border-radius', 'box-shadow'] }] },
-                            assetManager: { upload: '/api/admin/upload-image', uploadName: 'file', headers: { 'Authorization': this.authPass }, autoAdd: true }
+                            styleManager: { 
+                                appendTo: '#styles-container', 
+                                sectors: [
+                                    { name: 'Tipografi', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'] }, 
+                                    { name: 'Dimensi', open: false, buildProps: ['width', 'height', 'max-width', 'min-height', 'padding', 'margin'] }, 
+                                    { name: 'Layout', open: false, buildProps: ['display', 'flex-direction', 'justify-content', 'align-items', 'gap'] }, 
+                                    { name: 'Dekorasi', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow', 'opacity'] }
+                                ] 
+                            },
+                            
+                            // ASSET MANAGER
+                            assetManager: { 
+                                upload: '/api/admin/upload-image', 
+                                uploadName: 'file', 
+                                headers: { 'Authorization': this.authPass }, 
+                                autoAdd: true 
+                            }
                         });
 
                         // CUSTOM BLOCKS
                         const bm = editor.BlockManager;
-                        bm.add('section', {
-                            label: 'Section', category: 'Layout', attributes: { class: 'fa fa-square' },
-                            content: `<section style="padding: 50px 20px; display:flex; flex-direction:column; align-items:center;"><h2 style="margin-bottom:10px;">Judul Section</h2><p>Deskripsi singkat.</p></section>`
-                        });
                         bm.add('checkout-pro', {
-                            label: 'Checkout Form', category: 'E-Commerce', attributes: { class: 'fa fa-shopping-cart' },
-                            content: { type: 'checkout-widget', style: { padding: '20px', border: '2px dashed #3b82f6', 'background-color': '#eff6ff', 'text-align': 'center', 'border-radius': '8px' }, components: [{ tagName: 'strong', content: '[ CHECKOUT FORM ]', style: { color: '#1e40af', 'font-size': '18px' } }, { tagName: 'p', content: 'Form otomatis muncul saat live.', style: { 'font-size': '12px', color: '#64748b' } }] }
+                            label: 'Form Checkout',
+                            category: 'E-Commerce',
+                            attributes: { class: 'fa fa-shopping-cart' },
+                            content: `<div style="padding: 20px; border: 2px dashed #3b82f6; background: #eff6ff; text-align: center; border-radius: 8px;">
+                                <strong style="color: #1e40af; font-size: 16px;">[ FORM CHECKOUT ]</strong>
+                                <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Akan muncul saat halaman live.</p>
+                            </div>`
                         });
 
-                        // LOAD DATA
-                        if(this.page.slug) {
-                            fetch('/api/admin/pages/'+this.page.slug).then(r=>r.json()).then(d=>{
-                                if(d.id) { 
-                                    this.page.title=d.title; 
-                                    this.page.product_type = d.product_type || 'physical';
-                                    
-                                    // DEEP MERGE CONFIG
-                                    this.page.config = {
-                                        ...this.page.config,
-                                        ...JSON.parse(d.product_config_json || '{}')
-                                    };
-                                    
-                                    // Ensure Settings Object Exists
-                                    if(!this.page.config.settings) this.page.config.settings = { seo_title: d.title };
-                                    if(!this.page.config.shipping) this.page.config.shipping = { weight: 1000 };
+                        // --- FIX PENTING: LOAD KONTEN SETELAH EDITOR SIAP ---
+                        editor.on('load', () => {
+                            // 1. Set Default Background Canvas (Agar tidak transparan/hitam)
+                            editor.Canvas.getBody().style.backgroundColor = '#ffffff';
+                            editor.Canvas.getBody().style.color = '#1e293b'; // Teks default hitam (fix invisible text)
 
-                                    if(d.html_content) editor.setComponents(d.html_content); 
-                                    if(d.css_content) editor.setStyle(d.css_content); 
-                                }
-                            });
-                        }
+                            // 2. Load Data dari Database
+                            if(this.page.slug) {
+                                fetch('/api/admin/pages/'+this.page.slug)
+                                    .then(r => r.json())
+                                    .then(d => {
+                                        if(d.id) { 
+                                            this.page.title = d.title;
+                                            this.page.product_type = d.product_type || 'physical';
+                                            
+                                            // Merge Config dengan aman
+                                            this.page.config = {
+                                                ...this.page.config,
+                                                ...JSON.parse(d.product_config_json || '{}')
+                                            };
+                                            
+                                            // Init Sub-Objects jika kosong
+                                            if(!this.page.config.settings) this.page.config.settings = {};
+                                            if(!this.page.config.shipping) this.page.config.shipping = { weight: 1000 };
 
-                        editor.on('load', () => { editor.Canvas.getBody().style.backgroundColor = '#ffffff'; });
+                                            // Render Konten
+                                            if(d.html_content) editor.setComponents(d.html_content); 
+                                            if(d.css_content) editor.setStyle(d.css_content); 
+                                        }
+                                    })
+                                    .catch(e => console.error("Gagal memuat konten:", e));
+                            }
+                        });
+
                     }, 100);
                 }
             }
