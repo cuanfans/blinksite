@@ -265,6 +265,84 @@
                             label: 'Features 3-Col', category: 'Templates', attributes:{class:'ph ph-grid-three'},
                             content: `<section style="padding:60px 20px;"><div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:30px;"><div style="text-align:center; padding:20px; border:1px solid #eee; border-radius:8px;"><h3>Fitur 1</h3><p>Deskripsi singkat.</p></div><div style="text-align:center; padding:20px; border:1px solid #eee; border-radius:8px;"><h3>Fitur 2</h3><p>Deskripsi singkat.</p></div><div style="text-align:center; padding:20px; border:1px solid #eee; border-radius:8px;"><h3>Fitur 3</h3><p>Deskripsi singkat.</p></div></div></section>`
                         });
+                        // TEMPLATE PRICELIST (DAFTAR HARGA)
+                        bm.add('pricelist-tpl', {
+                            label: 'Pricelist 3-Col',
+                            category: 'Templates',
+                            attributes: { class: 'ph ph-tag' },
+                            content: `<section style="padding:60px 20px; background-color:#f1f5f9; width:100%; box-sizing:border-box;">
+                                <div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
+                                    <div style="background:#fff; padding:40px 20px; border-radius:12px; text-align:center; border:1px solid #e2e8f0;">
+                                        <h4 style="margin:0; color:#64748b; text-transform:uppercase; font-size:12px; font-weight:bold;">Paket Hemat</h4>
+                                        <div style="font-size:32px; font-weight:800; margin:15px 0;">Rp 99.000</div>
+                                        <ul style="list-style:none; padding:0; margin:20px 0; color:#475569; font-size:14px; line-height:2;">
+                                            <li>Fitur Dasar</li>
+                                            <li>Support Email</li>
+                                            <li>Update 1 Bulan</li>
+                                        </ul>
+                                        <a href="#" style="display:block; background:#2563eb; color:#fff; padding:12px; border-radius:6px; text-decoration:none; font-weight:bold;">Pilih Paket</a>
+                                    </div>
+                                    <div style="background:#fff; padding:40px 20px; border-radius:12px; text-align:center; border:2px solid #2563eb; transform:scale(1.05); position:relative;">
+                                        <span style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:#2563eb; color:#fff; padding:2px 12px; border-radius:20px; font-size:10px; font-weight:bold;">TERLARIS</span>
+                                        <h4 style="margin:0; color:#64748b; text-transform:uppercase; font-size:12px; font-weight:bold;">Paket Premium</h4>
+                                        <div style="font-size:32px; font-weight:800; margin:15px 0;">Rp 199.000</div>
+                                        <ul style="list-style:none; padding:0; margin:20px 0; color:#475569; font-size:14px; line-height:2;">
+                                            <li>Semua Fitur Dasar</li>
+                                            <li>Support Prioritas</li>
+                                            <li>Update Selamanya</li>
+                                        </ul>
+                                        <a href="#" style="display:block; background:#2563eb; color:#fff; padding:12px; border-radius:6px; text-decoration:none; font-weight:bold;">Pilih Paket</a>
+                                    </div>
+                                    <div style="background:#fff; padding:40px 20px; border-radius:12px; text-align:center; border:1px solid #e2e8f0;">
+                                        <h4 style="margin:0; color:#64748b; text-transform:uppercase; font-size:12px; font-weight:bold;">Paket Bisnis</h4>
+                                        <div style="font-size:32px; font-weight:800; margin:15px 0;">Rp 499.000</div>
+                                        <ul style="list-style:none; padding:0; margin:20px 0; color:#475569; font-size:14px; line-height:2;">
+                                            <li>Custom Domain</li>
+                                            <li>Support 24/7</li>
+                                            <li>Akses Eksklusif</li>
+                                        </ul>
+                                        <a href="#" style="display:block; background:#2563eb; color:#fff; padding:12px; border-radius:6px; text-decoration:none; font-weight:bold;">Pilih Paket</a>
+                                    </div>
+                                </div>
+                            </section>`
+                        });
+                        
+                        // TEMPLATE KOMPARASI (PERBANDINGAN)
+                        bm.add('comparison-tpl', {
+                            label: 'Comparison Table',
+                            category: 'Templates',
+                            attributes: { class: 'ph ph-scales' },
+                            content: `<section style="padding:60px 20px; width:100%; box-sizing:border-box;">
+                                <div style="max-width:900px; margin:0 auto;">
+                                    <table style="width:100%; border-collapse:collapse; border:1px solid #e2e8f0; text-align:left; font-size:14px;">
+                                        <thead>
+                                            <tr style="background:#f8fafc;">
+                                                <th style="padding:15px; border:1px solid #e2e8f0;">FITUR</th>
+                                                <th style="padding:15px; border:1px solid #e2e8f0; text-align:center;">PRODUK KAMI</th>
+                                                <th style="padding:15px; border:1px solid #e2e8f0; text-align:center; color:#94a3b8;">PRODUK LAIN</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td style="padding:15px; border:1px solid #e2e8f0; font-weight:bold;">Kualitas Bahan</td>
+                                                <td style="padding:15px; border:1px solid #e2e8f0; text-align:center; color:#16a34a; font-weight:bold;">Premium Grade A</td>
+                                                <td style="padding:15px; border:1px solid #e2e8f0; text-align:center;">Biasa</td>
+                                            </tr>
+                                            <tr style="background:#f8fafc;">
+                                                <td style="padding:15px; border:1px solid #e2e8f0; font-weight:bold;">Garansi</td>
+                                                <td style="padding:15px; border:1px solid #e2e8f0; text-align:center; color:#16a34a; font-weight:bold;">1 Tahun Ganti Baru</td>
+                                                <td style="padding:15px; border:1px solid #e2e8f0; text-align:center;">7 Hari</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:15px; border:1px solid #e2e8f0; font-weight:bold;">Harga</td>
+                                                <td style="padding:15px; border:1px solid #e2e8f0; text-align:center; color:#16a34a; font-weight:bold;">Sangat Terjangkau</td>
+                                                <td style="padding:15px; border:1px solid #e2e8f0; text-align:center;">Mahal</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>`
+                        });
 
                         // WIDGETS
                         bm.add('video-yt', { label: 'YouTube', category: 'Media', attributes:{class:'ph ph-youtube-logo'}, content: { type: 'video', provider: 'yt', style: { height: '350px', width: '100%' } } });
