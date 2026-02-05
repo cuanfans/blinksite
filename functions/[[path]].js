@@ -8,18 +8,20 @@ import { checkShipping } from '../src/modules/shipping'
 const app = new Hono()
 
 // ===============================================
-// 1. STATIC ASSETS & HTML SERVING (FIXED ORDER)
+// 1. STATIC ASSETS (PRIORITAS PERTAMA)
 // ===============================================
-
-// A. Static Assets (JS/CSS/Images)
+// Hanya ambil file JS, CSS, dan Gambar dari folder public
 app.get('/js/*', (c) => c.env.ASSETS.fetch(c.req.raw));
 app.get('/css/*', (c) => c.env.ASSETS.fetch(c.req.raw));
 app.get('/images/*', (c) => c.env.ASSETS.fetch(c.req.raw));
 
-// B. Admin HTML Routing (Ditaruh DI ATAS agar tidak tertutup wildcard)
+// ===============================================
+// 2. HALAMAN ADMIN (URUTAN WAJIB DI SINI!)
+// ===============================================
+// Redirect /admin ke dashboard
 app.get('/admin', (c) => c.redirect('/admin/dashboard'));
 
-// Serve File HTML Admin secara eksplisit
+// Load file HTML Admin secara eksplisit].js]
 app.get('/admin/dashboard', (c) => c.env.ASSETS.fetch(new URL('/admin/dashboard.html', c.req.url)));
 app.get('/admin/pages', (c) => c.env.ASSETS.fetch(new URL('/admin/pages.html', c.req.url)));
 app.get('/admin/editor', (c) => c.env.ASSETS.fetch(new URL('/admin/editor.html', c.req.url)));
@@ -27,16 +29,14 @@ app.get('/admin/reports', (c) => c.env.ASSETS.fetch(new URL('/admin/reports.html
 app.get('/admin/analytics', (c) => c.env.ASSETS.fetch(new URL('/admin/analytics.html', c.req.url)));
 app.get('/admin/settings', (c) => c.env.ASSETS.fetch(new URL('/admin/settings.html', c.req.url)));
 
-// Catatan: Route wildcard '/admin/*' dihapus untuk mencegah error blank page.
-
 // ===============================================
-// 2. MIDDLEWARE & AUTH
+// 3. MIDDLEWARE & AUTH
 // ===============================================
 app.use('/api/admin/*', async (c, next) => {
     const inputPass = c.req.header('Authorization');
     if(!inputPass) return c.json({error: 'Unauthorized'}, 401);
 
-    // Cek Password di tabel SETTINGS (Bukan Users)
+    // Cek Password di tabel SETTINGS
     const dbSetting = await c.env.DB.prepare("SELECT value FROM settings WHERE key = 'admin_password'").first();
     const realHash = dbSetting ? dbSetting.value : '';
     const inputHash = await sha256(inputPass);
@@ -46,7 +46,7 @@ app.use('/api/admin/*', async (c, next) => {
 })
 
 // ===============================================
-// 3. ADMIN API ROUTES
+// 4. ADMIN API ROUTES
 // ===============================================
 
 // Login Check
@@ -85,7 +85,7 @@ app.post('/api/admin/set-homepage', async (c) => {
     return c.json({ success: true });
 });
 
-// API Dashboard Stats (Menggunakan Tabel TRANSACTIONS & ANALYTICS)
+// API Dashboard Stats
 app.get('/api/admin/analytics-data', async (c) => {
     try {
         const visitors = await c.env.DB.prepare("SELECT COUNT(*) as c FROM analytics WHERE event_type='view'").first().catch(() => ({c:0}));
@@ -115,7 +115,7 @@ app.post('/api/admin/credentials', async (c) => {
 app.post('/api/admin/upload-image', uploadImage);
 
 // ===============================================
-// 4. PUBLIC API ROUTES
+// 5. PUBLIC API ROUTES
 // ===============================================
 
 app.post('/api/shipping/check', checkShipping);
@@ -162,7 +162,7 @@ app.post('/api/checkout', async (c) => {
 });
 
 // ===============================================
-// 5. PUBLIC HTML SERVING (LANDING PAGES)
+// 6. PUBLIC HTML SERVING (LANDING PAGES)
 // ===============================================
 
 // Serve Homepage & Dynamic Landing Pages
