@@ -8,7 +8,7 @@ import { uploadImage } from '../src/modules/cloudinary'
 import { checkShipping } from '../src/modules/shipping'
 
 const app = new Hono()
-const JWT_SECRET = 'RAHASIA_NEGARA_GANTI_DENGAN_ENV_VAR'
+const JWT_SECRET = 'BantarCaringin1BantarCaringin2BantarCaringin3'
 
 // ===============================================
 // 0. GLOBAL CONFIG
