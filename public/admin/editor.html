@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LandingBuilder Pro - Blue Theme</title>
+    <title>LandingBuilder Pro - Editor</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs"></script>
-    
     <script src="https://unpkg.com/grapesjs-blocks-basic"></script>
     <script src="https://unpkg.com/grapesjs-plugin-forms"></script>
     <script src="https://unpkg.com/grapesjs-preset-webpage"></script>
@@ -18,150 +17,47 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* --- TEMA BIRU PROFESIONAL (CUSTOM CSS) --- */
-        
-        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; color: #334155; }
+        /* --- STYLE SAMA SEPERTI SEBELUMNYA (DIPERSINGKAT UNTUK FOKUS KONTEKS) --- */
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: #f8fafc; color: #334155; }
         [x-cloak] { display: none !important; }
-
-        /* Sembunyikan UI Bawaan */
         .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-panels, .gjs-pn-buttons { display: none !important; }
-        
-        /* Canvas Area - Memberikan kontras agar kertas putih terlihat */
         .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f1f5f9; }
-        
-        /* Frame Wrapper Shadow - Efek melayang elegan */
-        .gjs-frame-wrapper {
-            margin: 0 auto;
-            background: white;
-            box-shadow: 0 10px 40px -10px rgba(30, 58, 138, 0.15); /* Shadow biru tipis */
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* --- PANEL KANAN STYLE --- */
-        
-        /* Tab Navigation */
-        .panel-tabs { display: flex; background: white; border-bottom: 1px solid #e0f2fe; } /* Border biru sangat muda */
-        .panel-tabs button { 
-            flex: 1; padding: 14px; color: #64748b; position: relative; transition: all 0.2s; 
-            font-size: 18px; /* Icon lebih besar */
-        }
-        .panel-tabs button:hover { color: #2563eb; background: #f0f9ff; }
+        .gjs-frame-wrapper { margin: 0 auto; background: white; box-shadow: 0 10px 40px -10px rgba(30, 58, 138, 0.15); transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .panel-tabs { display: flex; background: white; border-bottom: 1px solid #e0f2fe; }
+        .panel-tabs button { flex: 1; padding: 14px; color: #64748b; position: relative; transition: all 0.2s; font-size: 18px; }
         .panel-tabs button.active { color: #2563eb; background: #eff6ff; }
-        .panel-tabs button.active::after { 
-            content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; 
-            background: #2563eb; border-radius: 3px 3px 0 0;
-        }
-
-        /* Block Grid */
-        .gjs-blocks-c { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; background: #f8fafc; }
-        
-        /* Category Header */
-        .gjs-block-category .gjs-title { 
-            background: transparent; border-top: 1px solid transparent; border-bottom: 1px solid transparent; 
-            padding: 12px 4px 6px 4px; font-size: 11px; font-weight: 800; color: #94a3b8; 
-            text-transform: uppercase; letter-spacing: 0.05em; cursor: default;
-        }
-
-        /* Block Item (Card Style) */
-        .gjs-block { 
-            width: 100% !important; min-height: 85px !important; padding: 15px !important; margin: 0 !important;
-            background: white; border: 1px solid #e2e8f0; border-radius: 8px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02); cursor: grab; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .gjs-block:hover { 
-            border-color: #60a5fa; /* Biru cerah saat hover */
-            background: #ffffff; 
-            transform: translateY(-3px); 
-            box-shadow: 0 8px 15px -3px rgba(59, 130, 246, 0.15); /* Shadow biru */
-            color: #2563eb;
-        }
-        .gjs-block-label { font-size: 11px; font-weight: 600; text-align: center; line-height: 1.2; color: #475569; }
-        .gjs-block:hover .gjs-block-label { color: #2563eb; }
-        .gjs-block svg, .gjs-block i { width: 24px; height: 24px; font-size: 24px; fill: currentColor; color: #64748b; }
-        .gjs-block:hover svg, .gjs-block:hover i { color: #2563eb; }
-
-        /* INPUT FIELDS (Blue Focus) */
-        .gjs-field { background: white; border: 1px solid #cbd5e1; border-radius: 6px; color: #334155; padding: 5px; transition: border 0.2s; }
-        .gjs-field:focus-within { border-color: #3b82f6; ring: 2px solid #bfdbfe; }
-        .gjs-field input, .gjs-field select { font-size: 12px; color: #334155; width: 100%; background: transparent; }
-        
-        /* Style Manager Layout */
-        .gjs-sm-sector { border-bottom: 1px solid #e2e8f0; background: white; margin-bottom: 1px; }
-        .gjs-sm-title { 
-            background: white; font-size: 12px; font-weight: 700; color: #1e293b; 
-            padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-            transition: background 0.2s;
-        }
-        .gjs-sm-title:hover { background: #f8fafc; }
-        .gjs-sm-properties { padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px; background: #fcfcfc; }
-        .gjs-sm-property { width: 100%; margin-bottom: 0; }
-        .gjs-sm-property__name { font-size: 11px; margin-bottom: 4px; color: #64748b; font-weight: 600; }
-        
-        /* Inputs Half Width */
-        .gjs-sm-property--width, .gjs-sm-property--height, 
-        .gjs-sm-property--font-size, .gjs-sm-property--font-weight,
-        .gjs-sm-property--margin-top, .gjs-sm-property--margin-bottom, 
-        .gjs-sm-property--padding-top, .gjs-sm-property--padding-bottom,
-        .gjs-sm-property--color, .gjs-sm-property--background-color { width: 48%; }
-
-        /* Layers (Tree View) */
-        .gjs-layer-item { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; background: white; font-size: 12px; transition: background 0.1s; }
-        .gjs-layer-item:hover { background: #f8fafc; }
-        .gjs-layer-item.gjs-selected { background: #eff6ff !important; color: #1d4ed8; border-left: 3px solid #2563eb; }
-        
-        /* Scrollbar Halus */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        /* Highlight Selection Canvas */
-        .gjs-cv-canvas .gjs-highlighter, .gjs-cv-canvas .gjs-selected { outline: 2px solid #3b82f6 !important; }
+        .panel-tabs button.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background: #2563eb; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     </style>
 </head>
 
 <body x-data="editorApp()">
 
-    <header class="h-14 bg-white border-b border-blue-100/50 flex justify-between items-center px-4 z-50 relative shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] shrink-0">
+    <header class="h-14 bg-white border-b border-blue-100 flex justify-between items-center px-4 z-50 relative shadow-sm shrink-0">
         <div class="flex items-center gap-4">
-            <a href="/admin/pages" class="group flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition text-slate-500 hover:text-blue-600">
-                <div class="bg-slate-100 group-hover:bg-blue-100 text-slate-500 group-hover:text-blue-600 p-1 rounded transition">
-                    <i class="ph ph-arrow-left text-lg"></i>
-                </div>
-                <span class="text-xs font-bold uppercase tracking-wider">Dashboard</span>
+            <a href="/admin/pages" class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition">
+                <i class="ph ph-arrow-left text-lg"></i> <span class="text-xs font-bold uppercase">Back</span>
             </a>
             <div class="h-6 w-px bg-slate-200"></div>
-            
-            <div class="flex items-center bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-200 px-3 py-1.5 transition group">
-                <span class="text-slate-400 group-hover:text-blue-400 text-xs mr-2 font-mono font-bold">/</span>
-                <input x-model="page.slug" class="bg-transparent text-sm font-bold text-slate-700 group-hover:text-blue-800 outline-none w-32 placeholder-slate-400" placeholder="nama-halaman">
+            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
+                <span class="text-slate-400 text-xs mr-2 font-mono font-bold">/</span>
+                <input x-model="page.slug" class="bg-transparent text-sm font-bold text-slate-700 outline-none w-32" placeholder="slug-halaman">
             </div>
         </div>
 
         <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-white rounded-xl border border-slate-200 p-1 shadow-sm">
-            <div class="flex gap-1">
-                <button @click="setDevice('desktop')" :class="device=='desktop' ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'" class="p-2 rounded-lg transition" title="Desktop"><i class="ph ph-desktop text-xl"></i></button>
-                <button @click="setDevice('tablet')" :class="device=='tablet' ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'" class="p-2 rounded-lg transition" title="Tablet"><i class="ph ph-device-tablet text-xl"></i></button>
-                <button @click="setDevice('mobile')" :class="device=='mobile' ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'" class="p-2 rounded-lg transition" title="Mobile"><i class="ph ph-device-mobile text-xl"></i></button>
-            </div>
-            
+            <button @click="setDevice('desktop')" :class="device=='desktop' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'" class="p-2 rounded-lg transition"><i class="ph ph-desktop text-xl"></i></button>
+            <button @click="setDevice('tablet')" :class="device=='tablet' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'" class="p-2 rounded-lg transition"><i class="ph ph-device-tablet text-xl"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'" class="p-2 rounded-lg transition"><i class="ph ph-device-mobile text-xl"></i></button>
             <div class="w-px h-5 bg-slate-200 mx-3"></div>
-            
-            <div class="flex gap-1">
-                <button @click="cmd('core:undo')" class="text-slate-400 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition"><i class="ph ph-arrow-u-up-left text-xl"></i></button>
-                <button @click="cmd('core:redo')" class="text-slate-400 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition"><i class="ph ph-arrow-u-up-right text-xl"></i></button>
-                <button @click="cmd('core:preview')" class="text-slate-400 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition" title="Preview"><i class="ph ph-eye text-xl"></i></button>
-            </div>
+            <button @click="cmd('core:undo')" class="text-slate-400 hover:text-blue-600 p-2"><i class="ph ph-arrow-u-up-left text-xl"></i></button>
+            <button @click="cmd('core:redo')" class="text-slate-400 hover:text-blue-600 p-2"><i class="ph ph-arrow-u-up-right text-xl"></i></button>
+            <button @click="cmd('core:preview')" class="text-slate-400 hover:text-blue-600 p-2"><i class="ph ph-eye text-xl"></i></button>
         </div>
 
         <div class="flex items-center gap-2">
-            <div x-data="{saved: false}" @page-saved.window="saved=true; setTimeout(()=>saved=false, 2000)">
-                <span x-show="saved" x-transition class="text-xs text-green-600 font-bold mr-2 flex items-center gap-1"><i class="ph ph-check-circle-fill"></i> Tersimpan</span>
-            </div>
-            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-200 hover:shadow-blue-300">
+            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 shadow-lg shadow-blue-200">
                 <i x-show="loading" class="ph ph-spinner animate-spin"></i>
-                <i x-show="!loading" class="ph ph-floppy-disk"></i>
                 <span x-text="loading ? 'Menyimpan...' : 'Simpan Halaman'"></span>
             </button>
         </div>
@@ -169,103 +65,111 @@
 
     <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
         
-        <div class="flex-1 relative bg-slate-100/80 flex flex-col items-center justify-center p-8 overflow-hidden transition-all duration-300">
-            <div id="gjs" class="flex-1 w-full h-full shadow-xl rounded-lg overflow-hidden border border-slate-200"></div>
+        <div class="flex-1 relative bg-slate-100 flex flex-col items-center justify-center p-8 overflow-hidden">
+            <div id="gjs" class="flex-1 w-full h-full shadow-xl rounded-lg overflow-hidden border border-slate-200 bg-white"></div>
         </div>
 
-        <div class="w-[320px] bg-white border-l border-blue-100 flex flex-col z-20 shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.03)]">
+        <div class="w-[340px] bg-white border-l border-blue-100 flex flex-col z-20 shrink-0 shadow-lg">
             
             <div class="panel-tabs">
-                <button @click="tab='blocks'" :class="tab=='blocks' ? 'active' : ''" title="Tambah Elemen">
-                    <i class="ph ph-plus-square text-2xl"></i>
-                </button>
-                <button @click="tab='styles'" :class="tab=='styles' ? 'active' : ''" title="Edit Style">
-                    <i class="ph ph-paint-brush text-2xl"></i>
-                </button>
-                <button @click="tab='layers'" :class="tab=='layers' ? 'active' : ''" title="Struktur Layer">
-                    <i class="ph ph-list-dashes text-2xl"></i>
-                </button>
-                <button @click="tab='settings'" :class="tab=='settings' ? 'active' : ''" title="Pengaturan Halaman">
-                    <i class="ph ph-gear text-2xl"></i>
-                </button>
+                <button @click="tab='blocks'" :class="tab=='blocks' ? 'active' : ''" title="Add"><i class="ph ph-plus-square text-2xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles' ? 'active' : ''" title="Style"><i class="ph ph-paint-brush text-2xl"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers' ? 'active' : ''" title="Layers"><i class="ph ph-list-dashes text-2xl"></i></button>
+                <button @click="tab='settings'" :class="tab=='settings' ? 'active' : ''" title="Page Config"><i class="ph ph-gear text-2xl"></i></button>
             </div>
 
             <div class="flex-1 overflow-y-auto bg-white relative custom-scroll">
-                
                 <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-20"></div>
-
+                
                 <div x-show="tab=='styles'">
-                    <div class="p-3 bg-blue-50/50 border-b border-blue-100 text-xs text-blue-600 font-bold flex items-center justify-between">
-                        <span>SELECTED ELEMENT</span>
-                        <div id="selectors-container"></div>
-                    </div>
+                    <div id="selectors-container" class="p-3 border-b border-gray-100"></div>
                     <div id="styles-container" class="pb-20"></div>
                 </div>
 
                 <div x-show="tab=='layers'" id="layers-container" class="absolute inset-0 pb-20"></div>
 
-                <div x-show="tab=='settings'" class="p-5 space-y-6">
+                <div x-show="tab=='settings'" class="p-5 space-y-6 pb-20">
                     
-                    <div>
-                        <h3 class="text-xs font-bold uppercase text-slate-400 mb-3 border-b border-slate-100 pb-2">Produk & Harga</h3>
-                        
-                        <div class="space-y-4">
-                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                                <label class="text-xs font-bold text-slate-700 block mb-3 flex justify-between">
-                                    <span>VARIAN PAKET</span>
-                                    <button @click="addVariant" class="text-blue-600 hover:text-blue-800">+ Tambah</button>
-                                </label>
-                                <div class="space-y-2">
-                                    <template x-for="(v, i) in page.config.variants">
-                                        <div class="flex gap-2 mb-1 group">
-                                            <input x-model="v.name" class="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:border-blue-500 outline-none transition" placeholder="Nama Paket">
-                                            <input x-model="v.price" type="number" class="w-24 border border-slate-200 rounded px-2 py-1.5 text-xs focus:border-blue-500 outline-none transition" placeholder="Rp">
-                                            <button @click="page.config.variants.splice(i,1)" class="text-slate-300 hover:text-red-500 px-1"><i class="ph ph-trash-simple text-lg"></i></button>
-                                        </div>
-                                    </template>
-                                    <div x-show="page.config.variants.length === 0" class="text-center py-4 bg-slate-50 rounded-lg text-slate-400 text-xs italic">
-                                        Belum ada varian produk.
-                                    </div>
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <div class="bg-slate-50 p-3 border-b border-slate-200"><h3 class="text-xs font-bold text-slate-600 uppercase">Produk & Harga</h3></div>
+                        <div class="p-4 space-y-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Tipe Produk</label>
+                                <div class="flex bg-slate-100 p-1 rounded-lg">
+                                    <button @click="page.product_type = 'physical'" :class="page.product_type=='physical' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'" class="flex-1 py-1.5 rounded-md text-xs font-bold transition">Fisik (Kirim)</button>
+                                    <button @click="page.product_type = 'digital'" :class="page.product_type=='digital' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500'" class="flex-1 py-1.5 rounded-md text-xs font-bold transition">Digital</button>
                                 </div>
                             </div>
-
-                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                                <label class="flex items-center gap-3 cursor-pointer">
-                                    <div class="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
-                                        <input type="checkbox" x-model="page.config.order_bump.active" class="peer absolute opacity-0 w-0 h-0">
-                                        <span class="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-slate-200 rounded-full duration-200 peer-checked:bg-blue-500"></span>
-                                        <span class="absolute content-[''] left-1 bottom-1 bg-white w-3 h-3 rounded-full duration-200 peer-checked:translate-x-5"></span>
+                            <div x-show="page.product_type === 'physical'">
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Berat (Gram)</label>
+                                <input x-model="page.config.shipping.weight" type="number" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="1000">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1 flex justify-between"><span>Varian</span> <span @click="addVariant" class="text-blue-500 cursor-pointer">+ Add</span></label>
+                                <template x-for="(v, i) in page.config.variants">
+                                    <div class="flex gap-1 mb-1">
+                                        <input x-model="v.name" class="w-full border rounded p-1 text-xs" placeholder="Nama">
+                                        <input x-model="v.price" type="number" class="w-20 border rounded p-1 text-xs" placeholder="Rp">
+                                        <button @click="page.config.variants.splice(i,1)" class="text-red-400 px-1"><i class="ph ph-trash"></i></button>
                                     </div>
-                                    <span class="text-xs font-bold text-slate-700">Aktifkan Order Bump</span>
-                                </label>
-                                
-                                <div x-show="page.config.order_bump.active" class="mt-4 space-y-3 pt-3 border-t border-slate-100">
-                                    <div>
-                                        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Nama Produk Tambahan</label>
-                                        <input x-model="page.config.order_bump.product_name" class="w-full border border-slate-200 rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" placeholder="Contoh: Garansi Tambahan">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Harga (Rp)</label>
-                                        <input x-model="page.config.order_bump.price" type="number" class="w-full border border-slate-200 rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" placeholder="15000">
-                                    </div>
-                                </div>
+                                </template>
                             </div>
                         </div>
                     </div>
 
-                    <div>
-                        <h3 class="text-xs font-bold uppercase text-slate-400 mb-3 border-b border-slate-100 pb-2">Koneksi API</h3>
-                        <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <select x-model="cred.provider" class="w-full border border-slate-300 rounded text-xs p-2 bg-white outline-none focus:ring-2 focus:ring-blue-100">
-                                <option value="midtrans">Midtrans (Payment)</option>
-                                <option value="cloudinary">Cloudinary (Media)</option>
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <div class="bg-slate-50 p-3 border-b border-slate-200"><h3 class="text-xs font-bold text-slate-600 uppercase">SEO & Metadata</h3></div>
+                        <div class="p-4 space-y-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Judul Halaman (Browser Title)</label>
+                                <input x-model="page.config.settings.seo_title" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="Jual Sepatu Murah...">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Deskripsi (Meta Desc)</label>
+                                <textarea x-model="page.config.settings.seo_description" rows="2" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="Dapatkan promo terbatas..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Favicon URL</label>
+                                <input x-model="page.config.settings.favicon" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="https://...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <div class="bg-slate-50 p-3 border-b border-slate-200"><h3 class="text-xs font-bold text-slate-600 uppercase">Pixel & Scripts</h3></div>
+                        <div class="p-4 space-y-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-blue-600 mb-1">Facebook Pixel ID</label>
+                                <input x-model="page.config.settings.fb_pixel_id" class="w-full border border-blue-200 bg-blue-50 rounded p-2 text-xs" placeholder="1234567890">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-800 mb-1">TikTok Pixel ID</label>
+                                <input x-model="page.config.settings.tiktok_pixel_id" class="w-full border border-slate-300 rounded p-2 text-xs" placeholder="CXXXXXXXXX">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Custom Head HTML</label>
+                                <textarea x-model="page.config.settings.custom_head" rows="3" class="w-full border border-slate-300 rounded p-2 text-xs font-mono text-slate-600" placeholder="<script>..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Custom Footer HTML</label>
+                                <textarea x-model="page.config.settings.custom_footer" rows="3" class="w-full border border-slate-300 rounded p-2 text-xs font-mono text-slate-600" placeholder="<script>..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <div class="bg-slate-50 p-3 border-b border-slate-200"><h3 class="text-xs font-bold text-slate-600 uppercase">Koneksi API</h3></div>
+                        <div class="p-4 space-y-3">
+                            <select x-model="cred.provider" class="w-full border border-slate-300 rounded text-xs p-2 bg-white">
+                                <option value="midtrans">Midtrans</option>
+                                <option value="cloudinary">Cloudinary</option>
                             </select>
-                            <textarea x-model="cred.data" class="w-full border border-slate-300 rounded text-xs p-3 font-mono h-24 outline-none focus:ring-2 focus:ring-blue-100 text-slate-600" placeholder='{"server_key":"..."}'></textarea>
-                            <button @click="saveCreds" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2 rounded text-xs font-bold transition shadow-md">Simpan Konfigurasi</button>
+                            <textarea x-model="cred.data" class="w-full border border-slate-300 rounded text-xs p-2 font-mono h-16" placeholder='{"server_key":"..."}'></textarea>
+                            <button @click="saveCreds" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2 rounded text-xs font-bold">Simpan Key</button>
                         </div>
                     </div>
-                </div>
 
+                </div>
             </div>
         </div>
     </div>
@@ -276,7 +180,28 @@
                 loading: false,
                 device: 'desktop', 
                 tab: 'blocks',
-                page: { slug: '', title: '', config: { variants:[], coupons:[], order_bump:{active:false} } },
+                
+                // STATE DATA LENGKAP
+                page: { 
+                    slug: '', 
+                    title: '', 
+                    product_type: 'physical',
+                    config: { 
+                        variants:[], 
+                        coupons:[], 
+                        order_bump:{active:false},
+                        shipping: { weight: 1000 },
+                        settings: { // METADATA BARU
+                            seo_title: '',
+                            seo_description: '',
+                            favicon: '',
+                            fb_pixel_id: '',
+                            tiktok_pixel_id: '',
+                            custom_head: '',
+                            custom_footer: ''
+                        }
+                    } 
+                },
                 cred: { provider: 'midtrans', data: '' },
                 authPass: localStorage.getItem('admin_pass'),
 
@@ -289,24 +214,17 @@
                     this.initGrapes();
                 },
 
-                // --- DEVICE MANAGER LOGIC (FIXED) ---
-                setDevice(deviceId) {
-                    this.device = deviceId;
-                    if(window.editor) {
-                        window.editor.setDevice(deviceId);
-                    }
+                setDevice(d) {
+                    this.device = d;
+                    if(window.editor) window.editor.setDevice(d);
                 },
-
                 cmd(c) { window.editor.runCommand(c); },
-
-                // --- DATA LOGIC ---
                 addVariant() { this.page.config.variants.push({ id:Date.now(), name:'', price:0, desc:'' }) },
                 
                 async saveCreds() {
                     try {
                         await fetch('/api/admin/credentials', {
-                            method: 'POST', 
-                            headers: { 'Authorization': this.authPass },
+                            method: 'POST', headers: { 'Authorization': this.authPass },
                             body: JSON.stringify({ provider: this.cred.provider, data: JSON.parse(this.cred.data) })
                         });
                         alert('API Key Tersimpan!');
@@ -315,6 +233,10 @@
 
                 async savePage() {
                     if(!this.page.slug) return alert('Slug wajib diisi!');
+                    
+                    // Pastikan settings object ada (untuk data lama)
+                    if(!this.page.config.settings) this.page.config.settings = {};
+
                     this.loading = true;
                     try {
                         await fetch('/api/admin/pages', {
@@ -323,17 +245,17 @@
                             body: JSON.stringify({
                                 slug: this.page.slug,
                                 title: this.page.title,
+                                product_type: this.page.product_type,
                                 html: editor.getHtml(),
                                 css: editor.getCss(),
                                 product_config: this.page.config
                             })
                         });
-                        window.dispatchEvent(new CustomEvent('page-saved')); // Trigger notif
+                        alert('Berhasil Disimpan!');
                     } catch(e) { alert('Gagal menyimpan.'); }
                     this.loading = false;
                 },
 
-                // --- GRAPESJS INITIALIZATION ---
                 initGrapes() {
                     setTimeout(() => {
                         window.editor = grapesjs.init({
@@ -341,115 +263,61 @@
                             height: '100%',
                             fromElement: false,
                             storageManager: false,
-                            
-                            // PLUGINS (LOAD SEMUA STANDAR + FORM)
                             plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'gjs-preset-webpage'],
                             pluginsOpts: {
-                                'gjs-blocks-basic': { 
-                                    flexGrid: true, // Grid Responsif
-                                },
+                                'gjs-blocks-basic': { flexGrid: true },
                                 'grapesjs-plugin-forms': {},
-                                'gjs-preset-webpage': {
-                                    modalImportTitle: 'Import Code',
-                                    modalImportLabel: '',
-                                    modalImportContent: '',
-                                    blocks: [], // Disable bawaan preset agar tidak duplikat dengan basic
-                                    formsOpts: false,
-                                    navbarOpts: false,
-                                    countdownOpts: false
-                                }
+                                'gjs-preset-webpage': { blocks: [], formsOpts: false, navbarOpts: false, countdownOpts: false }
                             },
-                            
-                            // DEVICE MANAGER (Responsive Preview)
                             deviceManager: {
                                 devices: [
-                                    {
-                                        id: 'desktop',
-                                        name: 'Desktop',
-                                        width: '', // Full width
-                                    },
-                                    {
-                                        id: 'tablet',
-                                        name: 'Tablet',
-                                        width: '768px',
-                                        widthMedia: '992px',
-                                    },
-                                    {
-                                        id: 'mobile',
-                                        name: 'Mobile',
-                                        width: '375px',
-                                        widthMedia: '480px',
-                                    },
+                                    { id: 'desktop', name: 'Desktop', width: '' },
+                                    { id: 'tablet', name: 'Tablet', width: '768px', widthMedia: '992px' },
+                                    { id: 'mobile', name: 'Mobile', width: '375px', widthMedia: '480px' },
                                 ],
                             },
-
-                            // MAPPING PANEL KANAN (Custom UI)
                             blockManager: { appendTo: '#blocks-container' },
                             layerManager: { appendTo: '#layers-container' },
                             selectorManager: { appendTo: '#selectors-container' },
-                            styleManager: { 
-                                appendTo: '#styles-container',
-                                sectors: [
-                                    { 
-                                        name: 'Tipografi', open: true, 
-                                        buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align', 'letter-spacing'] 
-                                    },
-                                    { 
-                                        name: 'Dimensi & Spacing', open: false, 
-                                        buildProps: ['width', 'height', 'max-width', 'min-height', 'padding', 'margin'] 
-                                    },
-                                    { 
-                                        name: 'Layout (Flexbox)', open: false, 
-                                        buildProps: ['display', 'flex-direction', 'justify-content', 'align-items', 'gap'] 
-                                    },
-                                    { 
-                                        name: 'Dekorasi', open: false, 
-                                        buildProps: ['background-color', 'background-image', 'border', 'border-radius', 'box-shadow', 'opacity'] 
-                                    }
-                                ]
-                            },
-                            
-                            // CONFIG UPLOAD IMAGE
-                            assetManager: {
-                                upload: '/api/admin/upload-image',
-                                uploadName: 'file',
-                                headers: { 'Authorization': this.authPass },
-                                autoAdd: true
-                            }
+                            styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'color', 'line-height', 'text-align'] }, { name: 'Layout', open: false, buildProps: ['display', 'flex-direction', 'justify-content', 'align-items', 'width', 'height', 'padding', 'margin'] }, { name: 'Background', open: false, buildProps: ['background-color', 'background-image'] }, { name: 'Border & Effects', open: false, buildProps: ['border', 'border-radius', 'box-shadow'] }] },
+                            assetManager: { upload: '/api/admin/upload-image', uploadName: 'file', headers: { 'Authorization': this.authPass }, autoAdd: true }
                         });
 
-                        // CUSTOM BLOCKS (Untuk Fitur Spesifik)
+                        // CUSTOM BLOCKS
                         const bm = editor.BlockManager;
-                        
+                        bm.add('section', {
+                            label: 'Section', category: 'Layout', attributes: { class: 'fa fa-square' },
+                            content: `<section style="padding: 50px 20px; display:flex; flex-direction:column; align-items:center;"><h2 style="margin-bottom:10px;">Judul Section</h2><p>Deskripsi singkat.</p></section>`
+                        });
                         bm.add('checkout-pro', {
-                            label: 'Form Checkout',
-                            category: 'E-Commerce',
-                            attributes: { class: 'fa fa-shopping-cart' },
-                            content: `<div style="padding: 30px; border: 2px dashed #3b82f6; background: #eff6ff; text-align: center; border-radius: 8px;">
-                                <strong style="color: #1e40af; font-size: 18px; font-family: sans-serif;">[ FORM CHECKOUT OTOMATIS ]</strong>
-                                <p style="font-size: 12px; color: #64748b; margin-top: 5px; font-family: sans-serif;">(Akan tampil saat halaman live)</p>
-                            </div>`
+                            label: 'Checkout Form', category: 'E-Commerce', attributes: { class: 'fa fa-shopping-cart' },
+                            content: { type: 'checkout-widget', style: { padding: '20px', border: '2px dashed #3b82f6', 'background-color': '#eff6ff', 'text-align': 'center', 'border-radius': '8px' }, components: [{ tagName: 'strong', content: '[ CHECKOUT FORM ]', style: { color: '#1e40af', 'font-size': '18px' } }, { tagName: 'p', content: 'Form otomatis muncul saat live.', style: { 'font-size': '12px', color: '#64748b' } }] }
                         });
 
-                        // LOAD DATA FROM DB
+                        // LOAD DATA
                         if(this.page.slug) {
                             fetch('/api/admin/pages/'+this.page.slug).then(r=>r.json()).then(d=>{
                                 if(d.id) { 
                                     this.page.title=d.title; 
-                                    this.page.config=d.product_config_json||this.page.config; 
+                                    this.page.product_type = d.product_type || 'physical';
+                                    
+                                    // DEEP MERGE CONFIG
+                                    this.page.config = {
+                                        ...this.page.config,
+                                        ...JSON.parse(d.product_config_json || '{}')
+                                    };
+                                    
+                                    // Ensure Settings Object Exists
+                                    if(!this.page.config.settings) this.page.config.settings = { seo_title: d.title };
+                                    if(!this.page.config.shipping) this.page.config.shipping = { weight: 1000 };
+
                                     if(d.html_content) editor.setComponents(d.html_content); 
                                     if(d.css_content) editor.setStyle(d.css_content); 
                                 }
                             });
                         }
 
-                        // SET DEFAULT CANVAS STYLE (Agar kertas putih)
-                        editor.on('load', () => {
-                            const body = editor.Canvas.getBody();
-                            body.style.backgroundColor = '#ffffff'; 
-                            body.style.minHeight = '100vh';
-                        });
-
+                        editor.on('load', () => { editor.Canvas.getBody().style.backgroundColor = '#ffffff'; });
                     }, 100);
                 }
             }
