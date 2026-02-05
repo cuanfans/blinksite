@@ -432,30 +432,14 @@
                             blockManager: { appendTo: '#blocks-container' },
                             layerManager: { appendTo: '#layers-container' },
                             selectorManager: { appendTo: '#selectors-container' },
-                            traitManager: { appendTo: '#traits-container' },
+                            traitManager: { appendTo: '#traits-container' }, // PENTING UNTUK INPUT VIDEO ID
                             styleManager: { 
                                 appendTo: '#styles-container', 
                                 sectors: [
-                                    { 
-                                        name: 'Typography', 
-                                        open: true, 
-                                        buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'] 
-                                    }, 
-                                    { 
-                                        name: 'Dimensions', 
-                                        open: false, 
-                                        buildProps: ['width', 'height', 'max-width', 'padding', 'margin'] 
-                                    }, 
-                                    { 
-                                        name: 'Layout', 
-                                        open: false, 
-                                        buildProps: ['display', 'flex-direction', 'justify-content', 'align-items', 'gap'] 
-                                    }, 
-                                    { 
-                                        name: 'Decorations', 
-                                        open: false, 
-                                        buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'] 
-                                    }
+                                    { name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'] }, 
+                                    { name: 'Dimensions', open: false, buildProps: ['width', 'height', 'max-width', 'padding', 'margin'] }, 
+                                    { name: 'Layout', open: false, buildProps: ['display', 'flex-direction', 'justify-content', 'align-items', 'gap'] }, 
+                                    { name: 'Decorations', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'] }
                                 ] 
                             },
                             assetManager: { 
@@ -470,11 +454,8 @@
                                         reader.onload = async () => {
                                             try {
                                                 const res = await fetch('/api/admin/upload-image', {
-                                                    method: 'POST',
-                                                    headers: { 
-                                                        'Content-Type': 'application/json', 
-                                                        'Authorization': localStorage.getItem('admin_pass') 
-                                                    },
+                                                    method:'POST',
+                                                    headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('admin_pass') },
                                                     body: JSON.stringify({ image: reader.result, filename: file.name })
                                                 });
                                                 const json = await res.json();
@@ -488,26 +469,29 @@
 
                         const bm = editor.BlockManager;
 
-                        // LAYOUTS
+                        // LAYOUT
                         bm.add('container-box', { label: 'Boxed Container', category: 'Layout', content: `<div style="max-width:1200px; width:100%; margin:0 auto; padding:20px; box-sizing:border-box; min-height:50px;"></div>` });
                         bm.add('section-std', { label: 'Standard Section', category: 'Layout', content: `<section style="padding:60px 0; width:100%; box-sizing:border-box;"><div style="max-width:1100px; margin:0 auto; padding:0 20px; box-sizing:border-box;"></div></section>` });
 
                         // HEADERS
                         bm.add('header-s', { label: 'Logo Center', category: 'Headers', content: `<header style="padding:15px 20px; border-bottom:1px solid #eee; display:flex; justify-content:center; align-items:center; width:100%; box-sizing:border-box;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /></header>` });
                         bm.add('header-l', { label: 'Logo Left', category: 'Headers', content: `<header style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; flex-wrap:wrap; width:100%; box-sizing:border-box;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:35px; object-fit:contain;" /><nav style="display:flex; gap:15px;"><a href="#" style="color:#333; text-decoration:none; font-size:14px;">Home</a><a href="#" style="color:#333; text-decoration:none; font-size:14px;">Contact</a></nav></header>` });
-                        bm.add('header-r', { label: 'Logo Right', category: 'Headers', content: `<header style="padding:15px 20px; display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; flex-wrap:wrap; width:100%; box-sizing:border-box;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:35px; object-fit:contain;" /><nav style="display:flex; gap:15px;"><a href="#" style="color:#333; text-decoration:none; font-size:14px;">Home</a></nav></header>` });
-                        bm.add('header-c', { label: 'Logo Above', category: 'Headers', content: `<header style="padding:20px; text-align:center; border-bottom:1px solid #eee; width:100%; box-sizing:border-box;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:45px; margin-bottom:10px; object-fit:contain;" /><nav style="display:flex; justify-content:center; gap:15px;"><a href="#" style="color:#333; text-decoration:none; font-size:14px;">Home</a><a href="#" style="color:#333; text-decoration:none; font-size:14px;">About</a></nav></header>` });
 
                         // TEMPLATES
                         bm.add('hero-tpl', { label: 'Hero Utama', category: 'Templates', content: `<section style="padding:60px 20px; text-align:center; background:#f8fafc; width:100%; box-sizing:border-box;"><h1 style="font-size:2.5rem; margin-bottom:20px; color:#1e293b; font-weight:800; line-height:1.2;">Headline Anda</h1><p style="font-size:1.1rem; color:#64748b; margin-bottom:30px; max-width:700px; margin-left:auto; margin-right:auto;">Penjelasan produk Anda.</p><a href="#" style="display:inline-block; padding:15px 35px; background:#2563eb; color:white; border-radius:8px; text-decoration:none; font-weight:bold;">Beli Sekarang</a></section>` });
-                        bm.add('features-tpl', { label: 'Features Grid', category: 'Templates', content: `<section style="padding:60px 20px; width:100%; box-sizing:border-box;"><div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:30px; width:100%;">
-                                <div style="text-align:center; padding:30px; border:1px solid #eee; border-radius:12px; background:#fff;"><img src="https://via.placeholder.com/80x80?text=Icon" style="height:60px; margin:0 auto 20px;" /><h3>Fitur 1</h3><p style="color:#64748b;">Kelebihan poin pertama.</p></div>
-                                <div style="text-align:center; padding:30px; border:1px solid #eee; border-radius:12px; background:#fff;"><img src="https://via.placeholder.com/80x80?text=Icon" style="height:60px; margin:0 auto 20px;" /><h3>Fitur 2</h3><p style="color:#64748b;">Kelebihan poin kedua.</p></div>
-                                <div style="text-align:center; padding:30px; border:1px solid #eee; border-radius:12px; background:#fff;"><img src="https://via.placeholder.com/80x80?text=Icon" style="height:60px; margin:0 auto 20px;" /><h3>Fitur 3</h3><p style="color:#64748b;">Kelebihan poin ketiga.</p></div>
-                            </div></section>` });
 
-                        // WIDGETS
-                        bm.add('video', { label: 'Video YouTube', category: 'Media', content: { type: 'video', src: 'https://www.youtube.com/embed/dQw4w9WgXcQ', style: { width: '100%', height: '350px', 'max-width': '800px', margin: '0 auto' } } });
+                        // --- WIDGETS (FIX VIDEO TRAITS) ---
+                        bm.add('video', { 
+                            label: 'YouTube Video', 
+                            category: 'Media', 
+                            attributes: { class: 'ph ph-youtube-logo' },
+                            content: { 
+                                type: 'video', 
+                                provider: 'yt', // Supaya panel "Video ID" muncul di sidebar
+                                style: { width: '100%', height: '350px', 'max-width': '800px', margin: '0 auto' } 
+                            } 
+                        });
+                        
                         bm.add('checkout-pro', { label: 'Checkout Widget', category: 'E-Commerce', content: `<div data-gjs-type="checkout-widget" style="padding:20px; border:2px dashed #3b82f6; background:#eff6ff; text-align:center; border-radius:8px;"><strong style="color:#1e40af;">[ FORM CHECKOUT & ORDER BUMP ]</strong></div>` });
                         bm.add('custom-code-blk', { label: 'Embed Code', category: 'Extra', content: { type: 'custom-code', content: '' } });
 
@@ -549,5 +533,7 @@
             }
         }
     </script>
+</body>
+</html>
 </body>
 </html>
