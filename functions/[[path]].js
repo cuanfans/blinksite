@@ -8,12 +8,26 @@ import { checkShipping } from '../src/modules/shipping'
 const app = new Hono()
 
 // ===============================================
-// 1. STATIC ASSETS ROUTING (AGAR LAYOUT TIDAK 404)
+// 1. STATIC ASSETS & HTML SERVING (FIXED ORDER)
 // ===============================================
+
+// A. Static Assets (JS/CSS/Images)
 app.get('/js/*', (c) => c.env.ASSETS.fetch(c.req.raw));
 app.get('/css/*', (c) => c.env.ASSETS.fetch(c.req.raw));
 app.get('/images/*', (c) => c.env.ASSETS.fetch(c.req.raw));
-app.get('/admin/*', (c) => c.env.ASSETS.fetch(c.req.raw)); // Handle subfolder admin assets
+
+// B. Admin HTML Routing (Ditaruh DI ATAS agar tidak tertutup wildcard)
+app.get('/admin', (c) => c.redirect('/admin/dashboard'));
+
+// Serve File HTML Admin secara eksplisit
+app.get('/admin/dashboard', (c) => c.env.ASSETS.fetch(new URL('/admin/dashboard.html', c.req.url)));
+app.get('/admin/pages', (c) => c.env.ASSETS.fetch(new URL('/admin/pages.html', c.req.url)));
+app.get('/admin/editor', (c) => c.env.ASSETS.fetch(new URL('/admin/editor.html', c.req.url)));
+app.get('/admin/reports', (c) => c.env.ASSETS.fetch(new URL('/admin/reports.html', c.req.url)));
+app.get('/admin/analytics', (c) => c.env.ASSETS.fetch(new URL('/admin/analytics.html', c.req.url)));
+app.get('/admin/settings', (c) => c.env.ASSETS.fetch(new URL('/admin/settings.html', c.req.url)));
+
+// Catatan: Route wildcard '/admin/*' dihapus untuk mencegah error blank page.
 
 // ===============================================
 // 2. MIDDLEWARE & AUTH
@@ -148,19 +162,8 @@ app.post('/api/checkout', async (c) => {
 });
 
 // ===============================================
-// 5. HTML SERVING
+// 5. PUBLIC HTML SERVING (LANDING PAGES)
 // ===============================================
-
-// Redirect Admin Root
-app.get('/admin', (c) => c.redirect('/admin/dashboard'));
-
-// Serve Halaman Admin (Dashboard, Pages, Reports, dll)
-app.get('/admin/dashboard', (c) => c.env.ASSETS.fetch(new URL('/admin/dashboard.html', c.req.url)));
-app.get('/admin/pages', (c) => c.env.ASSETS.fetch(new URL('/admin/pages.html', c.req.url)));
-app.get('/admin/editor', (c) => c.env.ASSETS.fetch(new URL('/admin/editor.html', c.req.url))); 
-app.get('/admin/reports', (c) => c.env.ASSETS.fetch(new URL('/admin/reports.html', c.req.url)));
-app.get('/admin/analytics', (c) => c.env.ASSETS.fetch(new URL('/admin/analytics.html', c.req.url)));
-app.get('/admin/settings', (c) => c.env.ASSETS.fetch(new URL('/admin/settings.html', c.req.url)));
 
 // Serve Homepage & Dynamic Landing Pages
 app.get('/', async (c) => {
