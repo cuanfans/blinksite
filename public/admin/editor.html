@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor Ultimate - LandingBuilder</title>
+    <title>Editor Pro - LandingBuilder</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -22,33 +22,46 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* GLOBAL */
+        /* --- GLOBAL RESET --- */
         body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: #ffffff; color: #1e293b; }
         [x-cloak] { display: none !important; }
+        
+        /* Hapus UI Bawaan */
         .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-panels, .gjs-pn-buttons { display: none !important; }
+        
+        /* Canvas */
         .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f1f5f9; }
-        
-        /* PANEL */
+        .gjs-frame-wrapper { box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+
+        /* --- PANEL KANAN --- */
         .panel-tabs { display: flex; border-bottom: 1px solid #e2e8f0; background: #fff; }
-        .panel-tabs button { flex: 1; padding: 12px; color: #94a3b8; font-size: 20px; transition: all 0.2s; border-bottom: 2px solid transparent; }
+        .panel-tabs button { flex: 1; padding: 12px; color: #94a3b8; font-size: 20px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .panel-tabs button:hover { color: #334155; background: #f8fafc; }
         .panel-tabs button.active { color: #2563eb; border-bottom-color: #2563eb; background: #eff6ff; }
-        
+
         /* BLOCKS */
         .gjs-blocks-c { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
         .gjs-block { width: 100% !important; min-height: auto !important; padding: 15px 5px !important; margin: 0 !important; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: grab; transition: all 0.15s; }
         .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-1px); }
         .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 2px; }
         .gjs-block svg, .gjs-block i { width: 24px; height: 24px; font-size: 24px; fill: currentColor; }
+        
+        /* CATEGORY */
         .gjs-block-category .gjs-title { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 8px 12px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; cursor: pointer; }
 
-        /* STYLE INPUTS */
+        /* INPUTS */
         .gjs-field { background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; color: #334155; }
         .gjs-field input, .gjs-field select { font-size: 11px; width: 100%; background: transparent; }
-        .gjs-sm-sector, .gjs-tr-sector { border-bottom: 1px solid #e2e8f0; }
-        .gjs-sm-title, .gjs-tr-header { background: #f8fafc; font-size: 11px; font-weight: 600; color: #475569; padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; }
-        .gjs-sm-properties, .gjs-tr-traits { padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
-        .gjs-sm-property, .gjs-tr-trait { width: 100%; margin-bottom: 0; }
-        .gjs-sm-property--width, .gjs-sm-property--height, .gjs-sm-property--color, .gjs-sm-property--background-color { width: 48%; }
+        .gjs-sm-sector { border-bottom: 1px solid #e2e8f0; }
+        .gjs-sm-title { background: #f8fafc; font-size: 11px; font-weight: 600; color: #475569; padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; }
+        .gjs-sm-properties { padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .gjs-sm-property { width: 100%; margin-bottom: 0; }
+        .gjs-sm-property__name { font-size: 10px; margin-bottom: 3px; color: #64748b; }
+        .gjs-sm-property--width, .gjs-sm-property--height, .gjs-sm-property--color { width: 48%; }
+        
+        /* LAYERS */
+        .gjs-layer-item { padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-size: 11px; }
+        .gjs-layer-item.gjs-selected { background: #eff6ff; color: #2563eb; border-left: 2px solid #2563eb; }
         
         ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     </style>
@@ -90,13 +103,13 @@
             <div class="panel-tabs">
                 <button @click="tab='blocks'" :class="tab=='blocks'?'active':''" title="Templates"><i class="ph ph-squares-four"></i></button>
                 <button @click="tab='styles'" :class="tab=='styles'?'active':''" title="Style"><i class="ph ph-paint-brush"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'active':''" title="Properties"><i class="ph ph-sliders-horizontal"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'active':''" title="Settings"><i class="ph ph-sliders-horizontal"></i></button>
                 <button @click="tab='layers'" :class="tab=='layers'?'active':''" title="Layers"><i class="ph ph-list-dashes"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto bg-white relative custom-scroll">
                 <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-10"></div>
                 <div x-show="tab=='styles'"><div id="selectors-container" class="p-2 border-b"></div><div id="styles-container" class="pb-10"></div></div>
-                <div x-show="tab=='traits'"><div class="p-3 bg-blue-50 text-blue-700 text-xs font-bold border-b mb-2">PROPERTIES (VIDEO ID / LINK)</div><div id="traits-container" class="pb-10 px-2"></div></div>
+                <div x-show="tab=='traits'"><div class="p-3 bg-blue-50 text-blue-700 text-xs font-bold border-b mb-2">PROPERTIES</div><div id="traits-container" class="pb-10 px-2"></div></div>
                 <div x-show="tab=='layers'" id="layers-container" class="absolute inset-0 pb-10"></div>
             </div>
         </div>
@@ -121,18 +134,8 @@
                         <input x-model="page.config.settings.seo_title" class="w-full border rounded p-1.5 text-xs" placeholder="Page Title">
                         <textarea x-model="page.config.settings.seo_description" class="w-full border rounded p-1.5 text-xs" rows="2" placeholder="Description"></textarea>
                         <input x-model="page.config.settings.favicon" class="w-full border rounded p-1.5 text-xs font-mono" placeholder="Favicon URL">
-                        <input x-model="page.config.settings.og_title" class="w-full border rounded p-1.5 text-xs" placeholder="OG Title (Share)">
                         <input x-model="page.config.settings.og_image" class="w-full border rounded p-1.5 text-xs font-mono" placeholder="OG Image URL">
                     </div>
-                </div>
-                <div>
-                    <h3 class="text-xs font-bold text-orange-600 uppercase mb-2 border-b pb-1">Tracking & Scripts</h3>
-                    <div class="grid grid-cols-2 gap-2 mb-2">
-                        <input x-model="page.config.settings.fb_pixel_id" class="border rounded p-1.5 text-xs" placeholder="FB Pixel ID">
-                        <input x-model="page.config.settings.tiktok_pixel_id" class="border rounded p-1.5 text-xs" placeholder="TikTok Pixel ID">
-                    </div>
-                    <textarea x-model="page.config.settings.custom_head" class="w-full border rounded p-1.5 text-xs font-mono bg-gray-50" rows="3" placeholder="Head Code..."></textarea>
-                    <textarea x-model="page.config.settings.custom_footer" class="w-full border rounded p-1.5 text-xs font-mono bg-gray-50" rows="3" placeholder="Footer Code..."></textarea>
                 </div>
                 <div>
                     <h3 class="text-xs font-bold text-gray-600 uppercase mb-2 border-b pb-1">API Key</h3>
@@ -185,24 +188,24 @@
                             traitManager: { appendTo: '#traits-container' },
                             styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'] }, { name: 'Dimensions', open: false, buildProps: ['width', 'height', 'max-width', 'min-height', 'padding', 'margin'] }, { name: 'Layout', open: false, buildProps: ['display', 'flex-direction', 'justify-content', 'align-items', 'gap'] }, { name: 'Decorations', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'] }] },
                             
-                            // -----------------------------------------------------------
-                            // ASSET MANAGER (BASE64 UPLOAD - SESUAI INSTRUKSI ANDA)
-                            // -----------------------------------------------------------
+                            // ------------------------------------
+                            // ASSET MANAGER (BASE64 UPLOAD FIX)
+                            // ------------------------------------
                             assetManager: { 
-                                upload: false, // Matikan default
+                                upload: false,
                                 autoAdd: true,
                                 uploadFile: async (e) => {
                                     const files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
                                     for(let i=0; i<files.length; i++){
                                         const file = files[i];
                                         const reader = new FileReader();
-                                        reader.readAsDataURL(file); // BACA KE BASE64
+                                        reader.readAsDataURL(file);
                                         reader.onload = async () => {
                                             try {
                                                 const res = await fetch('/api/admin/upload-image', {
-                                                    method: 'POST',
+                                                    method:'POST',
                                                     headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('admin_pass') },
-                                                    body: JSON.stringify({ image: reader.result, filename: file.name }) // KIRIM JSON
+                                                    body: JSON.stringify({ image: reader.result, filename: file.name })
                                                 });
                                                 const json = await res.json();
                                                 if(json.data) window.editor.AssetManager.add(json.data);
@@ -214,23 +217,46 @@
                             }
                         });
 
-                        // -----------------------------------------------------------
-                        // CUSTOM BLOCKS (TEMPLATES & LAYOUTS)
-                        // -----------------------------------------------------------
+                        // ------------------------------------
+                        // CUSTOM BLOCKS (HEADER IMAGE LOGO)
+                        // ------------------------------------
                         const bm = editor.BlockManager;
 
-                        // 1. SMART LAYOUTS (Auto Center)
+                        // LAYOUTS
                         bm.add('container-fluid', { label: 'Container (Fluid)', category: 'Layout', attributes: {class:'ph ph-arrows-out-line-horizontal'}, content: `<div style="width:90%; max-width:1200px; margin:0 auto; padding:20px; min-height:50px;"></div>` });
                         bm.add('container-full', { label: 'Container (Full)', category: 'Layout', attributes: {class:'ph ph-arrows-out-simple'}, content: `<div style="width:100%; padding:20px; min-height:50px;"></div>` });
                         bm.add('section-std', { label: 'Section', category: 'Layout', attributes: {class:'ph ph-square'}, content: `<section style="padding:60px 0; background-color:#fff;"><div style="width:90%; max-width:1100px; margin:0 auto;"></div></section>` });
 
-                        // 2. HEADER TEMPLATES (Minimal Padding 10px)
-                        bm.add('header-simple', { label: 'Header Logo', category: 'Headers', attributes:{class:'ph ph-list'}, content: `<header style="padding:10px 20px; border-bottom:1px solid #eee; display:flex; justify-content:center;"><div style="font-size:20px; font-weight:bold;">LOGO</div></header>` });
-                        bm.add('header-left', { label: 'Header Left', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, content: `<header style="padding:10px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><div style="font-weight:bold;">LOGO</div><nav><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Home</a><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Contact</a></nav></header>` });
-                        bm.add('header-right', { label: 'Header Right', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, content: `<header style="padding:10px 20px; display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><div style="font-weight:bold;">LOGO</div><nav><a href="#" style="margin-right:15px; color:#333; text-decoration:none;">Home</a></nav></header>` });
-                        bm.add('header-center', { label: 'Header Center', category: 'Headers', attributes:{class:'ph ph-align-center-horizontal-simple'}, content: `<header style="padding:15px; text-align:center; border-bottom:1px solid #eee;"><div style="font-weight:bold; margin-bottom:5px;">LOGO</div><nav><a href="#" style="margin:0 10px; color:#333;">Home</a><a href="#" style="margin:0 10px; color:#333;">About</a></nav></header>` });
+                        // HEADER DENGAN IMAGE LOGO (PLACEHOLDER)
+                        bm.add('header-simple', { 
+                            label: 'Header Logo', category: 'Headers', attributes:{class:'ph ph-list'}, 
+                            content: `<header style="padding:15px 20px; border-bottom:1px solid #eee; display:flex; justify-content:center; align-items:center;">
+                                        <img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" alt="Logo" />
+                                      </header>` 
+                        });
+                        bm.add('header-left', { 
+                            label: 'Header Left', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, 
+                            content: `<header style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;">
+                                        <img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" alt="Logo" />
+                                        <nav><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Home</a><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Contact</a></nav>
+                                      </header>` 
+                        });
+                        bm.add('header-right', { 
+                            label: 'Header Right', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, 
+                            content: `<header style="padding:15px 20px; display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;">
+                                        <img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" alt="Logo" />
+                                        <nav><a href="#" style="margin-right:15px; color:#333; text-decoration:none;">Home</a></nav>
+                                      </header>` 
+                        });
+                        bm.add('header-center', { 
+                            label: 'Header Center', category: 'Headers', attributes:{class:'ph ph-align-center-horizontal-simple'}, 
+                            content: `<header style="padding:20px; text-align:center; border-bottom:1px solid #eee;">
+                                        <img src="https://via.placeholder.com/150x50?text=LOGO" style="height:50px; margin-bottom:10px; object-fit:contain;" alt="Logo" />
+                                        <nav style="display:block;"><a href="#" style="margin:0 10px; color:#333;">Home</a><a href="#" style="margin:0 10px; color:#333;">About</a></nav>
+                                      </header>` 
+                        });
 
-                        // 3. CONTENT TEMPLATES (Hero, Features)
+                        // CONTENT TEMPLATES
                         bm.add('hero-tpl', { 
                             label: 'Hero Section', category: 'Templates', attributes:{class:'ph ph-layout'}, 
                             content: `<section style="padding:80px 20px; text-align:center; background:#f8fafc;"><h1 style="font-size:3rem; margin-bottom:20px; color:#1e293b;">Judul Hero Menarik</h1><p style="font-size:1.2rem; color:#64748b; margin-bottom:30px; max-width:700px; margin-left:auto; margin-right:auto;">Subjudul yang menjelaskan value proposition produk Anda.</p><a href="#" style="padding:12px 30px; background:#2563eb; color:white; border-radius:5px; text-decoration:none; font-weight:bold;">Call to Action</a></section>` 
@@ -240,12 +266,11 @@
                             content: `<section style="padding:60px 20px;"><div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:30px;"><div style="text-align:center; padding:20px; border:1px solid #eee; border-radius:8px;"><h3>Fitur 1</h3><p>Deskripsi singkat.</p></div><div style="text-align:center; padding:20px; border:1px solid #eee; border-radius:8px;"><h3>Fitur 2</h3><p>Deskripsi singkat.</p></div><div style="text-align:center; padding:20px; border:1px solid #eee; border-radius:8px;"><h3>Fitur 3</h3><p>Deskripsi singkat.</p></div></div></section>`
                         });
 
-                        // 4. WIDGETS (Video, Checkout, Code)
+                        // WIDGETS
                         bm.add('video-yt', { label: 'YouTube', category: 'Media', attributes:{class:'ph ph-youtube-logo'}, content: { type: 'video', provider: 'yt', style: { height: '350px', width: '100%' } } });
                         bm.add('custom-code-blk', { label: 'Custom HTML', category: 'Extra', attributes:{class:'ph ph-code'}, content: { type: 'custom-code', content: '' } });
                         bm.add('checkout-pro', { label: 'Form Checkout', category: 'E-Commerce', attributes:{class:'ph ph-shopping-cart'}, content: `<div data-gjs-type="checkout-widget" style="padding:20px; border:2px dashed #3b82f6; background:#eff6ff; text-align:center; border-radius:8px;"><strong style="color:#1e40af;">[ FORM CHECKOUT ]</strong><p style="font-size:12px; color:#64748b;">Akan muncul saat live.</p></div>` });
 
-                        // LOAD CONTENT
                         editor.on('load', () => {
                             editor.Canvas.getBody().style.backgroundColor = '#ffffff';
                             if(this.page.slug) {
