@@ -3,20 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor - LandingBuilder</title>
+    <title>Editor Ultimate - LandingBuilder</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
+    
     <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script>
-    
+    <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-component-countdown@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
+    <script src="https://unpkg.com/grapesjs-custom-code@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-tooltip@0.1.7"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* --- RESET & UI FRAMEWORK --- */
+        /* --- GLOBAL RESET --- */
         body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: #ffffff; color: #1e293b; }
         [x-cloak] { display: none !important; }
 
@@ -46,7 +51,16 @@
         }
         .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-1px); }
         .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 2px; }
-        .gjs-block svg, .gjs-block i { width: 24px; height: 24px; font-size: 24px; fill: currentColor; }
+        
+        /* Fix Icon Size */
+        .gjs-block svg, .gjs-block i, .gjs-block .fa { width: 24px; height: 24px; font-size: 24px; fill: currentColor; }
+
+        /* CATEGORY HEADER */
+        .gjs-block-category .gjs-title { 
+            background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; 
+            padding: 8px 12px; font-size: 10px; font-weight: 700; color: #64748b; 
+            text-transform: uppercase; cursor: pointer;
+        }
 
         /* STYLE MANAGER */
         .gjs-field { background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; color: #334155; }
@@ -167,6 +181,7 @@
                                     <button @click="page.config.variants.splice(i,1)" class="text-red-400 px-1 hover:text-red-600"><i class="ph ph-trash"></i></button>
                                 </div>
                             </template>
+                            <div x-show="page.config.variants.length === 0" class="text-center text-[10px] text-gray-400 italic py-1">Belum ada varian</div>
                         </div>
                     </div>
 
@@ -174,8 +189,8 @@
                         <h3 class="text-xs font-bold uppercase text-gray-400 mb-3 border-b pb-1 tracking-wider">SEO & Metadata</h3>
                         <div class="space-y-3">
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Judul SEO (Browser Title)</label>
-                                <input x-model="page.config.settings.seo_title" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="Judul di Tab Browser">
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Judul SEO</label>
+                                <input x-model="page.config.settings.seo_title" class="w-full border border-gray-300 rounded p-1.5 text-xs">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 mb-1">Deskripsi SEO</label>
@@ -183,26 +198,25 @@
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 mb-1">Favicon URL</label>
-                                <input x-model="page.config.settings.favicon" class="w-full border border-gray-300 rounded p-1.5 text-xs font-mono" placeholder="https://...">
+                                <input x-model="page.config.settings.favicon" class="w-full border border-gray-300 rounded p-1.5 text-xs font-mono">
                             </div>
                         </div>
                     </div>
 
                     <div>
                         <h3 class="text-xs font-bold uppercase text-blue-500 mb-3 border-b pb-1 tracking-wider">Social Media (Open Graph)</h3>
-                        <div class="space-y-3 p-3 bg-blue-50/50 rounded border border-blue-100">
+                        <div class="space-y-3 bg-blue-50/50 p-3 rounded border border-blue-100">
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1">OG Title (Judul Share)</label>
-                                <input x-model="page.config.settings.og_title" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="Sama dengan SEO Title jika kosong">
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">OG Title</label>
+                                <input x-model="page.config.settings.og_title" class="w-full border border-gray-300 rounded p-1.5 text-xs">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 mb-1">OG Description</label>
-                                <textarea x-model="page.config.settings.og_description" rows="2" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="Sama dengan SEO Desc jika kosong"></textarea>
+                                <textarea x-model="page.config.settings.og_description" rows="2" class="w-full border border-gray-300 rounded p-1.5 text-xs"></textarea>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1">OG Image URL (Thumbnail)</label>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">OG Image URL</label>
                                 <input x-model="page.config.settings.og_image" class="w-full border border-gray-300 rounded p-1.5 text-xs font-mono" placeholder="https://...">
-                                <p class="text-[9px] text-gray-400 mt-1">Gambar yang muncul saat link disebar di WA/FB.</p>
                             </div>
                         </div>
                     </div>
@@ -225,7 +239,7 @@
                                 <textarea x-model="page.config.settings.custom_head" rows="3" class="w-full border border-orange-200 bg-orange-50/50 rounded p-1.5 text-xs font-mono text-gray-600" placeholder="<script>..."></textarea>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Custom Body Script (Footer)</label>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Custom Body Script</label>
                                 <textarea x-model="page.config.settings.custom_footer" rows="3" class="w-full border border-gray-300 rounded p-1.5 text-xs font-mono text-gray-600" placeholder="<script>..."></textarea>
                             </div>
                         </div>
@@ -255,22 +269,16 @@
                 device: 'desktop', 
                 tab: 'blocks',
                 
-                // DATA STATE LENGKAP
+                // DATA STATE
                 page: { 
                     slug: '', title: '', product_type: 'physical',
                     config: { 
                         variants:[], coupons:[], order_bump:{active:false}, shipping: { weight: 1000 },
-                        settings: { // METADATA & SCRIPTS
-                            seo_title: '', 
-                            seo_description: '', 
-                            favicon: '', 
-                            og_title: '',       // NEW
-                            og_description: '', // NEW
-                            og_image: '',       // NEW
-                            fb_pixel_id: '', 
-                            tiktok_pixel_id: '',
-                            custom_head: '',
-                            custom_footer: ''
+                        settings: { 
+                            seo_title: '', seo_description: '', favicon: '', 
+                            og_title: '', og_description: '', og_image: '',
+                            fb_pixel_id: '', tiktok_pixel_id: '',
+                            custom_head: '', custom_footer: ''
                         }
                     } 
                 },
@@ -306,8 +314,6 @@
                 async savePage() {
                     if(!this.page.slug) return alert('Slug wajib diisi!');
                     this.loading = true;
-                    
-                    // Pastikan objek settings tidak null sebelum save
                     if(!this.page.config.settings) this.page.config.settings = {};
 
                     try {
@@ -336,14 +342,29 @@
                             fromElement: false,
                             storageManager: false,
                             
-                            // PLUGINS (Manual Load - AMAN & STABIL)
-                            plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms'],
+                            // LOAD ALL PLUGINS
+                            plugins: [
+                                'gjs-blocks-basic', 
+                                'grapesjs-plugin-forms',
+                                'grapesjs-navbar',
+                                'grapesjs-component-countdown',
+                                'grapesjs-tabs',
+                                'grapesjs-custom-code',
+                                'grapesjs-tooltip'
+                            ],
                             pluginsOpts: {
                                 'gjs-blocks-basic': { flexGrid: true },
-                                'grapesjs-plugin-forms': {}
+                                'grapesjs-plugin-forms': {},
+                                'grapesjs-navbar': {},
+                                'grapesjs-component-countdown': {},
+                                'grapesjs-tabs': {},
+                                'grapesjs-custom-code': {
+                                    blockCustomCode: { label: 'Custom HTML', category: 'Extra', attributes: { class:'ph ph-code' } }
+                                },
+                                'grapesjs-tooltip': {}
                             },
                             
-                            // DEVICE MANAGER
+                            // CONFIG
                             deviceManager: {
                                 devices: [
                                     { id: 'desktop', name: 'Desktop', width: '' },
@@ -351,8 +372,6 @@
                                     { id: 'mobile', name: 'Mobile', width: '375px', widthMedia: '480px' },
                                 ],
                             },
-
-                            // PANEL MAPPING
                             blockManager: { appendTo: '#blocks-container' },
                             layerManager: { appendTo: '#layers-container' },
                             selectorManager: { appendTo: '#selectors-container' },
@@ -365,8 +384,6 @@
                                     { name: 'Dekorasi', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow', 'opacity'] }
                                 ] 
                             },
-                            
-                            // ASSET MANAGER
                             assetManager: { 
                                 upload: '/api/admin/upload-image', 
                                 uploadName: 'file', 
@@ -375,7 +392,7 @@
                             }
                         });
 
-                        // CUSTOM BLOCKS (Tambahan)
+                        // CUSTOM BLOCKS
                         const bm = editor.BlockManager;
                         bm.add('section-std', {
                             label: 'Section', category: 'Basic', attributes: { class: 'fa fa-square' },
@@ -390,12 +407,11 @@
                             </div>`
                         });
 
-                        // --- FIX PENTING: LOAD KONTEN SETELAH EDITOR SIAP ---
+                        // LOAD KONTEN
                         editor.on('load', () => {
                             editor.Canvas.getBody().style.backgroundColor = '#ffffff';
                             editor.Canvas.getBody().style.color = '#1e293b'; 
 
-                            // LOAD DATA DARI DB
                             if(this.page.slug) {
                                 fetch('/api/admin/pages/'+this.page.slug)
                                     .then(r => r.json())
@@ -404,7 +420,6 @@
                                             this.page.title = d.title;
                                             this.page.product_type = d.product_type || 'physical';
                                             
-                                            // PARSE CONFIG DENGAN AMAN
                                             try {
                                                 if (typeof d.product_config_json === 'string') {
                                                     this.page.config = JSON.parse(d.product_config_json);
@@ -416,11 +431,10 @@
                                                 this.page.config = { variants:[], settings:{} };
                                             }
                                             
-                                            // Init Sub-Objects (PENTING UNTUK MENGHINDARI ERROR UNDEFINED)
+                                            // Init Sub-Objects
                                             if(!this.page.config.settings) this.page.config.settings = { seo_title: d.title };
                                             if(!this.page.config.shipping) this.page.config.shipping = { weight: 1000 };
 
-                                            // Render Konten
                                             if(d.html_content) editor.setComponents(d.html_content); 
                                             if(d.css_content) editor.setStyle(d.css_content); 
                                         }
