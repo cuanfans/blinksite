@@ -186,6 +186,16 @@ app.post('/api/admin/pages', async (c) => {
         return c.json({ success: true });
     } catch(e) { return c.json({ error: e.message }, 500); }
 });
+// API Get All Pages (Untuk List di Admin)
+app.get('/api/admin/pages', async (c) => {
+    try {
+        // Ambil data penting saja (id, title, slug, type) agar ringan
+        const result = await c.env.DB.prepare("SELECT id, slug, title, product_type, created_at FROM pages ORDER BY created_at DESC").all();
+        return c.json(result.results);
+    } catch(e) {
+        return c.json({ error: e.message }, 500);
+    }
+});
 
 app.get('/api/admin/pages/:slug', async (c) => {
     const slug = c.req.param('slug');
