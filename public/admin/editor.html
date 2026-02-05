@@ -146,43 +146,47 @@
             </div>
         </div>
     </div>
-
     <script>
-        // LOGIKA UNTUK MENAMBAH BARIS OTOMATIS
-                const addTableLogic = (editor) => {
-                    editor.DomComponents.addType('comparison-table-wrapper', {
-                        model: {
-                            defaults: {
-                                traits: [
-                                    {
-                                        type: 'button',
-                                        text: '+ Tambah Baris Baru',
-                                        full: true,
-                                        command: (editor) => {
-                                            const selected = editor.getSelected();
-                                            const tbody = selected.find('tbody')[0];
-                                            if (tbody) {
-                                                tbody.append(`
-                                                    <div style="display:flex; padding:20px; border-bottom:1px solid #f1f5f9; align-items:center; text-align:center;">
-                                                        <div style="flex:1; text-align:left; font-weight:bold; color:#475569; padding-left:10px;">Fitur Baru</div>
-                                                        <div style="flex:1; color:#16a34a; font-weight:bold; display:flex; flex-direction:column; align-items:center;">
-                                                            <i class="ph ph-check-circle" style="font-size:24px;"></i>
-                                                            <span style="font-size:12px;">Kelebihan</span>
-                                                        </div>
-                                                        <div style="flex:1; color:#94a3b8; display:flex; flex-direction:column; align-items:center;">
-                                                            <i class="ph ph-x-circle" style="font-size:24px;"></i>
-                                                            <span style="font-size:12px;">Kekurangan</span>
-                                                        </div>
-                                                    </div>
-                                                `);
-                                            }
-                                        },
-                                    }
-                                ],
-                            },
+   const addTableLogic = (editor) => {
+    editor.DomComponents.addType('comparison-table-wrapper', {
+        model: {
+            defaults: {
+                // Tambahkan ini agar elemen di dalamnya tetap bisa diketik/diedit
+                editable: true,
+                droppable: true,
+                traits: [
+                    {
+                        type: 'button',
+                        text: '+ Tambah Baris Baru',
+                        full: true,
+                        command: (editor) => {
+                            const selected = editor.getSelected();
+                            // FIX: Cari class table-body-area, bukan tbody!
+                            const target = selected.find('.table-body-area')[0];
+                            if (target) {
+                                target.append(`
+                                    <div style="display:flex; padding:20px; border-bottom:1px solid #f1f5f9; align-items:center; text-align:center;">
+                                        <div style="flex:1; text-align:left; font-weight:bold; color:#475569; padding-left:10px;">Fitur Baru</div>
+                                        <div style="flex:1; color:#16a34a; font-weight:bold; display:flex; flex-direction:column; align-items:center;">
+                                            <i class="ph ph-check-circle" style="font-size:24px;"></i>
+                                            <span style="font-size:12px;">Kelebihan</span>
+                                        </div>
+                                        <div style="flex:1; color:#94a3b8; display:flex; flex-direction:column; align-items:center;">
+                                            <i class="ph ph-x-circle" style="font-size:24px;"></i>
+                                            <span style="font-size:12px;">Kekurangan</span>
+                                        </div>
+                                    </div>
+                                `);
+                            } else {
+                                alert('Pilih area tabel terlebih dahulu!');
+                            }
                         },
-                    });
-                };
+                    }
+                ],
+            },
+        },
+    });
+};
         function editorApp() {
             return {
                 loading: false, showSettings: false, device: 'desktop', tab: 'blocks',
