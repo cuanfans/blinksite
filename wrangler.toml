@@ -5,10 +5,10 @@ compatibility_date = "2024-02-05"
 # Binding Database D1
 [[d1_databases]]
 binding = "DB"
-database_name = "landing-db"
-database_id = "PASTE_ID_DATABASE_D1_DISINI"
+database_name = "blinksite"
+database_id = "abcf8538-59a8-4129-afcc-74107978e427"
 
 [vars]
 # Key ini untuk mengenkripsi API Key user (Midtrans/Cloudinary) di database.
 # Ganti dengan string acak panjang (min 32 karakter).
-APP_MASTER_KEY = "ganti-string-ini-dengan-key-acak-rahasia-32-char"
+APP_MASTER_KEY = "BantarCaringin1BantarCaringin2BantarCaringin3"
