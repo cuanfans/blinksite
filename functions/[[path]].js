@@ -8,9 +8,8 @@ import { checkShipping } from '../src/modules/shipping'
 const app = new Hono()
 
 // ===============================================
-// 1. STATIC ASSETS ROUTING (PRIORITAS TINGGI)
+// 1. STATIC ASSETS ROUTING (AGAR LAYOUT TIDAK 404)
 // ===============================================
-// Agar file JS/CSS layout tidak kena block atau 404
 app.get('/js/*', (c) => c.env.ASSETS.fetch(c.req.raw));
 app.get('/css/*', (c) => c.env.ASSETS.fetch(c.req.raw));
 app.get('/images/*', (c) => c.env.ASSETS.fetch(c.req.raw));
@@ -23,6 +22,7 @@ app.use('/api/admin/*', async (c, next) => {
     const inputPass = c.req.header('Authorization');
     if(!inputPass) return c.json({error: 'Unauthorized'}, 401);
 
+    // Cek Password di tabel SETTINGS (Bukan Users)
     const dbSetting = await c.env.DB.prepare("SELECT value FROM settings WHERE key = 'admin_password'").first();
     const realHash = dbSetting ? dbSetting.value : '';
     const inputHash = await sha256(inputPass);
@@ -32,7 +32,7 @@ app.use('/api/admin/*', async (c, next) => {
 })
 
 // ===============================================
-// 3. ADMIN API ROUTES (Protected)
+// 3. ADMIN API ROUTES
 // ===============================================
 
 // Login Check
@@ -42,27 +42,6 @@ app.post('/api/login', async (c) => {
     const inputHash = await sha256(password);
     return c.json({ success: inputHash === dbSetting.value });
 })
-
-// Ganti Password
-app.post('/api/admin/change-password', async (c) => {
-    const { new_password } = await c.req.json();
-    const newHash = await sha256(new_password);
-    await c.env.DB.prepare("UPDATE settings SET value = ? WHERE key = 'admin_password'").bind(newHash).run();
-    return c.json({ success: true });
-})
-
-// Save Credential
-app.post('/api/admin/credentials', async (c) => {
-    const { provider, data } = await c.req.json();
-    const { encrypted, iv } = await encryptJSON(data, c.env.APP_MASTER_KEY);
-    
-    await c.env.DB.prepare(
-        `INSERT INTO credentials (provider_slug, encrypted_data, iv) VALUES (?, ?, ?)
-         ON CONFLICT(provider_slug) DO UPDATE SET encrypted_data=excluded.encrypted_data, iv=excluded.iv`
-    ).bind(provider, encrypted, iv).run();
-    
-    return c.json({ success: true });
-});
 
 // Save Page
 app.post('/api/admin/pages', async (c) => {
@@ -92,13 +71,7 @@ app.post('/api/admin/set-homepage', async (c) => {
     return c.json({ success: true });
 });
 
-// Get Homepage Setting
-app.get('/api/admin/get-homepage', async (c) => {
-    const s = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
-    return c.json({ slug: s ? s.value : '' });
-});
-
-// API: Analytics Stats
+// API Dashboard Stats (Menggunakan Tabel TRANSACTIONS & ANALYTICS)
 app.get('/api/admin/analytics-data', async (c) => {
     try {
         const visitors = await c.env.DB.prepare("SELECT COUNT(*) as c FROM analytics WHERE event_type='view'").first().catch(() => ({c:0}));
@@ -114,56 +87,57 @@ app.get('/api/admin/analytics-data', async (c) => {
     }
 });
 
-// Upload Image
-app.post('/api/admin/upload-image', uploadImage);
+// Save Credential
+app.post('/api/admin/credentials', async (c) => {
+    const { provider, data } = await c.req.json();
+    const { encrypted, iv } = await encryptJSON(data, c.env.APP_MASTER_KEY);
+    await c.env.DB.prepare(
+        `INSERT INTO credentials (provider_slug, encrypted_data, iv) VALUES (?, ?, ?)
+         ON CONFLICT(provider_slug) DO UPDATE SET encrypted_data=excluded.encrypted_data, iv=excluded.iv`
+    ).bind(provider, encrypted, iv).run();
+    return c.json({ success: true });
+});
 
+app.post('/api/admin/upload-image', uploadImage);
 
 // ===============================================
 // 4. PUBLIC API ROUTES
 // ===============================================
 
-// Cek Ongkir
 app.post('/api/shipping/check', checkShipping);
 
-// Cek Kupon
 app.post('/api/check-coupon', async (c) => {
     const { page_id, code } = await c.req.json();
     const page = await c.env.DB.prepare("SELECT product_config_json FROM pages WHERE id=?").bind(page_id).first();
     const config = JSON.parse(page.product_config_json || '{}');
-    const coupons = config.coupons || [];
-    const valid = coupons.find(cp => cp.code === code.toUpperCase());
-    
-    if(valid) return c.json({ success: true, type: valid.type, value: valid.value, message: "Kupon Diterapkan!" });
-    else return c.json({ success: false, message: "Kode Tidak Valid" });
+    const valid = (config.coupons || []).find(cp => cp.code === code.toUpperCase());
+    if(valid) return c.json({ success: true, type: valid.type, value: valid.value, message: "Kupon OK" });
+    return c.json({ success: false, message: "Kode Invalid" });
 });
 
-// CHECKOUT
+// CHECKOUT (Menyimpan ke Tabel TRANSACTIONS)
 app.post('/api/checkout', async (c) => {
     try {
         const { page_id, provider, variant_id, coupon_code, with_bump, customer } = await c.req.json();
-
         const page = await c.env.DB.prepare("SELECT * FROM pages WHERE id=?").bind(page_id).first();
-        if(!page) throw new Error("Halaman tidak ditemukan");
+        if(!page) throw new Error("Halaman 404");
         
         const config = JSON.parse(page.product_config_json || '{}');
         const selectedVariant = (config.variants || []).find(v => v.id == variant_id);
-        if(!selectedVariant) throw new Error("Varian produk tidak valid");
+        if(!selectedVariant) throw new Error("Varian 404");
         
         let finalPrice = selectedVariant.price;
-        if (with_bump && config.order_bump && config.order_bump.active) finalPrice += config.order_bump.price;
-
+        if (with_bump && config.order_bump?.active) finalPrice += config.order_bump.price;
         if (coupon_code) {
-            const validCoupon = (config.coupons || []).find(cp => cp.code === coupon_code.toUpperCase());
-            if (validCoupon) {
-                if (validCoupon.type === 'percent') finalPrice -= Math.round(finalPrice * validCoupon.value / 100);
-                else if (validCoupon.type === 'fixed') finalPrice -= validCoupon.value;
-            }
+            const cp = (config.coupons || []).find(c => c.code === coupon_code.toUpperCase());
+            if (cp) finalPrice -= (cp.type === 'percent' ? Math.round(finalPrice * cp.value / 100) : cp.value);
         }
         if(finalPrice < 0) finalPrice = 0;
 
         const orderId = `TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-        const customerData = JSON.stringify({ ...customer, item: selectedVariant.name + (with_bump ? " + Bump" : ""), coupon: coupon_code });
+        const customerData = JSON.stringify({ ...customer, item: selectedVariant.name, coupon: coupon_code });
 
+        // Simpan Transaksi
         await c.env.DB.prepare(
             `INSERT INTO transactions (page_id, order_id, provider, amount, status, customer_info) VALUES (?, ?, ?, ?, 'pending', ?)`
         ).bind(page_id, orderId, provider, finalPrice, customerData).run();
@@ -174,11 +148,13 @@ app.post('/api/checkout', async (c) => {
 });
 
 // ===============================================
-// 5. HTML SERVING & RENDERER
+// 5. HTML SERVING
 // ===============================================
 
-// Serve Admin HTML
+// Redirect Admin Root
 app.get('/admin', (c) => c.redirect('/admin/dashboard'));
+
+// Serve Halaman Admin (Dashboard, Pages, Reports, dll)
 app.get('/admin/dashboard', (c) => c.env.ASSETS.fetch(new URL('/admin/dashboard.html', c.req.url)));
 app.get('/admin/pages', (c) => c.env.ASSETS.fetch(new URL('/admin/pages.html', c.req.url)));
 app.get('/admin/editor', (c) => c.env.ASSETS.fetch(new URL('/admin/editor.html', c.req.url))); 
@@ -186,7 +162,7 @@ app.get('/admin/reports', (c) => c.env.ASSETS.fetch(new URL('/admin/reports.html
 app.get('/admin/analytics', (c) => c.env.ASSETS.fetch(new URL('/admin/analytics.html', c.req.url)));
 app.get('/admin/settings', (c) => c.env.ASSETS.fetch(new URL('/admin/settings.html', c.req.url)));
 
-// Serve Homepage & Dynamic Slugs
+// Serve Homepage & Dynamic Landing Pages
 app.get('/', async (c) => {
     try {
         const s = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
@@ -200,11 +176,12 @@ app.get('/', async (c) => {
 
 app.get('/:slug', async (c) => {
     const slug = c.req.param('slug');
-    if (slug.includes('.')) return c.env.ASSETS.fetch(c.req.raw); // Ignored static assets fallback
+    if (slug.includes('.')) return c.env.ASSETS.fetch(c.req.raw);
 
     const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
     if(!page) return c.text('404 Not Found', 404);
 
+    // Track Visit
     c.env.DB.prepare("INSERT INTO analytics (page_id, event_type, referrer) VALUES (?, 'view', ?)").bind(page.id, c.req.header('Referer') || 'direct').run().catch(()=>{});
     return renderPage(c, page);
 });
