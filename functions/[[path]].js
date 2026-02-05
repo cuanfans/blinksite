@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { handle } from 'hono/cloudflare-pages'
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie'
 import { sign, verify } from 'hono/jwt'
-import { sha256, encryptJSON } from '../src/utils'
+import { sha256, encryptJSON, decryptJSON } from '../src/utils'
 import { executePayment } from '../src/engine'
 import { uploadImage } from '../src/modules/cloudinary'
 import { checkShipping } from '../src/modules/shipping'
@@ -36,7 +36,8 @@ async function serveAsset(c, path) {
 // ===============================================
 const requireAuth = async (c, next) => {
     const path = new URL(c.req.url).pathname;
-    if (path === '/admin/login' || path === '/api/login' || path.includes('.')) {
+    // Public paths (Login + API Public)
+    if (path.startsWith('/api/public/') || path === '/admin/login' || path === '/api/login' || path.includes('.')) {
         await next(); return;
     }
     const token = getCookie(c, 'auth_token');
@@ -121,21 +122,16 @@ app.get('/api/admin/pages/:slug', async (c) => {
     return c.json(page || {});
 });
 
-// --- FITUR HOMEPAGE (YANG HILANG DIKEMBALIKAN) ---
-
 // 1. Set Homepage
 app.post('/api/admin/set-homepage', async (c) => {
     try {
         const { slug } = await c.req.json();
-        // Insert atau Update setting homepage
         await c.env.DB.prepare("INSERT INTO settings (key, value) VALUES ('homepage_slug', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(slug).run();
         return c.json({ success: true });
-    } catch (e) {
-        return c.json({ error: e.message }, 500);
-    }
+    } catch (e) { return c.json({ error: e.message }, 500); }
 });
 
-// 2. Get Current Homepage (Untuk UI)
+// 2. Get Current Homepage
 app.get('/api/admin/homepage-slug', async (c) => {
     try {
         const s = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
@@ -158,7 +154,53 @@ app.post('/api/admin/upload-image', uploadImage);
 app.post('/api/shipping/check', checkShipping);
 
 // ===============================================
-// 4. PUBLIC & RENDER ROUTES
+// 4. API PUBLIC (FORM & CHECKOUT) - WAJIB ADA
+// ===============================================
+
+// A. FORM KONTAK (Generic)
+app.post('/api/public/submit-form', async (c) => {
+    try {
+        const body = await c.req.parseBody();
+        const name = body['name'] || 'Anonymous';
+        const email = body['email'] || '-';
+        const message = body['message'] || JSON.stringify(body);
+        
+        await c.env.DB.prepare("INSERT INTO leads (name, email, message, created_at) VALUES (?, ?, ?, datetime('now'))")
+            .bind(name, email, message).run();
+
+        const referer = c.req.header('Referer') || '/';
+        return c.redirect(referer + '?status=success');
+    } catch (e) { return c.text('Error: ' + e.message, 500); }
+});
+
+// B. FORM CHECKOUT (Order)
+app.post('/api/public/checkout', async (c) => {
+    try {
+        const { page_id, customer, items, total, shipping } = await c.req.json();
+        const orderId = `ORD-${Date.now()}-${Math.floor(Math.random()*1000)}`;
+
+        await c.env.DB.prepare(`
+            INSERT INTO orders (order_id, page_id, customer_name, customer_phone, customer_address, items_json, total_amount, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))
+        `).bind(orderId, page_id, customer.name, customer.phone, JSON.stringify(shipping || {}), JSON.stringify(items), total).run();
+
+        // Panggil Payment Engine (Modular)
+        let paymentResult = {};
+        try {
+            paymentResult = await executePayment(c, 'midtrans', total, orderId, customer);
+        } catch (err) {
+            console.error("Payment Engine Error:", err);
+            return c.json({ success: true, order_id: orderId, method: 'whatsapp', wa_url: `https://wa.me/628123456789?text=Order%20${orderId}` });
+        }
+
+        return c.json({ success: true, order_id: orderId, payment: paymentResult });
+    } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+app.post('/api/public/shipping', checkShipping);
+
+// ===============================================
+// 5. PUBLIC RENDER ROUTES
 // ===============================================
 app.get('/', async (c) => {
     try {
@@ -179,7 +221,6 @@ app.get('/:slug', async (c) => {
         const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
         if(!page) return c.text('404 Not Found', 404);
         
-        // Track View
         c.env.DB.prepare("INSERT INTO analytics (page_id, event_type, referrer) VALUES (?, 'view', ?)").bind(page.id, c.req.header('Referer') || 'direct').run().catch(()=>{});
         
         return renderPage(c, page);
@@ -187,59 +228,46 @@ app.get('/:slug', async (c) => {
 });
 
 // ===============================================
-// 5. PAGE RENDERER ENGINE
+// 6. RENDER ENGINE (DYNAMIC PAYMENT SCRIPT)
 // ===============================================
-function renderPage(c, page) {
+async function renderPage(c, page) {
     const config = JSON.parse(page.product_config_json || '{}');
     const settings = config.settings || {}; 
     const url = c.req.url;
 
     let headScripts = '';
     
-    // Facebook Pixel
+    // 1. PAYMENT GATEWAY SCRIPT (MODULAR & DYNAMIC)
+    // Cek Database dulu, jangan hardcode!
+    let paymentScript = '';
+    try {
+        const credRow = await c.env.DB.prepare("SELECT * FROM credentials WHERE provider_slug='midtrans'").first();
+        if (credRow) {
+            const creds = await decryptJSON(credRow.encrypted_data, credRow.iv, c.env.APP_MASTER_KEY || JWT_SECRET);
+            if (creds && creds.client_key) {
+                // Tentukan URL Sandbox atau Production berdasarkan config DB
+                const isProd = creds.is_production === true || creds.is_production === "true";
+                const snapUrl = isProd 
+                    ? "https://app.midtrans.com/snap/snap.js" 
+                    : "https://app.sandbox.midtrans.com/snap/snap.js";
+                
+                paymentScript = `<script src="${snapUrl}" data-client-key="${creds.client_key}"></script>`;
+            }
+        }
+    } catch (e) {
+        console.error("Failed to inject payment script:", e);
+    }
+
+    // 2. PIXELS
     if (settings.fb_pixel_id) {
-        headScripts += `
-        <script>
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', '${settings.fb_pixel_id}');
-        fbq('track', 'PageView');
-        </script>
-        <noscript><img height="1" width="1" style="display:none"
-        src="https://www.facebook.com/tr?id=${settings.fb_pixel_id}&ev=PageView&noscript=1"
-        /></noscript>`;
+        headScripts += `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init', '${settings.fb_pixel_id}');fbq('track', 'PageView');</script><noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${settings.fb_pixel_id}&ev=PageView&noscript=1"/></noscript>`;
     }
-
-    // TikTok Pixel
     if (settings.tiktok_pixel_id) {
-        headScripts += `
-        <script>
-        !function (w, d, t) {
-          w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];
-          ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],
-          ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};
-          for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);
-          ttq.instance=function(t){for(var e=ttq.methods[i],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},
-          ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";
-          ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};
-          var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;
-          var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
-          ttq.load('${settings.tiktok_pixel_id}');
-          ttq.page();
-        }(window, document, 'ttq');
-        </script>`;
+        headScripts += `<script>!function (w, d, t) { w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq.methods[i],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('${settings.tiktok_pixel_id}');ttq.page();}(window, document, 'ttq');</script>`;
     }
+    if (settings.custom_head) headScripts += settings.custom_head;
 
-    if (settings.custom_head) {
-        headScripts += settings.custom_head;
-    }
-
+    // 3. APP LOGIC
     const appScript = `
     <script>
         window.PAGE_ID = ${page.id};
@@ -251,19 +279,14 @@ function renderPage(c, page) {
         document.addEventListener('DOMContentLoaded', () => {
             const checkoutContainer = document.querySelector('[data-gjs-type="checkout-widget"]');
             if(checkoutContainer) {
-                console.log('Checkout Widget Detected');
-                // Di sini nanti logika load form checkout
+                // Logic Checkout Widget akan dihandle oleh file JS terpisah (checkout.js)
+                // Atau disuntikkan AlpineJS di sini
+                console.log('Checkout Widget Ready');
             }
         });
     </script>`;
 
-    // Meta Data
-    const metaTitle = settings.seo_title || page.title;
-    const metaDesc = settings.seo_description || '';
-    const ogTitle = settings.og_title || metaTitle;
-    const ogDesc = settings.og_description || metaDesc;
-    const ogImage = settings.og_image || '';
-
+    // 4. HTML CONSTRUCTION
     return c.html(`
     <!DOCTYPE html>
     <html lang="id">
@@ -271,20 +294,15 @@ function renderPage(c, page) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
-        <title>${metaTitle}</title>
-        <meta name="description" content="${metaDesc}">
+        <title>${settings.seo_title || page.title}</title>
+        <meta name="description" content="${settings.seo_description || ''}">
         ${settings.favicon ? `<link rel="icon" href="${settings.favicon}">` : ''}
 
         <meta property="og:type" content="website" />
         <meta property="og:url" content="${url}" />
-        <meta property="og:title" content="${ogTitle}" />
-        <meta property="og:description" content="${ogDesc}" />
-        ${ogImage ? `<meta property="og:image" content="${ogImage}" />` : ''}
-
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="${ogTitle}" />
-        <meta name="twitter:description" content="${ogDesc}" />
-        ${ogImage ? `<meta name="twitter:image" content="${ogImage}" />` : ''}
+        <meta property="og:title" content="${settings.og_title || settings.seo_title || page.title}" />
+        <meta property="og:description" content="${settings.og_description || settings.seo_description || ''}" />
+        ${settings.og_image ? `<meta property="og:image" content="${settings.og_image}" />` : ''}
 
         <script src="https://cdn.tailwindcss.com"></script>
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -297,8 +315,9 @@ function renderPage(c, page) {
     </head>
     <body class="antialiased">
         ${page.html_content}
+        
         ${appScript}
-        ${settings.custom_footer || ''}
+        ${paymentScript} ${settings.custom_footer || ''}
     </body>
     </html>`);
 }
