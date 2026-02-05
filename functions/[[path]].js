@@ -156,7 +156,13 @@ app.post('/api/checkout', async (c) => {
 // ===============================================
 
 // Placeholder Admin Route (Frontend Admin menyusul di file terpisah)
-app.get('/admin', (c) => c.text('Admin Panel akan dimuat di sini (Frontend).'));
+// FIX: Melayani file statis admin.html yang ada di folder public
+app.get('/admin', async (c) => {
+  return await c.env.ASSETS.fetch(new URL('/admin.html', c.req.url))
+})
+
+// Redirect halaman utama ke admin
+app.get('/', (c) => c.redirect('/admin'))
 
 // Render Landing Page
 app.get('/:slug', async (c) => {
