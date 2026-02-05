@@ -19,15 +19,31 @@ function getCookieFromHeader(req, name) {
     return null;
 }
 
+// Helper: fetch asset with graceful error handling
+async function safeAssetFetch(c, assetPath) {
+    try {
+        // assetPath is a path like '/admin/login.html' OR you can call with null to use c.req.raw
+        if (assetPath) {
+            return await c.env.ASSETS.fetch(new URL(assetPath, c.req.url));
+        } else {
+            return await c.env.ASSETS.fetch(c.req.raw);
+        }
+    } catch (e) {
+        // Log server-side for debugging (Cloudflare logs)
+        // eslint-disable-next-line no-console
+        console.error('ASSETS.fetch failed for', assetPath || c.req.url, e);
+        // Return a friendly not-found/empty response instead of letting it bubble to 500
+        return c.text('Not Found', 404);
+    }
+}
+
 // ===============================================
 // 0. AUTH FOR ADMIN PAGES (Protect HTML pages)
 // ===============================================
-// Sebelumnya admin HTML disajikan langsung dari ASSETS tanpa pengecekan.
-// Middleware berikut memastikan akses ke route /admin dan /admin/*
 app.use(['/admin', '/admin/*'], async (c, next) => {
     const pathname = new URL(c.req.url).pathname;
-    // izinkan akses ke halaman login jika ada (mis. /admin/login.html)
-    if (pathname.startsWith('/admin/login')) {
+    // allow login page(s) to be served without auth
+    if (pathname === '/admin/login' || pathname === '/admin/login.html') {
         await next();
         return;
     }
@@ -35,31 +51,43 @@ app.use(['/admin', '/admin/*'], async (c, next) => {
     // Periksa Authorization header (plain password) atau cookie admin_pass
     const inputPass = c.req.header('Authorization') || getCookieFromHeader(c.req, 'admin_pass');
     if (!inputPass) {
-        // Redirect ke halaman login (harus ada file /admin/login.html di ASSETS)
+        // Redirect ke halaman login (share the explicit path we serve)
         return c.redirect('/admin/login.html');
     }
 
-    // cek password di tabel SETTINGS (disimpan dalam bentuk hash)
+    // cek password di tabel SETTINGS (disimpan sebagai hash)
     const dbSetting = await c.env.DB.prepare("SELECT value FROM settings WHERE key = 'admin_password'").first();
     const realHash = dbSetting ? dbSetting.value : '';
     const inputHash = await sha256(inputPass);
 
     if (inputHash !== realHash) {
-        // jika salah, arahkan juga ke halaman login
+        // jika salah, arahkan ke halaman login
         return c.redirect('/admin/login.html');
     }
 
-    // Lolos validasi
     await next();
 });
 
 // ===============================================
 // 1. STATIC ASSETS (PRIORITAS PERTAMA)
 // ===============================================
-// Hanya ambil file JS, CSS, dan Gambar dari folder public
-app.get('/js/*', (c) => c.env.ASSETS.fetch(c.req.raw));
-app.get('/css/*', (c) => c.env.ASSETS.fetch(c.req.raw));
-app.get('/images/*', (c) => c.env.ASSETS.fetch(c.req.raw));
+// Hanya ambil file JS, CSS, dan Gambar dari folder public (wrap with safe fetch)
+app.get('/js/*', async (c) => await safeAssetFetch(c, null));
+app.get('/css/*', async (c) => await safeAssetFetch(c, null));
+app.get('/images/*', async (c) => await safeAssetFetch(c, null));
+
+// favicon (banyak browser request); jangan biarkan gagal jadi 500
+app.get('/favicon.ico', async (c) => {
+    // jika tidak ada favicon, kembalikan 204 kosong
+    try {
+        const res = await c.env.ASSETS.fetch(new URL('/favicon.ico', c.req.url));
+        return res;
+    } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn('favicon not found');
+        return c.text('', 204);
+    }
+});
 
 // ===============================================
 // 2. HALAMAN ADMIN (URUTAN WAJIB DI SINI!)
@@ -67,14 +95,17 @@ app.get('/images/*', (c) => c.env.ASSETS.fetch(c.req.raw));
 // Redirect /admin ke dashboard
 app.get('/admin', (c) => c.redirect('/admin/dashboard'));
 
-// Load file HTML Admin secara eksplisit
-app.get('/admin/dashboard', (c) => c.env.ASSETS.fetch(new URL('/admin/dashboard.html', c.req.url)));
-app.get('/admin/pages', (c) => c.env.ASSETS.fetch(new URL('/admin/pages.html', c.req.url)));
-app.get('/admin/editor', (c) => c.env.ASSETS.fetch(new URL('/admin/editor.html', c.req.url)));
-app.get('/admin/reports', (c) => c.env.ASSETS.fetch(new URL('/admin/reports.html', c.req.url)));
-app.get('/admin/analytics', (c) => c.env.ASSETS.fetch(new URL('/admin/analytics.html', c.req.url)));
-app.get('/admin/settings', (c) => c.env.ASSETS.fetch(new URL('/admin/settings.html', c.req.url)));
-app.get('/admin/login', (c) => c.env.ASSETS.fetch(new URL('/admin/login.html', c.req.url)));
+// Berikan route untuk /admin/login.html dan /admin/login agar redirect sebelumnya valid
+app.get('/admin/login', async (c) => await safeAssetFetch(c, '/admin/login.html'));
+app.get('/admin/login.html', async (c) => await safeAssetFetch(c, '/admin/login.html'));
+
+// Load file HTML Admin secara eksplisit (wrapped)
+app.get('/admin/dashboard', async (c) => await safeAssetFetch(c, '/admin/dashboard.html'));
+app.get('/admin/pages', async (c) => await safeAssetFetch(c, '/admin/pages.html'));
+app.get('/admin/editor', async (c) => await safeAssetFetch(c, '/admin/editor.html'));
+app.get('/admin/reports', async (c) => await safeAssetFetch(c, '/admin/reports.html'));
+app.get('/admin/analytics', async (c) => await safeAssetFetch(c, '/admin/analytics.html'));
+app.get('/admin/settings', async (c) => await safeAssetFetch(c, '/admin/settings.html'));
 
 // ===============================================
 // 3. MIDDLEWARE & AUTH (API-level)
@@ -221,17 +252,18 @@ app.get('/', async (c) => {
             if (page) return renderPage(c, page);
         }
     } catch (e) {}
-    return c.env.ASSETS.fetch(new URL('/index.html', c.req.url));
+    return await safeAssetFetch(c, '/index.html');
 })
 
 app.get('/:slug', async (c) => {
     const slug = c.req.param('slug');
-    if (slug.includes('.')) return c.env.ASSETS.fetch(c.req.raw);
+    // Jika request untuk file statis (memiliki titik), coba serve asset secara aman
+    if (slug.includes('.')) return await safeAssetFetch(c, null);
 
     const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
     if(!page) return c.text('404 Not Found', 404);
 
-    // Track Visit
+    // Track Visit (non-blocking)
     c.env.DB.prepare("INSERT INTO analytics (page_id, event_type, referrer) VALUES (?, 'view', ?)").bind(page.id, c.req.header('Referer') || 'direct').run().catch(()=>{});
     return renderPage(c, page);
 });
