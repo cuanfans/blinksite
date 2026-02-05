@@ -8,13 +8,12 @@ import { uploadImage } from '../src/modules/cloudinary'
 import { checkShipping } from '../src/modules/shipping'
 
 const app = new Hono()
-const JWT_SECRET = 'BantarCaringin1234567890BantarCaringin1234567890BantarCaringin1234567890' // Ganti dengan c.env.APP_SECRET di production
+const JWT_SECRET = 'RAHASIA_NEGARA_GANTI_DENGAN_ENV_VAR'
 
 // ===============================================
 // 0. GLOBAL CONFIG
 // ===============================================
 app.use('*', async (c, next) => {
-    // console.log(`[${c.req.method}] ${c.req.url}`); // Uncomment for debug
     await next();
 });
 
@@ -161,13 +160,14 @@ app.get('/:slug', async (c) => {
 });
 
 // ===============================================
-// 5. PAGE RENDERER ENGINE (CORE KONSEP)
+// 5. PAGE RENDERER ENGINE (LENGKAP: SEO + OG + PIXEL + SCRIPTS)
 // ===============================================
 function renderPage(c, page) {
     const config = JSON.parse(page.product_config_json || '{}');
     const settings = config.settings || {}; // Metadata Page Settings
+    const url = c.req.url; // URL Halaman saat ini
 
-    // A. SETUP PIXEL & TRACKING (Injection)
+    // 1. SETUP PIXEL & TRACKING (Injection)
     let headScripts = '';
     
     // Facebook Pixel
@@ -216,7 +216,7 @@ function renderPage(c, page) {
         headScripts += settings.custom_head;
     }
 
-    // B. LOGIKA CHECKOUT (Inject Variables ke Global Window)
+    // 2. LOGIKA CHECKOUT (Inject Variables ke Global Window)
     const appScript = `
     <script>
         window.PAGE_ID = ${page.id};
@@ -225,17 +225,22 @@ function renderPage(c, page) {
         window.ORDER_BUMP = ${JSON.stringify(config.order_bump || {active:false})};
         window.SHIPPING_CONFIG = ${JSON.stringify(config.shipping || {weight: 1000})};
         
-        // --- LOGIKA FORM CHECKOUT SEDERHANA (Placeholder) ---
-        // Di sistem full, ini akan me-load file JS terpisah seperti 'checkout.js'
+        // Render Checkout Placeholder jika ada
         document.addEventListener('DOMContentLoaded', () => {
             const checkoutContainer = document.querySelector('[data-gjs-type="checkout-widget"]');
             if(checkoutContainer) {
-                // Di sinilah kita me-render form AlpineJS/React secara dinamis
-                // checkoutContainer.innerHTML = '<div x-data="checkoutApp()">...</div>';
                 console.log('Checkout Widget Detected on ' + window.PRODUCT_TYPE + ' page.');
             }
         });
     </script>`;
+
+    // 3. OPEN GRAPH & SEO GENERATION
+    // Priority: Setting Khusus -> Setting SEO -> Default Title
+    const metaTitle = settings.seo_title || page.title;
+    const metaDesc = settings.seo_description || '';
+    const ogTitle = settings.og_title || metaTitle;
+    const ogDesc = settings.og_description || metaDesc;
+    const ogImage = settings.og_image || ''; // Gambar Link Share
 
     // C. RENDER FULL HTML
     return c.html(`
@@ -245,11 +250,20 @@ function renderPage(c, page) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
-        <title>${settings.seo_title || page.title}</title>
-        <meta name="description" content="${settings.seo_description || ''}">
-        <meta property="og:title" content="${settings.seo_title || page.title}">
-        <meta property="og:description" content="${settings.seo_description || ''}">
+        <title>${metaTitle}</title>
+        <meta name="description" content="${metaDesc}">
         ${settings.favicon ? `<link rel="icon" href="${settings.favicon}">` : ''}
+
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="${url}" />
+        <meta property="og:title" content="${ogTitle}" />
+        <meta property="og:description" content="${ogDesc}" />
+        ${ogImage ? `<meta property="og:image" content="${ogImage}" />` : ''}
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="${ogTitle}" />
+        <meta name="twitter:description" content="${ogDesc}" />
+        ${ogImage ? `<meta name="twitter:image" content="${ogImage}" />` : ''}
 
         <script src="https://cdn.tailwindcss.com"></script>
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
