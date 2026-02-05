@@ -15,10 +15,20 @@ document.addEventListener('alpine:init', () => {
             else document.documentElement.classList.remove('dark');
         },
 
+        // SECURITY FIX: Logout via API untuk hapus Cookie HttpOnly
         logout() {
             if(confirm('Keluar dari Admin?')) {
-                localStorage.removeItem('admin_pass');
-                window.location.href = '/';
+                // Panggil endpoint logout server untuk hapus cookie
+                fetch('/api/logout')
+                    .then(() => {
+                        // Redirect ke login setelah cookie terhapus
+                        window.location.href = '/login';
+                    })
+                    .catch(err => {
+                        console.error('Logout error:', err);
+                        // Fallback jika fetch gagal
+                        window.location.href = '/login';
+                    });
             }
         },
 
@@ -31,7 +41,6 @@ document.addEventListener('alpine:init', () => {
 class AdminLayout extends HTMLElement {
     connectedCallback() {
         // Tunggu sampai parser selesai (safety) sebelum memanipulasi DOM
-        // (masih cepat karena timeout 0)
         setTimeout(() => {
             this.initLayout();
         }, 0);
@@ -57,7 +66,6 @@ class AdminLayout extends HTMLElement {
         const isActive = (p) => path.includes(p) ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700';
 
         // Render kerangka layout (SIDEBAR + HEADER + SLOT-CONTAINER)
-        // Kita akan menempelkan fragment konten ke dalam #slot-container setelah markup ini
         this.innerHTML = `
         <div x-data class="flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans overflow-hidden transition-colors duration-300">
             
@@ -121,7 +129,6 @@ class AdminLayout extends HTMLElement {
                     </div>
                 </header>
 
-                <!-- Slot container tempat kita menempelkan kembali konten asli -->
                 <main id="slot-container" class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth w-full">
                 </main>
             </div>
@@ -132,50 +139,34 @@ class AdminLayout extends HTMLElement {
         const slotContainer = this.querySelector('#slot-container');
         slotContainer.appendChild(contentFragment);
 
-        // ---- PERBAIKAN PENTING ----
-        // 1) Re-inisialisasi Alpine pada subtree yang baru (jika Alpine tersedia)
-        //    Alpine menyediakan API initTree untuk meng-inisialisasi ulang bagian tertentu.
+        // Re-inisialisasi Alpine pada subtree yang baru
         if (window.Alpine && typeof window.Alpine.initTree === 'function') {
             try {
                 window.Alpine.initTree(slotContainer);
             } catch (err) {
-                // Jangan hentikan alur jika gagal; log untuk debugging
-                // eslint-disable-next-line no-console
                 console.error('Alpine.initTree failed:', err);
             }
         }
 
-        // 2) Pastikan semua <script> yang ikut dipindahkan dieksekusi ulang.
-        //    Browser tidak mengeksekusi ulang <script> yang dipindahkan, jadi kita
-        //    buat ulang setiap script untuk memicu eksekusi.
+        // Re-eksekusi script tag agar fitur halaman (seperti Chart.js) jalan kembali
         const scripts = slotContainer.querySelectorAll('script');
         scripts.forEach(oldScript => {
             try {
                 const newScript = document.createElement('script');
-
-                // Salin semua atribut (type, src, async, defer, nomodule, module, etc.)
                 for (let i = 0; i < oldScript.attributes.length; i++) {
                     const attr = oldScript.attributes[i];
                     newScript.setAttribute(attr.name, attr.value);
                 }
-
                 if (oldScript.src) {
-                    // External script: set src (browser akan memuat dan mengeksekusi)
                     newScript.src = oldScript.src;
                 } else {
-                    // Inline script: copy text content
                     newScript.textContent = oldScript.textContent;
                 }
-
-                // Ganti node lama dengan yang baru sehingga dieksekusi
                 oldScript.parentNode.replaceChild(newScript, oldScript);
             } catch (e) {
-                // eslint-disable-next-line no-console
-                console.error('Failed to re-run script in admin-layout:', e);
+                console.error('Failed to re-run script:', e);
             }
         });
-
-        // Selesai: layout di-render dan konten halaman di-attach kembali.
     }
 }
 
