@@ -8,7 +8,7 @@ import { uploadImage } from '../src/modules/cloudinary'
 import { checkShipping } from '../src/modules/shipping'
 
 const app = new Hono()
-const JWT_SECRET = 'BantarCaringin1BantarCaringin2BantarCaringin3'
+const JWT_SECRET = 'RAHASIA_NEGARA_GANTI_DENGAN_ENV_VAR'
 
 // ===============================================
 // 0. GLOBAL CONFIG
@@ -89,8 +89,10 @@ app.get('/admin/analytics', (c) => serveAsset(c, '/admin/analytics.html'));
 app.get('/admin/settings', (c) => serveAsset(c, '/admin/settings.html'));
 
 // ===============================================
-// 3. API DATA ROUTES
+// 3. API DATA ROUTES (API ADMIN)
 // ===============================================
+
+// GET ALL PAGES
 app.get('/api/admin/pages', async (c) => {
     try {
         const res = await c.env.DB.prepare("SELECT id, slug, title, product_type, created_at FROM pages ORDER BY created_at DESC").all();
@@ -98,6 +100,7 @@ app.get('/api/admin/pages', async (c) => {
     } catch(e) { return c.json({ error: e.message }, 500); }
 });
 
+// SAVE PAGE
 app.post('/api/admin/pages', async (c) => {
     const { slug, title, html, css, product_config, product_type } = await c.req.json();
     try {
@@ -110,6 +113,7 @@ app.post('/api/admin/pages', async (c) => {
     } catch(e) { return c.json({ error: e.message }, 500); }
 });
 
+// GET SINGLE PAGE
 app.get('/api/admin/pages/:slug', async (c) => {
     const slug = c.req.param('slug');
     const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
@@ -117,6 +121,29 @@ app.get('/api/admin/pages/:slug', async (c) => {
     return c.json(page || {});
 });
 
+// --- FITUR HOMEPAGE (YANG HILANG DIKEMBALIKAN) ---
+
+// 1. Set Homepage
+app.post('/api/admin/set-homepage', async (c) => {
+    try {
+        const { slug } = await c.req.json();
+        // Insert atau Update setting homepage
+        await c.env.DB.prepare("INSERT INTO settings (key, value) VALUES ('homepage_slug', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(slug).run();
+        return c.json({ success: true });
+    } catch (e) {
+        return c.json({ error: e.message }, 500);
+    }
+});
+
+// 2. Get Current Homepage (Untuk UI)
+app.get('/api/admin/homepage-slug', async (c) => {
+    try {
+        const s = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
+        return c.json({ slug: s ? s.value : null });
+    } catch(e) { return c.json({ slug: null }); }
+});
+
+// SAVE CREDENTIALS
 app.post('/api/admin/credentials', async (c) => {
     const { provider, data } = await c.req.json();
     const { encrypted, iv } = await encryptJSON(data, c.env.APP_MASTER_KEY || JWT_SECRET);
@@ -152,7 +179,7 @@ app.get('/:slug', async (c) => {
         const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
         if(!page) return c.text('404 Not Found', 404);
         
-        // Track View (Async)
+        // Track View
         c.env.DB.prepare("INSERT INTO analytics (page_id, event_type, referrer) VALUES (?, 'view', ?)").bind(page.id, c.req.header('Referer') || 'direct').run().catch(()=>{});
         
         return renderPage(c, page);
@@ -160,14 +187,13 @@ app.get('/:slug', async (c) => {
 });
 
 // ===============================================
-// 5. PAGE RENDERER ENGINE (LENGKAP: SEO + OG + PIXEL + SCRIPTS)
+// 5. PAGE RENDERER ENGINE
 // ===============================================
 function renderPage(c, page) {
     const config = JSON.parse(page.product_config_json || '{}');
-    const settings = config.settings || {}; // Metadata Page Settings
-    const url = c.req.url; // URL Halaman saat ini
+    const settings = config.settings || {}; 
+    const url = c.req.url;
 
-    // 1. SETUP PIXEL & TRACKING (Injection)
     let headScripts = '';
     
     // Facebook Pixel
@@ -187,8 +213,7 @@ function renderPage(c, page) {
         </script>
         <noscript><img height="1" width="1" style="display:none"
         src="https://www.facebook.com/tr?id=${settings.fb_pixel_id}&ev=PageView&noscript=1"
-        /></noscript>
-        `;
+        /></noscript>`;
     }
 
     // TikTok Pixel
@@ -211,12 +236,10 @@ function renderPage(c, page) {
         </script>`;
     }
 
-    // Custom Head Script (Misal: Google Verification, LiveChat)
     if (settings.custom_head) {
         headScripts += settings.custom_head;
     }
 
-    // 2. LOGIKA CHECKOUT (Inject Variables ke Global Window)
     const appScript = `
     <script>
         window.PAGE_ID = ${page.id};
@@ -225,24 +248,22 @@ function renderPage(c, page) {
         window.ORDER_BUMP = ${JSON.stringify(config.order_bump || {active:false})};
         window.SHIPPING_CONFIG = ${JSON.stringify(config.shipping || {weight: 1000})};
         
-        // Render Checkout Placeholder jika ada
         document.addEventListener('DOMContentLoaded', () => {
             const checkoutContainer = document.querySelector('[data-gjs-type="checkout-widget"]');
             if(checkoutContainer) {
-                console.log('Checkout Widget Detected on ' + window.PRODUCT_TYPE + ' page.');
+                console.log('Checkout Widget Detected');
+                // Di sini nanti logika load form checkout
             }
         });
     </script>`;
 
-    // 3. OPEN GRAPH & SEO GENERATION
-    // Priority: Setting Khusus -> Setting SEO -> Default Title
+    // Meta Data
     const metaTitle = settings.seo_title || page.title;
     const metaDesc = settings.seo_description || '';
     const ogTitle = settings.og_title || metaTitle;
     const ogDesc = settings.og_description || metaDesc;
-    const ogImage = settings.og_image || ''; // Gambar Link Share
+    const ogImage = settings.og_image || '';
 
-    // C. RENDER FULL HTML
     return c.html(`
     <!DOCTYPE html>
     <html lang="id">
@@ -275,13 +296,9 @@ function renderPage(c, page) {
         ${headScripts}
     </head>
     <body class="antialiased">
-        
         ${page.html_content}
-
         ${appScript}
-
         ${settings.custom_footer || ''}
-        
     </body>
     </html>`);
 }
