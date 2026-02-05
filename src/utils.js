@@ -1,4 +1,4 @@
-// HASHING (Password & Signature)
+// HASHING
 export async function sha256(text) {
     const msgBuffer = new TextEncoder().encode(text);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -11,7 +11,7 @@ export async function sha1(str) {
     return Array.from(new Uint8Array(hash)).map(v => v.toString(16).padStart(2, '0')).join('');
 }
 
-// ENKRIPSI AES-GCM (Untuk simpan API Key di DB)
+// ENKRIPSI
 const toHex = (buf) => [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, "0")).join("");
 const fromHex = (hex) => new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
 
@@ -32,11 +32,18 @@ export async function encryptJSON(jsonObj, masterSecret) {
     return { encrypted: toHex(encrypted), iv: toHex(iv) };
 }
 
+// FIX: Tambahkan Try-Catch agar tidak error 500 JSON Parse
 export async function decryptJSON(encryptedHex, ivHex, masterSecret) {
     try {
+        if (!encryptedHex || !ivHex) return null;
         const key = await getCryptoKey(masterSecret);
-        const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromHex(ivHex) }, key, fromHex(encryptedHex));
-        const str = new TextDecoder().decode(decrypted);
-        return JSON.parse(str);
-    } catch (e) { return null; }
+        const encrypted = fromHex(encryptedHex);
+        const iv = fromHex(ivHex);
+        const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, encrypted);
+        const decStr = new TextDecoder().decode(decrypted);
+        return JSON.parse(decStr);
+    } catch (e) {
+        console.error("Decryption Failed:", e);
+        return null; // Return null jika gagal, jangan throw error
+    }
 }
