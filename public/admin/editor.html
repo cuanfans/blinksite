@@ -10,25 +10,24 @@
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
-    
     <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script>
     
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* --- GLOBAL RESET --- */
+        /* --- RESET & UI FRAMEWORK --- */
         body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: #ffffff; color: #1e293b; }
         [x-cloak] { display: none !important; }
 
-        /* HILANGKAN PANEL BAWAAN GRAPESJS */
+        /* HILANGKAN PANEL BAWAAN */
         .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-panels, .gjs-pn-buttons { display: none !important; }
         
         /* CANVAS STYLE */
         .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f1f5f9; }
         .gjs-frame-wrapper { box-shadow: 0 0 20px rgba(0,0,0,0.1); }
 
-        /* --- PANEL KANAN (WEBFLOW STYLE) --- */
+        /* --- PANEL KANAN STYLE --- */
         .panel-tabs { display: flex; border-bottom: 1px solid #e2e8f0; background: #fff; }
         .panel-tabs button { 
             flex: 1; padding: 12px; color: #64748b; font-size: 20px; 
@@ -37,7 +36,7 @@
         .panel-tabs button:hover { color: #0f172a; background: #f8fafc; }
         .panel-tabs button.active { color: #2563eb; border-bottom-color: #2563eb; background: #eff6ff; }
 
-        /* BLOCK MANAGER (GRID 2 KOLOM) */
+        /* BLOCK MANAGER */
         .gjs-blocks-c { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
         .gjs-block { 
             width: 100% !important; min-height: auto !important; padding: 15px 5px !important; margin: 0 !important;
@@ -47,21 +46,11 @@
         }
         .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-1px); }
         .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 2px; }
-        
-        /* ICON SIZE FIX */
-        .gjs-block svg, .gjs-block i, .gjs-block .fa { width: 24px; height: 24px; font-size: 24px; fill: currentColor; }
+        .gjs-block svg, .gjs-block i { width: 24px; height: 24px; font-size: 24px; fill: currentColor; }
 
-        /* CATEGORY HEADER */
-        .gjs-block-category .gjs-title { 
-            background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; 
-            padding: 8px 12px; font-size: 10px; font-weight: 700; color: #64748b; 
-            text-transform: uppercase; cursor: pointer;
-        }
-
-        /* STYLE MANAGER INPUTS */
+        /* STYLE MANAGER */
         .gjs-field { background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; color: #334155; }
         .gjs-field input, .gjs-field select { font-size: 11px; color: #334155; width: 100%; background: transparent; }
-        
         .gjs-sm-sector { border-bottom: 1px solid #e2e8f0; }
         .gjs-sm-title { 
             background: #f8fafc; font-size: 11px; font-weight: 600; color: #475569; 
@@ -70,8 +59,6 @@
         .gjs-sm-properties { padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
         .gjs-sm-property { width: 100%; margin-bottom: 0; }
         .gjs-sm-property__name { font-size: 10px; margin-bottom: 3px; color: #64748b; }
-        
-        /* HELPER WIDTHS */
         .gjs-sm-property--width, .gjs-sm-property--height, 
         .gjs-sm-property--font-size, .gjs-sm-property--font-weight,
         .gjs-sm-property--color, .gjs-sm-property--background-color { width: 48%; }
@@ -107,7 +94,6 @@
             <button @click="setDevice('mobile')" :class="device=='mobile' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
             
             <div class="w-px h-4 bg-gray-300 mx-2"></div>
-            
             <button @click="cmd('core:undo')" class="text-gray-500 hover:text-black p-1.5 transition"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
             <button @click="cmd('core:redo')" class="text-gray-500 hover:text-black p-1.5 transition"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
             <button @click="cmd('core:preview')" class="text-gray-500 hover:text-blue-600 p-1.5 transition"><i class="ph ph-eye text-lg"></i></button>
@@ -142,7 +128,7 @@
             <div class="flex-1 overflow-y-auto bg-white relative custom-scroll">
                 
                 <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-10"></div>
-
+                
                 <div x-show="tab=='styles'">
                     <div id="selectors-container" class="p-2 border-b border-gray-100"></div>
                     <div id="styles-container" class="pb-10"></div>
@@ -185,16 +171,26 @@
                     </div>
 
                     <div>
-                        <h3 class="text-xs font-bold uppercase text-gray-400 mb-3 border-b pb-1 tracking-wider">SEO & Tracking</h3>
+                        <h3 class="text-xs font-bold uppercase text-gray-400 mb-3 border-b pb-1 tracking-wider">SEO & Metadata</h3>
                         <div class="space-y-3">
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Judul SEO</label>
-                                <input x-model="page.config.settings.seo_title" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="Judul di Google...">
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Judul SEO (Meta Title)</label>
+                                <input x-model="page.config.settings.seo_title" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="Judul Halaman...">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 mb-1">Deskripsi SEO</label>
                                 <textarea x-model="page.config.settings.seo_description" rows="2" class="w-full border border-gray-300 rounded p-1.5 text-xs"></textarea>
                             </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Favicon URL (Icon Tab)</label>
+                                <input x-model="page.config.settings.favicon" class="w-full border border-gray-300 rounded p-1.5 text-xs font-mono" placeholder="https://contoh.com/icon.png">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-bold uppercase text-gray-400 mb-3 border-b pb-1 tracking-wider">Scripts & Tracking</h3>
+                        <div class="space-y-3">
                             <div>
                                 <label class="block text-[10px] font-bold text-blue-600 mb-1">Facebook Pixel ID</label>
                                 <input x-model="page.config.settings.fb_pixel_id" class="w-full border border-blue-200 bg-blue-50/50 rounded p-1.5 text-xs" placeholder="1234567890">
@@ -202,6 +198,16 @@
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-800 mb-1">TikTok Pixel ID</label>
                                 <input x-model="page.config.settings.tiktok_pixel_id" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="CXXXXXXXX">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-orange-600 mb-1">Custom Head Script</label>
+                                <textarea x-model="page.config.settings.custom_head" rows="3" class="w-full border border-orange-200 bg-orange-50/50 rounded p-1.5 text-xs font-mono text-gray-600" placeholder="<script>..."></textarea>
+                                <p class="text-[9px] text-gray-400 mt-1">Kode ini akan dimasukkan di dalam tag &lt;head&gt;</p>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Custom Body Script (Footer)</label>
+                                <textarea x-model="page.config.settings.custom_footer" rows="3" class="w-full border border-gray-300 rounded p-1.5 text-xs font-mono text-gray-600" placeholder="<script>..."></textarea>
+                                <p class="text-[9px] text-gray-400 mt-1">Kode ini akan dimasukkan sebelum tag &lt;/body&gt; (Chat widget, dll)</p>
                             </div>
                         </div>
                     </div>
@@ -230,12 +236,20 @@
                 device: 'desktop', 
                 tab: 'blocks',
                 
-                // Data State
+                // DATA STATE LENGKAP
                 page: { 
                     slug: '', title: '', product_type: 'physical',
                     config: { 
                         variants:[], coupons:[], order_bump:{active:false}, shipping: { weight: 1000 },
-                        settings: { seo_title: '', seo_description: '', fb_pixel_id: '', tiktok_pixel_id: '' }
+                        settings: { // METADATA & SCRIPTS
+                            seo_title: '', 
+                            seo_description: '', 
+                            favicon: '', 
+                            fb_pixel_id: '', 
+                            tiktok_pixel_id: '',
+                            custom_head: '',
+                            custom_footer: ''
+                        }
                     } 
                 },
                 cred: { provider: 'midtrans', data: '' },
@@ -270,6 +284,10 @@
                 async savePage() {
                     if(!this.page.slug) return alert('Slug wajib diisi!');
                     this.loading = true;
+                    
+                    // Pastikan objek settings tidak null sebelum save
+                    if(!this.page.config.settings) this.page.config.settings = {};
+
                     try {
                         await fetch('/api/admin/pages', {
                             method: 'POST',
@@ -296,7 +314,7 @@
                             fromElement: false,
                             storageManager: false,
                             
-                            // PLUGINS (Manual Load - LEBIH AMAN)
+                            // PLUGINS (Manual Load - AMAN & STABIL)
                             plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms'],
                             pluginsOpts: {
                                 'gjs-blocks-basic': { flexGrid: true },
@@ -335,20 +353,16 @@
                             }
                         });
 
-                        // CUSTOM BLOCKS (Tambahkan Section karena gjs-blocks-basic kadang tidak bawa Section)
+                        // CUSTOM BLOCKS (Tambahan)
                         const bm = editor.BlockManager;
                         bm.add('section-std', {
-                            label: 'Section',
-                            category: 'Basic',
-                            attributes: { class: 'fa fa-square' },
+                            label: 'Section', category: 'Basic', attributes: { class: 'fa fa-square' },
                             content: `<section style="padding:50px 20px; min-height:100px; display:flex; flex-direction:column; align-items:center;"><div>Konten disini</div></section>`
                         });
 
                         bm.add('checkout-pro', {
-                            label: 'Form Checkout',
-                            category: 'E-Commerce',
-                            attributes: { class: 'fa fa-shopping-cart' },
-                            content: `<div style="padding: 20px; border: 2px dashed #3b82f6; background: #eff6ff; text-align: center; border-radius: 8px;">
+                            label: 'Form Checkout', category: 'E-Commerce', attributes: { class: 'fa fa-shopping-cart' },
+                            content: `<div data-gjs-type="checkout-widget" style="padding: 20px; border: 2px dashed #3b82f6; background: #eff6ff; text-align: center; border-radius: 8px;">
                                 <strong style="color: #1e40af; font-size: 16px;">[ FORM CHECKOUT ]</strong>
                                 <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Akan muncul saat halaman live.</p>
                             </div>`
@@ -356,11 +370,10 @@
 
                         // --- FIX PENTING: LOAD KONTEN SETELAH EDITOR SIAP ---
                         editor.on('load', () => {
-                            // 1. Set Default Background Canvas (Agar tidak transparan/hitam)
                             editor.Canvas.getBody().style.backgroundColor = '#ffffff';
-                            editor.Canvas.getBody().style.color = '#1e293b'; // Teks default hitam (fix invisible text)
+                            editor.Canvas.getBody().style.color = '#1e293b'; 
 
-                            // 2. Load Data dari Database
+                            // LOAD DATA DARI DB
                             if(this.page.slug) {
                                 fetch('/api/admin/pages/'+this.page.slug)
                                     .then(r => r.json())
@@ -378,12 +391,11 @@
                                                 }
                                             } catch (e) {
                                                 console.error("JSON Parse Error:", e);
-                                                // Fallback jika JSON rusak
                                                 this.page.config = { variants:[], settings:{} };
                                             }
                                             
-                                            // Init Sub-Objects jika kosong
-                                            if(!this.page.config.settings) this.page.config.settings = {};
+                                            // Init Sub-Objects (PENTING UNTUK MENGHINDARI ERROR UNDEFINED)
+                                            if(!this.page.config.settings) this.page.config.settings = { seo_title: d.title };
                                             if(!this.page.config.shipping) this.page.config.shipping = { weight: 1000 };
 
                                             // Render Konten
