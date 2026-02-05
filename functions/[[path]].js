@@ -154,7 +154,7 @@ app.post('/api/admin/upload-image', uploadImage);
 app.post('/api/shipping/check', checkShipping);
 
 // ===============================================
-// 4. API PUBLIC (FORM & CHECKOUT) - WAJIB ADA
+// 4. API PUBLIC (FORM & CHECKOUT)
 // ===============================================
 
 // A. FORM KONTAK (Generic)
@@ -228,7 +228,7 @@ app.get('/:slug', async (c) => {
 });
 
 // ===============================================
-// 6. RENDER ENGINE (DYNAMIC PAYMENT SCRIPT)
+// 6. RENDER ENGINE (FIX GAP & DYNAMIC SCRIPT)
 // ===============================================
 async function renderPage(c, page) {
     const config = JSON.parse(page.product_config_json || '{}');
@@ -237,20 +237,18 @@ async function renderPage(c, page) {
 
     let headScripts = '';
     
-    // 1. PAYMENT GATEWAY SCRIPT (MODULAR & DYNAMIC)
-    // Cek Database dulu, jangan hardcode!
+    // 1. PAYMENT GATEWAY SCRIPT (MODULAR - LOAD FROM DB)
     let paymentScript = '';
     try {
         const credRow = await c.env.DB.prepare("SELECT * FROM credentials WHERE provider_slug='midtrans'").first();
         if (credRow) {
             const creds = await decryptJSON(credRow.encrypted_data, credRow.iv, c.env.APP_MASTER_KEY || JWT_SECRET);
             if (creds && creds.client_key) {
-                // Tentukan URL Sandbox atau Production berdasarkan config DB
                 const isProd = creds.is_production === true || creds.is_production === "true";
                 const snapUrl = isProd 
                     ? "https://app.midtrans.com/snap/snap.js" 
                     : "https://app.sandbox.midtrans.com/snap/snap.js";
-                
+                // INI SCRIPT DINAMIS, BUKAN HARDCODE
                 paymentScript = `<script src="${snapUrl}" data-client-key="${creds.client_key}"></script>`;
             }
         }
@@ -279,8 +277,6 @@ async function renderPage(c, page) {
         document.addEventListener('DOMContentLoaded', () => {
             const checkoutContainer = document.querySelector('[data-gjs-type="checkout-widget"]');
             if(checkoutContainer) {
-                // Logic Checkout Widget akan dihandle oleh file JS terpisah (checkout.js)
-                // Atau disuntikkan AlpineJS di sini
                 console.log('Checkout Widget Ready');
             }
         });
@@ -304,9 +300,27 @@ async function renderPage(c, page) {
         <meta property="og:description" content="${settings.og_description || settings.seo_description || ''}" />
         ${settings.og_image ? `<meta property="og:image" content="${settings.og_image}" />` : ''}
 
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="${settings.og_title || settings.seo_title || page.title}" />
+        <meta name="twitter:description" content="${settings.og_description || settings.seo_description || ''}" />
+        ${settings.og_image ? `<meta name="twitter:image" content="${settings.og_image}" />` : ''}
+
         <script src="https://cdn.tailwindcss.com"></script>
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
         <style>
+            /* CSS RESET UNTUK MENGHILANGKAN GAP ABU-ABU */
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow-x: hidden;
+                background-color: #ffffff; /* Default Putih */
+            }
+            body > * {
+                margin-top: 0; /* Cegah margin collapse elemen pertama */
+            }
+            
             ${page.css_content}
             [x-cloak] { display: none !important; }
         </style>
@@ -317,7 +331,8 @@ async function renderPage(c, page) {
         ${page.html_content}
         
         ${appScript}
-        ${paymentScript} ${settings.custom_footer || ''}
+        ${paymentScript}
+        ${settings.custom_footer || ''}
     </body>
     </html>`);
 }
