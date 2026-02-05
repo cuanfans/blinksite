@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor Pro - LandingBuilder Ultimate</title>
+    <title>Editor Pro - LandingBuilder</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -22,335 +22,136 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        body, 
-        html { 
-            height: 100%; 
-            margin: 0 !important; 
-            padding: 0 !important; 
-            overflow: hidden; 
-            font-family: 'Inter', sans-serif; 
-            background: #ffffff; 
-            color: #1e293b; 
-        }
-
-        [x-cloak] { 
-            display: none !important; 
-        }
-
-        .gjs-pn-top-panel, 
-        .gjs-pn-views-container, 
-        .gjs-pn-views, 
-        .gjs-pn-panels, 
-        .gjs-pn-buttons { 
-            display: none !important; 
-        }
-
-        .gjs-cv-canvas { 
-            width: 100%; 
-            height: 100%; 
-            top: 0 !important; 
-            background-color: #f1f5f9; 
-        }
-
-        .gjs-frame-wrapper { 
-            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
-        }
-
-        .panel-tabs { 
-            display: flex; 
-            border-bottom: 1px solid #e2e8f0; 
-            background: #fff; 
-        }
-
-        .panel-tabs button { 
-            flex: 1; 
-            padding: 12px; 
-            color: #94a3b8; 
-            font-size: 20px; 
-            border-bottom: 2px solid transparent; 
-            transition: all 0.2s; 
-        }
-
-        .panel-tabs button:hover { 
-            color: #334155; 
-            background: #f8fafc; 
-        }
-
-        .panel-tabs button.active { 
-            color: #2563eb; 
-            border-bottom-color: #2563eb; 
-            background: #eff6ff; 
-        }
-
-        .gjs-blocks-c { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 8px; 
-            padding: 10px; 
-            background: #fff; 
-        }
-
-        .gjs-block { 
-            width: 100% !important; 
-            min-height: auto !important; 
-            padding: 15px 5px !important; 
-            margin: 0 !important; 
-            background: #fff; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 6px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 5px; 
-            cursor: grab; 
-            transition: all 0.15s; 
-        }
-
-        .gjs-block:hover { 
-            border-color: #3b82f6; 
-            color: #2563eb; 
-            transform: translateY(-1px); 
-        }
-
-        .gjs-block-label { 
-            font-size: 10px; 
-            font-weight: 600; 
-            text-align: center; 
-            margin-top: 2px; 
-        }
-
-        .gjs-block svg, 
-        .gjs-block i { 
-            width: 24px; 
-            height: 24px; 
-            font-size: 24px; 
-            fill: currentColor; 
-        }
-
-        .gjs-field { 
-            background: #fff; 
-            border: 1px solid #cbd5e1; 
-            border-radius: 4px; 
-            padding: 4px; 
-            color: #334155; 
-        }
-
-        .gjs-field input, 
-        .gjs-field select { 
-            font-size: 11px; 
-            width: 100%; 
-            background: transparent; 
-        }
-
-        .gjs-sm-title, 
-        .gjs-tr-header { 
-            background: #f8fafc; 
-            font-size: 11px; 
-            font-weight: 600; 
-            color: #475569; 
-            padding: 10px 12px; 
-            cursor: pointer; 
-            display: flex; 
-            justify-content: space-between; 
-        }
+        /* --- GLOBAL RESET --- */
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: #ffffff; color: #1e293b; }
+        [x-cloak] { display: none !important; }
         
-        ::-webkit-scrollbar { 
-            width: 5px; 
-        } 
+        /* Hapus UI Bawaan */
+        .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-panels, .gjs-pn-buttons { display: none !important; }
         
-        ::-webkit-scrollbar-thumb { 
-            background: #cbd5e1; 
-            border-radius: 3px; 
-        }
+        /* Canvas */
+        .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f1f5f9; }
+        .gjs-frame-wrapper { box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+
+        /* --- PANEL KANAN --- */
+        .panel-tabs { display: flex; border-bottom: 1px solid #e2e8f0; background: #fff; }
+        .panel-tabs button { flex: 1; padding: 12px; color: #94a3b8; font-size: 20px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .panel-tabs button:hover { color: #334155; background: #f8fafc; }
+        .panel-tabs button.active { color: #2563eb; border-bottom-color: #2563eb; background: #eff6ff; }
+
+        /* BLOCKS */
+        .gjs-blocks-c { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
+        .gjs-block { width: 100% !important; min-height: auto !important; padding: 15px 5px !important; margin: 0 !important; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: grab; transition: all 0.15s; }
+        .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-1px); }
+        .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 2px; }
+        .gjs-block svg, .gjs-block i { width: 24px; height: 24px; font-size: 24px; fill: currentColor; }
+        
+        /* CATEGORY */
+        .gjs-block-category .gjs-title { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 8px 12px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; cursor: pointer; }
+
+        /* INPUTS */
+        .gjs-field { background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; color: #334155; }
+        .gjs-field input, .gjs-field select { font-size: 11px; width: 100%; background: transparent; }
+        .gjs-sm-sector { border-bottom: 1px solid #e2e8f0; }
+        .gjs-sm-title { background: #f8fafc; font-size: 11px; font-weight: 600; color: #475569; padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; }
+        .gjs-sm-properties { padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .gjs-sm-property { width: 100%; margin-bottom: 0; }
+        .gjs-sm-property__name { font-size: 10px; margin-bottom: 3px; color: #64748b; }
+        .gjs-sm-property--width, .gjs-sm-property--height, .gjs-sm-property--color { width: 48%; }
+        
+        /* LAYERS */
+        .gjs-layer-item { padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-size: 11px; }
+        .gjs-layer-item.gjs-selected { background: #eff6ff; color: #2563eb; border-left: 2px solid #2563eb; }
+        
+        ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     </style>
 </head>
 
 <body x-data="editorApp()">
+
     <header class="h-12 bg-white border-b border-gray-200 flex justify-between items-center px-4 z-50 relative shrink-0">
         <div class="flex items-center gap-3">
-            <a href="/admin/pages" class="text-gray-500 hover:text-blue-600 transition p-1.5 rounded hover:bg-gray-100">
-                <i class="ph ph-arrow-left text-lg"></i>
-            </a>
+            <a href="/admin/pages" class="text-gray-500 hover:text-blue-600 transition p-1.5 rounded hover:bg-gray-100"><i class="ph ph-arrow-left text-lg"></i></a>
+            <div class="h-5 w-px bg-gray-200"></div>
             <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-gray-400 font-mono">SLUG:</span>
-                <input x-model="page.slug" class="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs font-bold text-gray-700 outline-none w-32">
+                <input x-model="page.slug" class="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs font-bold text-gray-700 outline-none w-32 placeholder-slate-400">
             </div>
         </div>
-        
         <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-50 rounded-lg border border-gray-200 p-0.5">
-            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-blue-600':'text-gray-400'" class="p-1.5 rounded transition">
-                <i class="ph ph-desktop text-lg"></i>
-            </button>
-            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow text-blue-600':'text-gray-400'" class="p-1.5 rounded transition">
-                <i class="ph ph-device-tablet text-lg"></i>
-            </button>
-            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-blue-600':'text-gray-400'" class="p-1.5 rounded transition">
-                <i class="ph ph-device-mobile text-lg"></i>
-            </button>
+            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-blue-50 text-blue-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
+            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-blue-50 text-blue-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-blue-50 text-blue-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
+            <div class="w-px h-4 bg-gray-300 mx-2"></div>
+            <button @click="cmd('core:undo')" class="text-gray-500 hover:text-black p-1.5"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
+            <button @click="cmd('core:redo')" class="text-gray-500 hover:text-black p-1.5"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
+            <button @click="cmd('core:preview')" class="text-gray-500 hover:text-blue-600 p-1.5"><i class="ph ph-eye text-lg"></i></button>
         </div>
-
         <div class="flex items-center gap-3">
-            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-1.5 rounded text-xs font-bold transition flex items-center gap-2 disabled:opacity-50">
-                <i x-show="loading" class="ph ph-spinner animate-spin"></i> 
-                <span x-text="loading ? 'Saving...' : 'SIMPAN'"></span>
+            <button @click="showSettings=true" class="text-slate-500 hover:text-blue-600 flex items-center gap-1 text-xs font-bold bg-gray-50 px-2 py-1.5 rounded border border-gray-200"><i class="ph ph-gear text-lg"></i> Config</button>
+            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-xs font-bold transition flex items-center gap-2 disabled:opacity-50">
+                <i x-show="loading" class="ph ph-spinner animate-spin"></i> <span x-text="loading ? 'Saving...' : 'SIMPAN'"></span>
             </button>
         </div>
     </header>
+
     <div class="flex h-[calc(100vh-3rem)] overflow-hidden">
         <div class="flex-1 relative bg-gray-100 flex flex-col items-center justify-center p-8 overflow-hidden">
             <div id="gjs" class="flex-1 w-full h-full shadow-lg rounded-sm overflow-hidden border border-gray-300 bg-white"></div>
         </div>
-
-        <div class="w-[340px] bg-white border-l border-gray-200 flex flex-col z-20 shrink-0 shadow-lg">
+        <div class="w-[300px] bg-white border-l border-gray-200 flex flex-col z-20 shrink-0 shadow-lg">
             <div class="panel-tabs">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'active':''" title="Elements">
-                    <i class="ph ph-squares-four"></i>
-                </button>
-                <button @click="tab='styles'" :class="tab=='styles'?'active':''" title="Style">
-                    <i class="ph ph-paint-brush"></i>
-                </button>
-                <button @click="tab='settings'" :class="tab=='settings'?'active':''" title="Page Config">
-                    <i class="ph ph-gear"></i>
-                </button>
-                <button @click="tab='layers'" :class="tab=='layers'?'active':''" title="Layers">
-                    <i class="ph ph-list-dashes"></i>
-                </button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'active':''" title="Templates"><i class="ph ph-squares-four"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'active':''" title="Style"><i class="ph ph-paint-brush"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'active':''" title="Settings"><i class="ph ph-sliders-horizontal"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'active':''" title="Layers"><i class="ph ph-list-dashes"></i></button>
             </div>
-
             <div class="flex-1 overflow-y-auto bg-white relative custom-scroll">
                 <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-10"></div>
-                <div x-show="tab=='styles'">
-                    <div id="selectors-container" class="p-2 border-b"></div>
-                    <div id="styles-container" class="pb-10"></div>
-                </div>
-                
-                <div x-show="tab=='settings'" class="p-4 space-y-6 pb-20">
-                    
-                    <div class="space-y-3">
-                        <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b pb-1">Produk & Tipe</h3>
-                        <div class="flex bg-gray-100 p-1 rounded">
-                            <button @click="page.product_type='physical'" 
-                                    :class="page.product_type=='physical'?'bg-white shadow':''" 
-                                    class="flex-1 py-1 text-[10px] font-bold rounded transition uppercase">Fisik</button>
-                            <button @click="page.product_type='digital'" 
-                                    :class="page.product_type=='digital'?'bg-white shadow':''" 
-                                    class="flex-1 py-1 text-[10px] font-bold rounded transition uppercase">Digital</button>
-                        </div>
-                        <div x-show="page.product_type==='physical'">
-                            <label class="text-[10px] font-bold text-gray-500 uppercase">Berat Paket (Gram)</label>
-                            <input x-model="page.config.shipping.weight" type="number" 
-                                   class="w-full border rounded p-1.5 text-xs bg-gray-50 outline-none">
-                        </div>
-                    </div>
-
-                    <div class="pt-4 border-t">
-                        <h3 class="text-[10px] font-bold text-purple-600 uppercase tracking-widest border-b pb-1">Order Bump</h3>
-                        <div class="mt-2 space-y-2">
-                            <label class="flex items-center gap-2 text-xs font-bold cursor-pointer">
-                                <input type="checkbox" x-model="page.config.order_bump.active"> 
-                                <span>AKTIFKAN ORDER BUMP</span>
-                            </label>
-                            <div x-show="page.config.order_bump.active" 
-                                 class="space-y-2 bg-purple-50 p-2 rounded border border-purple-100 transition-all">
-                                <input x-model="page.config.order_bump.title" 
-                                       class="w-full border rounded p-1.5 text-xs" placeholder="Judul Penawaran">
-                                <input x-model="page.config.order_bump.price" type="number" 
-                                       class="w-full border rounded p-1.5 text-xs" placeholder="Harga Tambahan">
-                                <textarea x-model="page.config.order_bump.desc" 
-                                          class="w-full border rounded p-1.5 text-xs h-16" placeholder="Deskripsi Singkat"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pt-4 border-t">
-                        <h3 class="text-[10px] font-bold text-red-500 uppercase tracking-widest border-b pb-1">Kupon Diskon</h3>
-                        <div class="mt-2 space-y-2">
-                            <template x-for="(c, i) in page.config.coupons">
-                                <div class="bg-red-50 p-2 rounded border border-red-100 relative group">
-                                    <button @click="page.config.coupons.splice(i,1)" 
-                                            class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition shadow">
-                                        <i class="ph ph-x text-[10px]"></i>
-                                    </button>
-                                    <div class="flex gap-1 mb-1">
-                                        <input x-model="c.code" class="flex-1 border rounded px-1.5 py-1 text-[10px] font-bold uppercase" placeholder="KODE">
-                                        <select x-model="c.type" class="border rounded text-[9px]">
-                                            <option value="percent">%</option>
-                                            <option value="fixed">Rp</option>
-                                        </select>
-                                    </div>
-                                    <input x-model="c.value" type="number" class="w-full border rounded px-1.5 py-1 text-[10px]" placeholder="Nilai Potongan">
-                                </div>
-                            </template>
-                            <button @click="page.config.coupons.push({code:'', type:'percent', value:0})" 
-                                    class="w-full border-2 border-dashed border-red-200 py-1.5 text-[10px] font-bold text-red-600 rounded uppercase hover:bg-red-50 transition">
-                                + Tambah Kupon
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="space-y-3 pt-4 border-t">
-                        <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b pb-1">Varian Utama</h3>
-                        <template x-for="(v, i) in page.config.variants">
-                            <div class="flex gap-1 mb-1 items-center bg-gray-50 p-1 rounded border">
-                                <input x-model="v.name" class="flex-1 border rounded px-1 text-xs" placeholder="Nama">
-                                <input x-model="v.price" type="number" class="w-16 border rounded px-1 text-xs" placeholder="Harga">
-                                <button @click="page.config.variants.splice(i,1)" class="text-red-500 hover:bg-red-100 p-1 rounded">
-                                    <i class="ph ph-trash"></i>
-                                </button>
-                            </div>
-                        </template>
-                        <button @click="addVariant" 
-                                class="w-full border-2 border-dashed border-gray-200 py-1.5 text-[10px] font-bold text-blue-600 rounded uppercase hover:bg-blue-50 transition">
-                            + Tambah Varian
-                        </button>
-                    </div>
-
-                    <div class="space-y-3 pt-4 border-t">
-                        <h3 class="text-[10px] font-bold text-green-600 uppercase tracking-widest border-b pb-1">SEO & Scripts</h3>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-500">JUDUL (SEO)</label>
-                            <input x-model="page.config.settings.seo_title" class="w-full border rounded p-1.5 text-xs bg-gray-50">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-500">DESKRIPSI (SEO)</label>
-                            <textarea x-model="page.config.settings.seo_description" class="w-full border rounded p-1.5 text-xs bg-gray-50 h-16"></textarea>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-500">OG IMAGE URL</label>
-                            <input x-model="page.config.settings.og_image" class="w-full border rounded p-1.5 text-xs font-mono bg-gray-50">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-500">CUSTOM HEAD SCRIPT</label>
-                            <textarea x-model="page.config.settings.custom_head" class="w-full border rounded p-1.5 text-xs font-mono h-20 bg-gray-50" placeholder="<script>..."></textarea>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-500">CUSTOM FOOTER SCRIPT</label>
-                            <textarea x-model="page.config.settings.custom_footer" class="w-full border rounded p-1.5 text-xs font-mono h-20 bg-gray-50"></textarea>
-                        </div>
-                    </div>
-                </div>
+                <div x-show="tab=='styles'"><div id="selectors-container" class="p-2 border-b"></div><div id="styles-container" class="pb-10"></div></div>
+                <div x-show="tab=='traits'"><div class="p-3 bg-blue-50 text-blue-700 text-xs font-bold border-b mb-2">PROPERTIES</div><div id="traits-container" class="pb-10 px-2"></div></div>
                 <div x-show="tab=='layers'" id="layers-container" class="absolute inset-0 pb-10"></div>
             </div>
         </div>
     </div>
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
+        <div class="w-[450px] h-full bg-white shadow-2xl flex flex-col transition-transform duration-300" x-transition:enter="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="translate-x-0" x-transition:leave-end="translate-x-full">
+            <div class="p-4 border-b bg-gray-50 flex justify-between items-center"><h2 class="font-bold text-gray-800"><i class="ph ph-faders"></i> Page Config</h2><button @click="showSettings = false"><i class="ph ph-x"></i></button></div>
+            <div class="flex-1 overflow-y-auto p-5 space-y-6 custom-scroll">
+                <div>
+                    <h3 class="text-xs font-bold text-blue-600 uppercase mb-2 border-b pb-1">Product</h3>
+                    <div class="flex bg-gray-100 p-1 rounded mb-3">
+                        <button @click="page.product_type='physical'" :class="page.product_type=='physical'?'bg-white shadow':''" class="flex-1 py-1 text-xs font-bold rounded transition">Fisik</button>
+                        <button @click="page.product_type='digital'" :class="page.product_type=='digital'?'bg-white shadow':''" class="flex-1 py-1 text-xs font-bold rounded transition">Digital</button>
+                    </div>
+                    <div x-show="page.product_type==='physical'"><label class="text-[10px] font-bold text-gray-500">Berat (gr)</label><input x-model="page.config.shipping.weight" type="number" class="w-full border rounded p-1.5 text-xs"></div>
+                    <div class="mt-2"><label class="text-[10px] font-bold text-gray-500">Variants</label><template x-for="(v, i) in page.config.variants"><div class="flex gap-1 mb-1"><input x-model="v.name" class="flex-1 border rounded px-2 text-xs"><input x-model="v.price" type="number" class="w-20 border rounded px-2 text-xs"><button @click="page.config.variants.splice(i,1)" class="text-red-500"><i class="ph ph-trash"></i></button></div></template><button @click="addVariant" class="text-xs text-blue-600 font-bold">+ Add Variant</button></div>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-green-600 uppercase mb-2 border-b pb-1">SEO & Social</h3>
+                    <div class="space-y-2">
+                        <input x-model="page.config.settings.seo_title" class="w-full border rounded p-1.5 text-xs" placeholder="Page Title">
+                        <textarea x-model="page.config.settings.seo_description" class="w-full border rounded p-1.5 text-xs" rows="2" placeholder="Description"></textarea>
+                        <input x-model="page.config.settings.favicon" class="w-full border rounded p-1.5 text-xs font-mono" placeholder="Favicon URL">
+                        <input x-model="page.config.settings.og_image" class="w-full border rounded p-1.5 text-xs font-mono" placeholder="OG Image URL">
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-gray-600 uppercase mb-2 border-b pb-1">API Key</h3>
+                    <select x-model="cred.provider" class="w-full border rounded p-1.5 text-xs mb-2"><option value="midtrans">Midtrans</option><option value="cloudinary">Cloudinary</option></select>
+                    <textarea x-model="cred.data" class="w-full border rounded p-1.5 text-xs font-mono" rows="3" placeholder='JSON Config'></textarea>
+                    <button @click="saveCreds" class="w-full bg-slate-800 text-white py-1.5 rounded text-xs font-bold mt-2">Simpan Key</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         function editorApp() {
             return {
-                loading: false, 
-                device: 'desktop', 
-                tab: 'blocks',
-                page: { 
-                    slug: '', 
-                    title: '', 
-                    product_type: 'physical', 
-                    config: { 
-                        variants: [], 
-                        shipping: { weight: 1000 }, 
-                        order_bump: { active: false, title: '', price: 0, desc: '' }, 
-                        coupons: [], 
-                        settings: {} 
-                    } 
-                },
+                loading: false, showSettings: false, device: 'desktop', tab: 'blocks',
+                page: { slug: '', title: '', product_type: 'physical', config: { variants:[], shipping:{weight:1000}, settings:{} } },
                 cred: { provider: 'midtrans', data: '' },
                 authPass: localStorage.getItem('admin_pass'),
 
@@ -361,93 +162,41 @@
                     this.initGrapes();
                 },
 
-                setDevice(d) { 
-                    this.device = d; 
-                    window.editor.setDevice(d); 
-                },
-
-                cmd(c) { 
-                    window.editor.runCommand(c); 
-                },
-
-                addVariant() { 
-                    this.page.config.variants.push({ id: Date.now(), name: '', price: 0 }); 
-                },
+                setDevice(d) { this.device=d; window.editor.setDevice(d); },
+                cmd(c) { window.editor.runCommand(c); },
+                addVariant() { this.page.config.variants.push({id:Date.now(), name:'', price:0}) },
                 
                 async saveCreds() {
-                    try { 
-                        const res = await fetch('/api/admin/credentials', {
-                            method: 'POST', 
-                            headers: { 'Authorization': this.authPass }, 
-                            body: JSON.stringify({ provider: this.cred.provider, data: JSON.parse(this.cred.data) })
-                        }); 
-                        if(res.ok) alert('Kredensial Tersimpan!'); 
-                    } catch(e) { alert('Format JSON Salah!'); }
+                    try { await fetch('/api/admin/credentials', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({provider:this.cred.provider, data:JSON.parse(this.cred.data)})}); alert('Tersimpan!'); } catch(e){ alert('JSON Salah'); }
                 },
-
                 async savePage() {
-                    this.loading = true;
-                    try { 
-                        const res = await fetch('/api/admin/pages', {
-                            method: 'POST', 
-                            headers: { 'Authorization': this.authPass }, 
-                            body: JSON.stringify({
-                                slug: this.page.slug, 
-                                title: this.page.title, 
-                                product_type: this.page.product_type, 
-                                html: editor.getHtml(), 
-                                css: editor.getCss(), 
-                                product_config: this.page.config
-                            })
-                        }); 
-                        if(res.ok) alert('Berhasil Disimpan!'); 
-                    } catch(e) { alert('Gagal Menyimpan.'); }
-                    this.loading = false;
+                    this.loading=true;
+                    try { await fetch('/api/admin/pages', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({slug:this.page.slug, title:this.page.title, product_type:this.page.product_type, html:editor.getHtml(), css:editor.getCss(), product_config:this.page.config})}); alert('Berhasil!'); } catch(e){ alert('Gagal'); }
+                    this.loading=false;
                 },
 
                 initGrapes() {
                     setTimeout(() => {
                         window.editor = grapesjs.init({
-                            container: '#gjs', 
-                            height: '100%', 
-                            fromElement: false, 
-                            storageManager: false,
-                            plugins: [
-                                'gjs-blocks-basic', 
-                                'grapesjs-plugin-forms', 
-                                'grapesjs-navbar', 
-                                'grapesjs-component-countdown', 
-                                'grapesjs-tabs', 
-                                'grapesjs-custom-code', 
-                                'grapesjs-tooltip'
-                            ],
+                            container: '#gjs', height: '100%', fromElement: false, storageManager: false,
+                            plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-component-countdown', 'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip'],
                             pluginsOpts: { 'gjs-blocks-basic': { flexGrid: true } },
-                            deviceManager: { 
-                                devices: [
-                                    { id: 'desktop', width: '' }, 
-                                    { id: 'tablet', width: '768px' }, 
-                                    { id: 'mobile', width: '375px' }
-                                ] 
-                            },
+                            deviceManager: { devices: [{id:'desktop',width:''}, {id:'tablet',width:'768px'}, {id:'mobile',width:'375px'}] },
                             blockManager: { appendTo: '#blocks-container' },
                             layerManager: { appendTo: '#layers-container' },
-                            selectorManager: { appendTo: '#selectors-container' },
-                            traitManager: { appendTo: '#traits-container' }, // PENTING UNTUK INPUT VIDEO ID
-                            styleManager: { 
-                                appendTo: '#styles-container', 
-                                sectors: [
-                                    { name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'] }, 
-                                    { name: 'Dimensions', open: false, buildProps: ['width', 'height', 'max-width', 'padding', 'margin'] }, 
-                                    { name: 'Layout', open: false, buildProps: ['display', 'flex-direction', 'justify-content', 'align-items', 'gap'] }, 
-                                    { name: 'Decorations', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'] }
-                                ] 
-                            },
+                            selectorManager: { appendTo: '#styles-container' },
+                            traitManager: { appendTo: '#traits-container' },
+                            styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'] }, { name: 'Dimensions', open: false, buildProps: ['width', 'height', 'max-width', 'min-height', 'padding', 'margin'] }, { name: 'Layout', open: false, buildProps: ['display', 'flex-direction', 'justify-content', 'align-items', 'gap'] }, { name: 'Decorations', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'] }] },
+                            
+                            // ------------------------------------
+                            // ASSET MANAGER (BASE64 UPLOAD FIX)
+                            // ------------------------------------
                             assetManager: { 
-                                upload: false, 
+                                upload: false,
                                 autoAdd: true,
                                 uploadFile: async (e) => {
                                     const files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
-                                    for(let i=0; i<files.length; i++) {
+                                    for(let i=0; i<files.length; i++){
                                         const file = files[i];
                                         const reader = new FileReader();
                                         reader.readAsDataURL(file);
@@ -460,70 +209,79 @@
                                                 });
                                                 const json = await res.json();
                                                 if(json.data) window.editor.AssetManager.add(json.data);
-                                            } catch(err) { alert('Upload Gagal'); }
+                                                else alert(json.message || 'Upload Gagal');
+                                            } catch(err) { console.error(err); alert('Koneksi Gagal'); }
                                         };
                                     }
                                 }
                             }
                         });
 
+                        // ------------------------------------
+                        // CUSTOM BLOCKS (HEADER IMAGE LOGO)
+                        // ------------------------------------
                         const bm = editor.BlockManager;
 
-                        // LAYOUT
-                        bm.add('container-box', { label: 'Boxed Container', category: 'Layout', content: `<div style="max-width:1200px; width:100%; margin:0 auto; padding:20px; box-sizing:border-box; min-height:50px;"></div>` });
-                        bm.add('section-std', { label: 'Standard Section', category: 'Layout', content: `<section style="padding:60px 0; width:100%; box-sizing:border-box;"><div style="max-width:1100px; margin:0 auto; padding:0 20px; box-sizing:border-box;"></div></section>` });
+                        // LAYOUTS
+                        bm.add('container-fluid', { label: 'Container (Fluid)', category: 'Layout', attributes: {class:'ph ph-arrows-out-line-horizontal'}, content: `<div style="width:90%; max-width:1200px; margin:0 auto; padding:20px; min-height:50px;"></div>` });
+                        bm.add('container-full', { label: 'Container (Full)', category: 'Layout', attributes: {class:'ph ph-arrows-out-simple'}, content: `<div style="width:100%; padding:20px; min-height:50px;"></div>` });
+                        bm.add('section-std', { label: 'Section', category: 'Layout', attributes: {class:'ph ph-square'}, content: `<section style="padding:60px 0; background-color:#fff;"><div style="width:90%; max-width:1100px; margin:0 auto;"></div></section>` });
 
-                        // HEADERS
-                        bm.add('header-s', { label: 'Logo Center', category: 'Headers', content: `<header style="padding:15px 20px; border-bottom:1px solid #eee; display:flex; justify-content:center; align-items:center; width:100%; box-sizing:border-box;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /></header>` });
-                        bm.add('header-l', { label: 'Logo Left', category: 'Headers', content: `<header style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; flex-wrap:wrap; width:100%; box-sizing:border-box;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:35px; object-fit:contain;" /><nav style="display:flex; gap:15px;"><a href="#" style="color:#333; text-decoration:none; font-size:14px;">Home</a><a href="#" style="color:#333; text-decoration:none; font-size:14px;">Contact</a></nav></header>` });
-
-                        // TEMPLATES
-                        bm.add('hero-tpl', { label: 'Hero Utama', category: 'Templates', content: `<section style="padding:60px 20px; text-align:center; background:#f8fafc; width:100%; box-sizing:border-box;"><h1 style="font-size:2.5rem; margin-bottom:20px; color:#1e293b; font-weight:800; line-height:1.2;">Headline Anda</h1><p style="font-size:1.1rem; color:#64748b; margin-bottom:30px; max-width:700px; margin-left:auto; margin-right:auto;">Penjelasan produk Anda.</p><a href="#" style="display:inline-block; padding:15px 35px; background:#2563eb; color:white; border-radius:8px; text-decoration:none; font-weight:bold;">Beli Sekarang</a></section>` });
-
-                        // --- WIDGETS (FIX VIDEO TRAITS) ---
-                        bm.add('video', { 
-                            label: 'YouTube Video', 
-                            category: 'Media', 
-                            attributes: { class: 'ph ph-youtube-logo' },
-                            content: { 
-                                type: 'video', 
-                                provider: 'yt', // Supaya panel "Video ID" muncul di sidebar
-                                style: { width: '100%', height: '350px', 'max-width': '800px', margin: '0 auto' } 
-                            } 
+                        // HEADER DENGAN IMAGE LOGO (PLACEHOLDER)
+                        bm.add('header-simple', { 
+                            label: 'Header Logo', category: 'Headers', attributes:{class:'ph ph-list'}, 
+                            content: `<header style="padding:15px 20px; border-bottom:1px solid #eee; display:flex; justify-content:center; align-items:center;">
+                                        <img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" alt="Logo" />
+                                      </header>` 
                         });
-                        
-                        bm.add('checkout-pro', { label: 'Checkout Widget', category: 'E-Commerce', content: `<div data-gjs-type="checkout-widget" style="padding:20px; border:2px dashed #3b82f6; background:#eff6ff; text-align:center; border-radius:8px;"><strong style="color:#1e40af;">[ FORM CHECKOUT & ORDER BUMP ]</strong></div>` });
-                        bm.add('custom-code-blk', { label: 'Embed Code', category: 'Extra', content: { type: 'custom-code', content: '' } });
+                        bm.add('header-left', { 
+                            label: 'Header Left', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, 
+                            content: `<header style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;">
+                                        <img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" alt="Logo" />
+                                        <nav><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Home</a><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Contact</a></nav>
+                                      </header>` 
+                        });
+                        bm.add('header-right', { 
+                            label: 'Header Right', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, 
+                            content: `<header style="padding:15px 20px; display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;">
+                                        <img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" alt="Logo" />
+                                        <nav><a href="#" style="margin-right:15px; color:#333; text-decoration:none;">Home</a></nav>
+                                      </header>` 
+                        });
+                        bm.add('header-center', { 
+                            label: 'Header Center', category: 'Headers', attributes:{class:'ph ph-align-center-horizontal-simple'}, 
+                            content: `<header style="padding:20px; text-align:center; border-bottom:1px solid #eee;">
+                                        <img src="https://via.placeholder.com/150x50?text=LOGO" style="height:50px; margin-bottom:10px; object-fit:contain;" alt="Logo" />
+                                        <nav style="display:block;"><a href="#" style="margin:0 10px; color:#333;">Home</a><a href="#" style="margin:0 10px; color:#333;">About</a></nav>
+                                      </header>` 
+                        });
+
+                        // CONTENT TEMPLATES
+                        bm.add('hero-tpl', { 
+                            label: 'Hero Section', category: 'Templates', attributes:{class:'ph ph-layout'}, 
+                            content: `<section style="padding:80px 20px; text-align:center; background:#f8fafc;"><h1 style="font-size:3rem; margin-bottom:20px; color:#1e293b;">Judul Hero Menarik</h1><p style="font-size:1.2rem; color:#64748b; margin-bottom:30px; max-width:700px; margin-left:auto; margin-right:auto;">Subjudul yang menjelaskan value proposition produk Anda.</p><a href="#" style="padding:12px 30px; background:#2563eb; color:white; border-radius:5px; text-decoration:none; font-weight:bold;">Call to Action</a></section>` 
+                        });
+                        bm.add('features-tpl', {
+                            label: 'Features 3-Col', category: 'Templates', attributes:{class:'ph ph-grid-three'},
+                            content: `<section style="padding:60px 20px;"><div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:30px;"><div style="text-align:center; padding:20px; border:1px solid #eee; border-radius:8px;"><h3>Fitur 1</h3><p>Deskripsi singkat.</p></div><div style="text-align:center; padding:20px; border:1px solid #eee; border-radius:8px;"><h3>Fitur 2</h3><p>Deskripsi singkat.</p></div><div style="text-align:center; padding:20px; border:1px solid #eee; border-radius:8px;"><h3>Fitur 3</h3><p>Deskripsi singkat.</p></div></div></section>`
+                        });
+
+                        // WIDGETS
+                        bm.add('video-yt', { label: 'YouTube', category: 'Media', attributes:{class:'ph ph-youtube-logo'}, content: { type: 'video', provider: 'yt', style: { height: '350px', width: '100%' } } });
+                        bm.add('custom-code-blk', { label: 'Custom HTML', category: 'Extra', attributes:{class:'ph ph-code'}, content: { type: 'custom-code', content: '' } });
+                        bm.add('checkout-pro', { label: 'Form Checkout', category: 'E-Commerce', attributes:{class:'ph ph-shopping-cart'}, content: `<div data-gjs-type="checkout-widget" style="padding:20px; border:2px dashed #3b82f6; background:#eff6ff; text-align:center; border-radius:8px;"><strong style="color:#1e40af;">[ FORM CHECKOUT ]</strong><p style="font-size:12px; color:#64748b;">Akan muncul saat live.</p></div>` });
 
                         editor.on('load', () => {
-                            const body = editor.Canvas.getBody();
-                            body.style.backgroundColor = '#ffffff';
-                            body.style.margin = '0';
-                            body.style.padding = '0';
-
+                            editor.Canvas.getBody().style.backgroundColor = '#ffffff';
                             if(this.page.slug) {
                                 fetch('/api/admin/pages/'+this.page.slug).then(r=>r.json()).then(d=>{
                                     if(d.id) {
-                                        this.page.title=d.title; 
-                                        this.page.product_type=d.product_type||'physical';
-                                        try { 
-                                            const saved = JSON.parse(d.product_config_json||'{}');
-                                            this.page.config = {
-                                                variants: saved.variants || [],
-                                                shipping: saved.shipping || {weight:1000},
-                                                order_bump: saved.order_bump || {active:false, title:'', price:0, desc:''},
-                                                coupons: saved.coupons || [],
-                                                settings: saved.settings || {}
-                                            };
-                                        } catch(e) { this.page.config = {variants:[], shipping:{weight:1000}, order_bump:{active:false}, settings:{}}; }
-                                        
-                                        let rawHtml = d.html_content || '';
-                                        const ghost = '<section class="py-20 px-4 text-center bg-gray-100"><div id="iilw"></div></section>';
-                                        if (rawHtml.includes(ghost)) rawHtml = rawHtml.replace(ghost, '');
-
-                                        editor.setComponents(rawHtml);
+                                        this.page.title=d.title; this.page.product_type=d.product_type||'physical';
+                                        try{ this.page.config=JSON.parse(d.product_config_json||'{}'); }catch(e){ this.page.config={variants:[],settings:{}}; }
+                                        if(!this.page.config.settings) this.page.config.settings={seo_title:d.title};
+                                        if(!this.page.config.shipping) this.page.config.shipping={weight:1000};
+                                        if(d.html_content) editor.setComponents(d.html_content);
                                         if(d.css_content) editor.setStyle(d.css_content);
-                                        setTimeout(() => { editor.refresh(); }, 200);
                                     }
                                 });
                             }
@@ -533,7 +291,5 @@
             }
         }
     </script>
-</body>
-</html>
 </body>
 </html>
