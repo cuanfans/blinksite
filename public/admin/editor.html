@@ -94,6 +94,7 @@
             <button @click="setDevice('mobile')" :class="device=='mobile' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
             
             <div class="w-px h-4 bg-gray-300 mx-2"></div>
+            
             <button @click="cmd('core:undo')" class="text-gray-500 hover:text-black p-1.5 transition"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
             <button @click="cmd('core:redo')" class="text-gray-500 hover:text-black p-1.5 transition"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
             <button @click="cmd('core:preview')" class="text-gray-500 hover:text-blue-600 p-1.5 transition"><i class="ph ph-eye text-lg"></i></button>
@@ -166,7 +167,6 @@
                                     <button @click="page.config.variants.splice(i,1)" class="text-red-400 px-1 hover:text-red-600"><i class="ph ph-trash"></i></button>
                                 </div>
                             </template>
-                            <div x-show="page.config.variants.length === 0" class="text-center text-[10px] text-gray-400 italic py-1">Belum ada varian</div>
                         </div>
                     </div>
 
@@ -174,16 +174,35 @@
                         <h3 class="text-xs font-bold uppercase text-gray-400 mb-3 border-b pb-1 tracking-wider">SEO & Metadata</h3>
                         <div class="space-y-3">
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Judul SEO (Meta Title)</label>
-                                <input x-model="page.config.settings.seo_title" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="Judul Halaman...">
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Judul SEO (Browser Title)</label>
+                                <input x-model="page.config.settings.seo_title" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="Judul di Tab Browser">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 mb-1">Deskripsi SEO</label>
                                 <textarea x-model="page.config.settings.seo_description" rows="2" class="w-full border border-gray-300 rounded p-1.5 text-xs"></textarea>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Favicon URL (Icon Tab)</label>
-                                <input x-model="page.config.settings.favicon" class="w-full border border-gray-300 rounded p-1.5 text-xs font-mono" placeholder="https://contoh.com/icon.png">
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Favicon URL</label>
+                                <input x-model="page.config.settings.favicon" class="w-full border border-gray-300 rounded p-1.5 text-xs font-mono" placeholder="https://...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-bold uppercase text-blue-500 mb-3 border-b pb-1 tracking-wider">Social Media (Open Graph)</h3>
+                        <div class="space-y-3 p-3 bg-blue-50/50 rounded border border-blue-100">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">OG Title (Judul Share)</label>
+                                <input x-model="page.config.settings.og_title" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="Sama dengan SEO Title jika kosong">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">OG Description</label>
+                                <textarea x-model="page.config.settings.og_description" rows="2" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="Sama dengan SEO Desc jika kosong"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">OG Image URL (Thumbnail)</label>
+                                <input x-model="page.config.settings.og_image" class="w-full border border-gray-300 rounded p-1.5 text-xs font-mono" placeholder="https://...">
+                                <p class="text-[9px] text-gray-400 mt-1">Gambar yang muncul saat link disebar di WA/FB.</p>
                             </div>
                         </div>
                     </div>
@@ -191,23 +210,23 @@
                     <div>
                         <h3 class="text-xs font-bold uppercase text-gray-400 mb-3 border-b pb-1 tracking-wider">Scripts & Tracking</h3>
                         <div class="space-y-3">
-                            <div>
-                                <label class="block text-[10px] font-bold text-blue-600 mb-1">Facebook Pixel ID</label>
-                                <input x-model="page.config.settings.fb_pixel_id" class="w-full border border-blue-200 bg-blue-50/50 rounded p-1.5 text-xs" placeholder="1234567890">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-800 mb-1">TikTok Pixel ID</label>
-                                <input x-model="page.config.settings.tiktok_pixel_id" class="w-full border border-gray-300 rounded p-1.5 text-xs" placeholder="CXXXXXXXX">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-blue-600 mb-1">FB Pixel ID</label>
+                                    <input x-model="page.config.settings.fb_pixel_id" class="w-full border border-blue-200 bg-blue-50/50 rounded p-1.5 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-800 mb-1">TikTok Pixel</label>
+                                    <input x-model="page.config.settings.tiktok_pixel_id" class="w-full border border-gray-300 rounded p-1.5 text-xs">
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-orange-600 mb-1">Custom Head Script</label>
                                 <textarea x-model="page.config.settings.custom_head" rows="3" class="w-full border border-orange-200 bg-orange-50/50 rounded p-1.5 text-xs font-mono text-gray-600" placeholder="<script>..."></textarea>
-                                <p class="text-[9px] text-gray-400 mt-1">Kode ini akan dimasukkan di dalam tag &lt;head&gt;</p>
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 mb-1">Custom Body Script (Footer)</label>
                                 <textarea x-model="page.config.settings.custom_footer" rows="3" class="w-full border border-gray-300 rounded p-1.5 text-xs font-mono text-gray-600" placeholder="<script>..."></textarea>
-                                <p class="text-[9px] text-gray-400 mt-1">Kode ini akan dimasukkan sebelum tag &lt;/body&gt; (Chat widget, dll)</p>
                             </div>
                         </div>
                     </div>
@@ -245,6 +264,9 @@
                             seo_title: '', 
                             seo_description: '', 
                             favicon: '', 
+                            og_title: '',       // NEW
+                            og_description: '', // NEW
+                            og_image: '',       // NEW
                             fb_pixel_id: '', 
                             tiktok_pixel_id: '',
                             custom_head: '',
