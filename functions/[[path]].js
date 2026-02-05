@@ -1,27 +1,33 @@
 import { Hono } from 'hono'
 import { handle } from 'hono/cloudflare-pages'
-import { setCookie, getCookie, deleteCookie } from 'hono/cookie' // WAJIB ADA
-import { sign, verify } from 'hono/jwt' // WAJIB ADA
+import { setCookie, getCookie, deleteCookie } from 'hono/cookie'
+import { sign, verify } from 'hono/jwt'
 import { sha256, encryptJSON } from '../src/utils'
 import { executePayment } from '../src/engine'
 import { uploadImage } from '../src/modules/cloudinary'
 import { checkShipping } from '../src/modules/shipping'
 
 const app = new Hono()
-const JWT_SECRET = 'RAHASIA_NEGARA_GANTI_DENGAN_ENV_VAR' // Harusnya dari c.env.APP_SECRET
+const JWT_SECRET = 'BantarCaringin1234567890BantarCaringin1234567890BantarCaringin1234567890' // Ganti dengan c.env.APP_SECRET di production
 
 // ===============================================
-// 0. GLOBAL CONFIG
+// 0. GLOBAL CONFIG & LOGGING
 // ===============================================
+
+// Middleware: Log Request (Paling Atas)
 app.use('*', async (c, next) => {
+    console.log(`[${c.req.method}] ${c.req.url}`);
     await next();
 });
 
+// Error Handler
 app.onError((err, c) => {
-    console.error(`[ERROR] ${err.message}`, err.stack);
-    return c.json({ success: false, message: 'Internal Server Error' }, 500);
+    console.error(`[ERROR] ${err.message}`);
+    console.error(err.stack);
+    return c.json({ success: false, message: 'Internal Server Error', debug: err.message }, 500);
 });
 
+// Helper: Serve Asset
 async function serveAsset(c, path) {
     try {
         const url = new URL(path, c.req.url);
@@ -32,13 +38,14 @@ async function serveAsset(c, path) {
 }
 
 // ===============================================
-// 1. AUTH MIDDLEWARE (PENJAGA PINTU UTAMA)
+// 1. AUTH MIDDLEWARE LOGIC
 // ===============================================
-// Mencegat SEMUA akses ke /admin... dan /api/admin...
-app.use(['/admin*', '/api/admin*'], async (c, next) => {
+
+// Kita definisikan fungsi middleware secara terpisah agar bisa dipakai berulang
+const requireAuth = async (c, next) => {
     const path = new URL(c.req.url).pathname;
 
-    // 1. Whitelist: Biarkan halaman login dan asset lewat
+    // 1. Whitelist: Biarkan halaman login dan file asset (titik) lewat
     if (path === '/admin/login' || path === '/api/login' || path.includes('.')) {
         await next();
         return;
@@ -47,42 +54,42 @@ app.use(['/admin*', '/api/admin*'], async (c, next) => {
     // 2. Ambil Cookie
     const token = getCookie(c, 'auth_token');
 
-    // 3. Jika tidak ada token -> TENDANG KELUAR
+    // 3. Jika tidak ada token -> TENDANG
     if (!token) {
-        // Jika request API, balas JSON error
         if (path.startsWith('/api/')) {
             return c.json({ error: 'Unauthorized: No Token' }, 401);
         }
-        // Jika akses halaman HTML, Redirect ke login
         return c.redirect('/login');
     }
 
     // 4. Verifikasi Token JWT
     try {
-        const payload = await verify(token, c.env.APP_MASTER_KEY || JWT_SECRET);
-        // Token valid, lanjut
-        c.set('jwtPayload', payload);
+        const secret = c.env.APP_MASTER_KEY || JWT_SECRET;
+        const payload = await verify(token, secret);
+        c.set('jwtPayload', payload); // Simpan info user di context
         await next();
     } catch (e) {
-        // Token palsu/expired -> Hapus cookie & Tendang
+        // Token tidak valid/expired
         deleteCookie(c, 'auth_token');
         if (path.startsWith('/api/')) {
             return c.json({ error: 'Unauthorized: Invalid Token' }, 401);
         }
         return c.redirect('/login');
     }
-});
+};
+
+// TERAPKAN MIDDLEWARE KE RUTE SPESIFIK (JANGAN PAKAI ARRAY DI SINI)
+app.use('/admin*', requireAuth);
+app.use('/api/admin*', requireAuth);
 
 // ===============================================
 // 2. AUTH ROUTES (LOGIN & LOGOUT)
 // ===============================================
 
-// LOGIN: Cek Password DB -> Buat JWT -> Set Cookie
 app.post('/api/login', async (c) => {
     try {
         const { password } = await c.req.json();
         
-        // Ambil password hash dari DB
         const dbSetting = await c.env.DB.prepare("SELECT value FROM settings WHERE key = 'admin_password'").first();
         const realHash = dbSetting ? dbSetting.value : '';
         const inputHash = await sha256(password);
@@ -91,38 +98,41 @@ app.post('/api/login', async (c) => {
             return c.json({ success: false, message: 'Password Salah' }, 401);
         }
 
-        // BUAT JWT
-        const payload = {
-            role: 'admin',
-            exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // Expire 24 jam
-        };
+        // Buat Token
         const secret = c.env.APP_MASTER_KEY || JWT_SECRET;
-        const token = await sign(payload, secret);
+        const token = await sign({ role: 'admin', exp: Math.floor(Date.now() / 1000) + 86400 }, secret);
 
-        // SET COOKIE (HttpOnly agar tidak bisa dibaca JS nakal)
+        // Set Cookie HttpOnly
         setCookie(c, 'auth_token', token, {
             path: '/',
             secure: true,
             httpOnly: true,
-            maxAge: 60 * 60 * 24,
+            maxAge: 86400,
             sameSite: 'Lax',
         });
 
         return c.json({ success: true });
     } catch (e) {
+        console.error(e);
         return c.json({ success: false, error: e.message }, 500);
     }
 });
 
-// LOGOUT: Hapus Cookie
 app.get('/api/logout', (c) => {
     deleteCookie(c, 'auth_token');
     return c.redirect('/login');
 });
 
 // ===============================================
-// 3. PROTECTED ADMIN PAGES (Hanya bisa diakses jika lolos Middleware di atas)
+// 3. HTML ROUTES (Static & Admin)
 // ===============================================
+
+// Login Page
+app.get('/login', (c) => serveAsset(c, '/login.html'));
+app.get('/login.html', (c) => serveAsset(c, '/login.html'));
+app.get('/admin/login', (c) => c.redirect('/login'));
+
+// Admin Pages (Protected by requireAuth)
 app.get('/admin', (c) => c.redirect('/admin/dashboard'));
 app.get('/admin/dashboard', (c) => serveAsset(c, '/admin/dashboard.html'));
 app.get('/admin/pages', (c) => serveAsset(c, '/admin/pages.html'));
@@ -131,16 +141,7 @@ app.get('/admin/reports', (c) => serveAsset(c, '/admin/reports.html'));
 app.get('/admin/analytics', (c) => serveAsset(c, '/admin/analytics.html'));
 app.get('/admin/settings', (c) => serveAsset(c, '/admin/settings.html'));
 
-
-// ===============================================
-// 4. PUBLIC ROUTES
-// ===============================================
-
-// Login Page (Public)
-app.get('/login', (c) => serveAsset(c, '/login.html'));
-app.get('/login.html', (c) => serveAsset(c, '/login.html'));
-
-// Homepage & Dynamic Pages
+// Homepage
 app.get('/', async (c) => {
     try {
         const s = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
@@ -150,17 +151,17 @@ app.get('/', async (c) => {
         }
     } catch (e) {}
     return serveAsset(c, '/index.html');
-});
+})
 
+// Dynamic Landing Pages
 app.get('/:slug', async (c) => {
     const slug = c.req.param('slug');
-    if (slug.includes('.')) return c.env.ASSETS.fetch(c.req.raw); // Asset fallback
+    if (slug.includes('.')) return c.env.ASSETS.fetch(c.req.raw);
 
     try {
         const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
         if(!page) return c.text('404 Not Found', 404);
         
-        // Analytics
         c.env.DB.prepare("INSERT INTO analytics (page_id, event_type, referrer) VALUES (?, 'view', ?)").bind(page.id, c.req.header('Referer') || 'direct').run().catch(()=>{});
         
         return renderPage(c, page);
@@ -170,12 +171,11 @@ app.get('/:slug', async (c) => {
 });
 
 // ===============================================
-// 5. API LOGIC (PROTECTED BY MIDDLEWARE)
+// 4. API ROUTES (Protected & Public)
 // ===============================================
-// Note: Route /api/admin/* sudah dijaga oleh middleware di atas
 
+// --- Protected APIs ---
 app.post('/api/admin/pages', async (c) => {
-    // Logic simpan halaman...
     const { slug, title, html, css, product_config, product_type } = await c.req.json();
     try {
         await c.env.DB.prepare(
@@ -224,7 +224,7 @@ app.post('/api/admin/credentials', async (c) => {
 
 app.post('/api/admin/upload-image', uploadImage);
 
-// PUBLIC API
+// --- Public APIs ---
 app.post('/api/shipping/check', checkShipping);
 app.post('/api/check-coupon', async (c) => {
     const { page_id, code } = await c.req.json();
@@ -272,7 +272,7 @@ function renderPage(c, page) {
     return c.html(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${page.title}</title><script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script><script src="https://cdn.tailwindcss.com"></script><style>${page.css_content}</style>${scriptInject}</head><body>${page.html_content}</body></html>`);
 }
 
-// ASSET FALLBACK
+// Fallback Asset
 app.get('*', (c) => c.env.ASSETS.fetch(c.req.raw));
 
 export const onRequest = handle(app)
