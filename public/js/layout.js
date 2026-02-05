@@ -1,7 +1,8 @@
+// Store Layout (State Management)
 document.addEventListener('alpine:init', () => {
     Alpine.store('layout', {
         darkMode: localStorage.getItem('theme') === 'dark',
-        sidebarOpen: true,
+        sidebarOpen: window.innerWidth > 768, // Auto close on mobile
         pageTitle: document.title,
         
         toggleTheme() {
@@ -15,20 +16,9 @@ document.addEventListener('alpine:init', () => {
             else document.documentElement.classList.remove('dark');
         },
 
-        // SECURITY FIX: Logout via API untuk hapus Cookie HttpOnly
         logout() {
             if(confirm('Keluar dari Admin?')) {
-                // Panggil endpoint logout server untuk hapus cookie
-                fetch('/api/logout')
-                    .then(() => {
-                        // Redirect ke login setelah cookie terhapus
-                        window.location.href = '/login';
-                    })
-                    .catch(err => {
-                        console.error('Logout error:', err);
-                        // Fallback jika fetch gagal
-                        window.location.href = '/login';
-                    });
+                fetch('/api/logout').finally(() => window.location.href = '/login');
             }
         },
 
@@ -38,37 +28,34 @@ document.addEventListener('alpine:init', () => {
     });
 });
 
+// Web Component Layout
 class AdminLayout extends HTMLElement {
-    connectedCallback() {
-        // Tunggu sampai parser selesai (safety) sebelum memanipulasi DOM
-        setTimeout(() => {
-            this.initLayout();
-        }, 0);
-    }
+    async connectedCallback() {
+        // Tunggu sedikit agar DOM parser stabil
+        await new Promise(r => setTimeout(r, 10));
 
-    initLayout() {
-        // Cegah render/inisialisasi ganda
-        if (this.hasAttribute('rendered')) return;
+        if (this.getAttribute('rendered')) return;
         this.setAttribute('rendered', 'true');
 
-        // Ambil semua konten asli (light DOM) ke DocumentFragment sementara
-        const contentFragment = document.createDocumentFragment();
-        while (this.childNodes.length > 0) {
-            contentFragment.appendChild(this.childNodes[0]);
-        }
-
-        // Style dasar agar layout memakan full height
+        // 1. Ambil Konten Asli (Anak dari <admin-layout>)
+        const contentNodes = Array.from(this.childNodes);
+        
+        // 2. Bersihkan Element
+        this.innerHTML = ''; 
         this.style.display = 'block';
-        this.style.height = '100vh';
 
-        // Helper untuk menandai menu aktif
+        // 3. Render Struktur Shell (Sidebar + Header)
+        // Kita gunakan x-ignore pada wrapper agar Alpine tidak bingung saat kita inject HTML
+        // Nanti kita panggil initTree manual.
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = "flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans overflow-hidden transition-colors duration-300";
+        wrapper.setAttribute('x-data', ''); // Bind Alpine Context
+
         const path = window.location.pathname;
         const isActive = (p) => path.includes(p) ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700';
 
-        // Render kerangka layout (SIDEBAR + HEADER + SLOT-CONTAINER)
-        this.innerHTML = `
-        <div x-data class="flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans overflow-hidden transition-colors duration-300">
-            
+        wrapper.innerHTML = `
             <aside :class="$store.layout.sidebarOpen ? 'w-64 translate-x-0' : 'w-20 translate-x-0'" 
                    class="bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex flex-col transition-all duration-300 fixed md:relative z-30 h-full shadow-xl">
                 
@@ -109,7 +96,6 @@ class AdminLayout extends HTMLElement {
             </aside>
 
             <div class="flex-1 flex flex-col h-full overflow-hidden relative min-w-0">
-                
                 <header class="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center px-4 md:px-6 shadow-sm z-20 shrink-0">
                     <div class="flex items-center gap-4 overflow-hidden">
                         <button @click="$store.layout.sidebarOpen = !$store.layout.sidebarOpen" class="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0">
@@ -117,9 +103,8 @@ class AdminLayout extends HTMLElement {
                         </button>
                         <h1 class="font-bold text-lg truncate" x-text="$store.layout.pageTitle"></h1>
                     </div>
-
                     <div class="flex items-center gap-3 shrink-0">
-                         <a href="/admin/editor" class="hidden md:flex items-center gap-2 text-xs font-bold bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition shadow">
+                        <a href="/admin/editor" class="hidden md:flex items-center gap-2 text-xs font-bold bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition shadow">
                             <i class="ph ph-plus"></i> Editor
                         </a>
                         <button @click="$store.layout.toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 border dark:border-gray-600">
@@ -129,44 +114,26 @@ class AdminLayout extends HTMLElement {
                     </div>
                 </header>
 
-                <main id="slot-container" class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth w-full">
-                </main>
+                <main id="main-slot" class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth w-full">
+                    </main>
             </div>
-        </div>
         `;
 
-        // Tempelkan kembali konten asli ke dalam slot-container
-        const slotContainer = this.querySelector('#slot-container');
-        slotContainer.appendChild(contentFragment);
+        this.appendChild(wrapper);
 
-        // Re-inisialisasi Alpine pada subtree yang baru
-        if (window.Alpine && typeof window.Alpine.initTree === 'function') {
-            try {
-                window.Alpine.initTree(slotContainer);
-            } catch (err) {
-                console.error('Alpine.initTree failed:', err);
-            }
+        // 4. Masukkan Kembali Konten Asli ke dalam Slot
+        const mainSlot = wrapper.querySelector('#main-slot');
+        contentNodes.forEach(node => mainSlot.appendChild(node));
+
+        // 5. Inisialisasi Alpine JS pada DOM Baru
+        // Kita perlu menunggu sebentar jika Alpine belum siap
+        if (window.Alpine) {
+            window.Alpine.initTree(this);
+        } else {
+            document.addEventListener('alpine:init', () => {
+                window.Alpine.initTree(this);
+            });
         }
-
-        // Re-eksekusi script tag agar fitur halaman (seperti Chart.js) jalan kembali
-        const scripts = slotContainer.querySelectorAll('script');
-        scripts.forEach(oldScript => {
-            try {
-                const newScript = document.createElement('script');
-                for (let i = 0; i < oldScript.attributes.length; i++) {
-                    const attr = oldScript.attributes[i];
-                    newScript.setAttribute(attr.name, attr.value);
-                }
-                if (oldScript.src) {
-                    newScript.src = oldScript.src;
-                } else {
-                    newScript.textContent = oldScript.textContent;
-                }
-                oldScript.parentNode.replaceChild(newScript, oldScript);
-            } catch (e) {
-                console.error('Failed to re-run script:', e);
-            }
-        });
     }
 }
 
