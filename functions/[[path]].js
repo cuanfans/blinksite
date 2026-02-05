@@ -161,19 +161,33 @@ app.get('/admin', async (c) => {
   return await c.env.ASSETS.fetch(new URL('/admin.html', c.req.url))
 })
 
-// Redirect halaman utama ke admin
-app.get('/', (c) => c.redirect('/admin'))
+app.get('/', async (c) => {
+    try {
+        // 1. Cek apakah Admin sudah set Homepage di Database
+        const s = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
+        
+        // 2. Jika ada settingan slug, coba ambil halaman tersebut
+        if (s && s.value) {
+            const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug = ?").bind(s.value).first();
+            
+            // 3. Jika halaman ketemu, Render Halamannya
+            if (page) return renderPage(c, page);
+        }
+    } catch (e) {
+        // Jika database error (misal tabel belum dibuat), abaikan dan lanjut ke index.html
+        console.log('DB Error or No Homepage set');
+    }
 
-// Render Landing Page
-app.get('/:slug', async (c) => {
-    const slug = c.req.param('slug');
-    const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
-    
-    if(!page) return c.text('404 Not Found', 404);
+    // 4. FALLBACK WAJIB: Tampilkan index.html (Halaman Landing SaaS)
+    // JANGAN GUNAKAN c.redirect('/admin') DI SINI!
+    return c.env.ASSETS.fetch(new URL('/index.html', c.req.url));
+})
 
+// ==========================================
+// HELPER RENDER & EXPORT
+// ==========================================
+function renderPage(c, page) {
     const config = JSON.parse(page.product_config_json || '{}');
-    
-    // Inject Global Variables untuk AlpineJS
     const scriptInject = `
         <script>
             window.PAGE_ID = ${page.id};
@@ -199,6 +213,6 @@ app.get('/:slug', async (c) => {
         </body>
         </html>
     `);
-});
+}
 
-export const onRequest = handle(app);
+export const onRequest = handle(app)
