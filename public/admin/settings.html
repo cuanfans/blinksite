@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <title>Pengaturan Website</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="/js/layout.js"></script>
+</head>
+<body>
+    <admin-layout>
+        <div x-data="settingsApp()" class="max-w-4xl mx-auto">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Pengaturan Website</h2>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border dark:border-gray-700 mb-6">
+                <div class="flex items-center gap-3 mb-4 text-blue-600">
+                    <i class="ph ph-house text-2xl"></i>
+                    <h3 class="font-bold text-lg">Homepage Configuration</h3>
+                </div>
+                <p class="text-gray-500 text-sm mb-4">Tentukan halaman landing page mana yang akan muncul saat domain utama dibuka.</p>
+                
+                <div class="flex gap-2">
+                    <input x-model="homepageSlug" type="text" placeholder="Masukkan Slug Halaman (contoh: promo-ramadhan)" 
+                           class="flex-1 bg-gray-50 dark:bg-gray-900 border dark:border-gray-600 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                    <button @click="saveHomepage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold transition disabled:opacity-50">
+                        <span x-text="loading ? 'Menyimpan...' : 'Simpan'"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border dark:border-gray-700">
+                <div class="flex items-center gap-3 mb-6 text-purple-600">
+                    <i class="ph ph-plugs text-2xl"></i>
+                    <h3 class="font-bold text-lg">API Integrations</h3>
+                </div>
+
+                <div class="flex gap-2 border-b dark:border-gray-700 mb-6">
+                    <button @click="tab='midtrans'" :class="tab==='midtrans' ? 'border-b-2 border-purple-600 text-purple-600 font-bold' : 'text-gray-500 hover:text-gray-700'" class="px-4 py-2 transition">Midtrans Payment</button>
+                    <button @click="tab='cloudinary'" :class="tab==='cloudinary' ? 'border-b-2 border-purple-600 text-purple-600 font-bold' : 'text-gray-500 hover:text-gray-700'" class="px-4 py-2 transition">Cloudinary Storage</button>
+                </div>
+
+                <div x-show="tab==='midtrans'" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold mb-1 text-gray-700 dark:text-gray-300">Server Key</label>
+                        <input x-model="creds.midtrans.server_key" type="text" class="w-full bg-gray-50 dark:bg-gray-900 border dark:border-gray-600 rounded p-2 text-sm font-mono" placeholder="SB-Mid-server-xxxx">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1 text-gray-700 dark:text-gray-300">Client Key</label>
+                        <input x-model="creds.midtrans.client_key" type="text" class="w-full bg-gray-50 dark:bg-gray-900 border dark:border-gray-600 rounded p-2 text-sm font-mono" placeholder="SB-Mid-client-xxxx">
+                    </div>
+                    <div class="flex justify-end pt-2">
+                        <button @click="saveCreds('midtrans', creds.midtrans)" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded font-bold">Simpan Midtrans</button>
+                    </div>
+                </div>
+
+                <div x-show="tab==='cloudinary'" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold mb-1 text-gray-700 dark:text-gray-300">Cloud Name</label>
+                        <input x-model="creds.cloudinary.cloud_name" type="text" class="w-full bg-gray-50 dark:bg-gray-900 border dark:border-gray-600 rounded p-2 text-sm font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1 text-gray-700 dark:text-gray-300">API Key</label>
+                        <input x-model="creds.cloudinary.api_key" type="text" class="w-full bg-gray-50 dark:bg-gray-900 border dark:border-gray-600 rounded p-2 text-sm font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1 text-gray-700 dark:text-gray-300">API Secret</label>
+                        <input x-model="creds.cloudinary.api_secret" type="password" class="w-full bg-gray-50 dark:bg-gray-900 border dark:border-gray-600 rounded p-2 text-sm font-mono">
+                    </div>
+                    <div class="flex justify-end pt-2">
+                        <button @click="saveCreds('cloudinary', creds.cloudinary)" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded font-bold">Simpan Cloudinary</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <script>
+            function settingsApp() {
+                return {
+                    homepageSlug: '',
+                    loading: false,
+                    tab: 'midtrans',
+                    pass: localStorage.getItem('admin_pass') || '',
+                    creds: {
+                        midtrans: { server_key: '', client_key: '' },
+                        cloudinary: { cloud_name: '', api_key: '', api_secret: '' }
+                    },
+
+                    async saveHomepage() {
+                        if(!this.homepageSlug) return alert('Slug tidak boleh kosong');
+                        this.loading = true;
+                        try {
+                            const res = await fetch('/api/admin/set-homepage', {
+                                method: 'POST',
+                                headers: { 'Authorization': this.pass, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ slug: this.homepageSlug })
+                            });
+                            const data = await res.json();
+                            if(data.success) alert('Homepage berhasil diatur!');
+                            else alert('Gagal: ' + (data.error || 'Unknown Error'));
+                        } catch(e) { alert('Error koneksi'); }
+                        this.loading = false;
+                    },
+
+                    async saveCreds(provider, dataObj) {
+                        // Validasi sederhana
+                        if(Object.values(dataObj).some(x => !x)) return alert('Harap isi semua field!');
+                        
+                        try {
+                            const res = await fetch('/api/admin/credentials', {
+                                method: 'POST',
+                                headers: { 'Authorization': this.pass, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ provider: provider, data: dataObj })
+                            });
+                            const data = await res.json();
+                            if(data.success) alert('Kredensial ' + provider + ' tersimpan aman!');
+                            else alert('Gagal menyimpan');
+                        } catch(e) { alert('Error koneksi'); }
+                    }
+                }
+            }
+        </script>
+    </admin-layout>
+</body>
+</html>
