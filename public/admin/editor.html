@@ -7,126 +7,238 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs"></script>
     <script src="https://unpkg.com/grapesjs-preset-webpage"></script>
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* BASE STYLE */
-        body, html { height: 100%; margin: 0; overflow: hidden; font-family: sans-serif; }
+        /* --- RESET & BASE --- */
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: #111827; }
         [x-cloak] { display: none !important; }
-        
-        /* THEME COLOR */
-        .gjs-one-bg { background-color: #1f2937; } /* Gray-800 */
-        .gjs-two-color { color: #f3f4f6; }
-        .gjs-three-bg { background-color: #111827; color: white; }
-        .gjs-four-color, .gjs-four-color-h:hover { color: #60a5fa; }
 
-        /* SIMPLE MODE TOGGLES */
-        body.simple-mode .gjs-pn-views-container .gjs-clm-tags { display: none !important; }
-        body.simple-mode .gjs-pn-views-container .gjs-sm-header { display: none !important; }
-        .gjs-rte-toolbar { top: -45px !important; border-radius: 4px; border: 1px solid #374151; }
-        .gjs-cv-canvas { width: 100%; height: 100%; top: 0; }
-        .gjs-pn-panel { position: relative; }
+        /* --- GRAPESJS OVERRIDES (DARK THEME PROFESIONAL) --- */
+        
+        /* Hapus Default Top Panel GrapesJS (Kita pakai Header Sendiri) */
+        .gjs-pn-top-panel { display: none !important; }
+
+        /* Canvas Area */
+        .gjs-cv-canvas {
+            background-color: #111827; /* Dark BG */
+            top: 0 !important;
+            height: 100% !important;
+            width: calc(100% - 300px) !important; /* Sisakan ruang untuk panel kanan */
+        }
+
+        /* Right Panel (Style/Blocks) */
+        .gjs-pn-views-container {
+            width: 300px !important;
+            right: 0 !important;
+            left: auto !important;
+            height: 100% !important;
+            top: 0 !important;
+            background: #1f2937 !important; /* Gray-800 */
+            border-left: 1px solid #374151;
+            box-shadow: none !important;
+            z-index: 10;
+        }
+
+        /* Right Panel Tabs (Icon bar) */
+        .gjs-pn-views {
+            width: 300px !important;
+            left: auto !important;
+            right: 0 !important;
+            border-bottom: 1px solid #374151;
+            background: #1f2937;
+        }
+
+        .gjs-pn-btn {
+            color: #9ca3af !important; /* Gray-400 */
+            height: 40px !important;
+            margin: 0 !important;
+        }
+        .gjs-pn-btn.gjs-pn-active {
+            color: #60a5fa !important; /* Blue-400 */
+            background: #374151 !important;
+            box-shadow: none !important;
+        }
+
+        /* Input Fields & Labels di Panel */
+        .gjs-field { background-color: #374151; border: 1px solid #4b5563; border-radius: 4px; color: white; }
+        .gjs-field-color-picker { background-color: #374151; }
+        .gjs-label { color: #d1d5db; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .gjs-category-title { background-color: #111827; border-bottom: 1px solid #374151; color: #e5e7eb; font-weight: bold; }
+        .gjs-sm-sector .gjs-sm-title { background-color: #1f2937; border-top: 1px solid #374151; font-weight: 600; }
+
+        /* Scrollbar Halus */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #111827; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        /* Block Manager Icons */
+        .gjs-block { border: 1px solid #374151; border-radius: 6px; background: #111827; transition: all 0.2s; }
+        .gjs-block:hover { border-color: #60a5fa; color: #60a5fa; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); }
+        .gjs-block-label { font-size: 11px; font-weight: 500; margin-top: 4px; }
+
+        /* Highlight Selection */
+        .gjs-cv-canvas .gjs-highlighter, .gjs-cv-canvas .gjs-selected { outline: 2px solid #60a5fa !important; }
+        .gjs-toolbar { background-color: #2563eb !important; border-radius: 4px; top: -30px !important; }
     </style>
 </head>
 
-<body class="bg-gray-900 text-white" x-data="app()" :class="editorMode === 'simple' ? 'simple-mode' : ''">
+<body class="bg-gray-900 text-white" x-data="app()">
 
-    <div x-show="!isLoggedIn" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900">
+    <div x-show="!isLoggedIn" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/95 backdrop-blur-sm">
         <div class="bg-gray-800 p-8 rounded-xl w-96 border border-gray-700 shadow-2xl text-center">
-            <h1 class="text-2xl font-bold mb-6 text-blue-500">Sesi Berakhir</h1>
-            <p class="mb-4 text-sm text-gray-400">Silakan login ulang untuk melanjutkan editing.</p>
+            <div class="mb-4 text-red-500 text-5xl"><i class="ph ph-lock-key"></i></div>
+            <h1 class="text-2xl font-bold mb-2 text-white">Sesi Berakhir</h1>
+            <p class="mb-6 text-sm text-gray-400">Keamanan: Silakan login ulang.</p>
             <form @submit.prevent="login">
-                <input type="password" x-model="auth.password" placeholder="Password Admin" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 mb-4 text-white focus:ring-2 focus:ring-blue-500 outline-none">
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">LOGIN KEMBALI</button>
+                <input type="password" x-model="auth.password" placeholder="Password Admin" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 mb-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-lg hover:shadow-blue-500/20">LOGIN KEMBALI</button>
             </form>
-            <a href="/admin/dashboard" class="block mt-4 text-gray-500 text-sm hover:text-white">Kembali ke Dashboard</a>
+            <a href="/admin/dashboard" class="block mt-6 text-gray-500 text-xs hover:text-white underline">Kembali ke Dashboard</a>
         </div>
     </div>
 
     <div x-show="isLoggedIn" x-cloak class="flex flex-col h-full">
         
-        <div class="h-14 bg-gray-900 border-b border-gray-700 flex justify-between items-center px-4 relative z-40 shadow-md">
+        <div class="h-14 bg-gray-900 border-b border-gray-700 flex justify-between items-center px-4 relative z-50 shadow-md shrink-0">
             
             <div class="flex items-center gap-4">
-                <a href="/admin/pages" class="text-gray-400 hover:text-white transition"><i class="fa fa-arrow-left"></i> Back</a>
-                <div class="h-8 w-px bg-gray-700 mx-2"></div>
+                <a href="/admin/pages" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-sm font-medium">
+                    <i class="ph ph-arrow-left text-lg"></i> Back
+                </a>
+                <div class="h-6 w-px bg-gray-700"></div>
                 
-                <div class="flex flex-col leading-tight">
-                    <span class="font-bold text-lg text-blue-500">LandingPro</span>
-                    <button @click="toggleMode" class="text-[10px] font-bold px-2 py-0.5 rounded-full border transition-colors flex items-center gap-1 w-fit"
-                        :class="editorMode === 'simple' ? 'bg-green-900/30 border-green-600 text-green-400 hover:bg-green-900/50' : 'bg-red-900/30 border-red-600 text-red-400 hover:bg-red-900/50'">
-                        <span x-text="editorMode === 'simple' ? '😊 SIMPLE' : '⚡ ADVANCED'"></span>
-                    </button>
+                <div class="flex items-center gap-3">
+                    <span class="font-bold text-lg text-blue-500 tracking-tight">LandingBuilder <span class="text-xs bg-blue-900/50 text-blue-300 px-1.5 py-0.5 rounded border border-blue-800">PRO</span></span>
                 </div>
-                
-                <div class="h-8 w-px bg-gray-700 mx-2"></div>
-
-                <div class="flex items-center bg-gray-800 rounded border border-gray-600 overflow-hidden">
-                    <span class="px-2 text-xs text-gray-500">/</span>
-                    <input x-model="page.slug" placeholder="slug-halaman" class="bg-transparent text-sm p-1 outline-none w-32 text-white placeholder-gray-600 font-mono">
-                </div>
-                <input x-model="page.title" placeholder="Judul Halaman" class="bg-gray-800 border border-gray-600 text-sm p-1 rounded w-48 outline-none focus:border-blue-500 ml-2">
             </div>
 
-            <div class="flex gap-2">
-                <button @click="modal='product'" class="bg-yellow-600 hover:bg-yellow-700 px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1">📦 Produk</button>
-                <button @click="modal='settings'" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1">⚙️ API</button>
+            <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-800 rounded-lg p-1 border border-gray-700">
+                <button @click="setDevice('Desktop')" :class="device=='Desktop' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-200'" class="p-1.5 rounded transition" title="Desktop"><i class="ph ph-desktop text-lg"></i></button>
+                <button @click="setDevice('Tablet')" :class="device=='Tablet' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-200'" class="p-1.5 rounded transition" title="Tablet"><i class="ph ph-device-tablet text-lg"></i></button>
+                <button @click="setDevice('Mobile')" :class="device=='Mobile' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-200'" class="p-1.5 rounded transition" title="Mobile"><i class="ph ph-device-mobile text-lg"></i></button>
                 
-                <div class="w-px bg-gray-700 mx-1"></div>
+                <div class="w-px h-4 bg-gray-600 mx-2"></div>
+                
+                <button @click="cmd('core:undo')" class="text-gray-400 hover:text-white p-1.5 transition" title="Undo"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
+                <button @click="cmd('core:redo')" class="text-gray-400 hover:text-white p-1.5 transition" title="Redo"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
+                <button @click="cmd('core:component-outline')" class="text-gray-400 hover:text-blue-400 p-1.5 transition" title="Toggle Borders"><i class="ph ph-bounding-box text-lg"></i></button>
+            </div>
 
-                <button @click="savePage" class="bg-green-600 hover:bg-green-700 px-4 py-1.5 rounded text-xs font-bold flex gap-2 shadow-lg hover:-translate-y-0.5 transition transform">
-                    <span x-show="loading" class="animate-spin">⏳</span><span>SIMPAN</span>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center bg-gray-800 rounded border border-gray-700 overflow-hidden h-8">
+                    <div class="px-3 text-xs text-gray-500 bg-gray-900 h-full flex items-center border-r border-gray-700">slug</div>
+                    <input x-model="page.slug" placeholder="halaman-saya" class="bg-transparent text-sm px-3 outline-none w-32 text-white placeholder-gray-600 font-mono h-full">
+                </div>
+
+                <button @click="modal='product'" class="bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-600 px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-2">
+                    <i class="ph ph-package"></i> Produk
                 </button>
-                <button @click="previewPage" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-xs font-bold transition" title="Lihat Hasil">👁️</button>
+                <button @click="modal='settings'" class="bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-600 px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-2">
+                    <i class="ph ph-plugs"></i> API
+                </button>
+                
+                <button @click="savePage" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-1.5 rounded text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-900/50 hover:-translate-y-0.5 transition transform border border-blue-500">
+                    <i x-show="!loading" class="ph ph-floppy-disk text-lg"></i>
+                    <i x-show="loading" class="ph ph-spinner animate-spin text-lg"></i>
+                    <span x-text="loading ? 'Menyimpan...' : 'Simpan'"></span>
+                </button>
+                
+                <button @click="previewPage" class="text-gray-400 hover:text-white p-2 transition" title="Lihat Live"><i class="ph ph-eye text-xl"></i></button>
             </div>
         </div>
 
-        <div id="gjs" class="h-[calc(100%-3.5rem)] bg-gray-800"></div>
+        <div class="flex-grow relative overflow-hidden">
+            <div id="gjs" class="absolute inset-0"></div>
+        </div>
     </div>
 
-    <div x-show="modal==='product'" x-cloak class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-        <div class="bg-white text-gray-800 w-full max-w-4xl h-[85vh] rounded-xl flex overflow-hidden shadow-2xl">
-            <div class="w-48 bg-gray-50 border-r p-4 flex flex-col gap-2">
-                <button @click="tab='variants'" :class="tab=='variants'?'bg-blue-100 text-blue-700':''" class="text-left px-4 py-2 rounded text-sm font-bold transition">1. Varian</button>
-                <button @click="tab='bump'" :class="tab=='bump'?'bg-blue-100 text-blue-700':''" class="text-left px-4 py-2 rounded text-sm font-bold transition">2. Bump</button>
-                <button @click="tab='coupons'" :class="tab=='coupons'?'bg-blue-100 text-blue-700':''" class="text-left px-4 py-2 rounded text-sm font-bold transition">3. Kupon</button>
+    <div x-show="modal==='product'" x-cloak class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" @click.self="modal=null">
+        <div class="bg-gray-900 text-white w-full max-w-4xl h-[80vh] rounded-2xl flex overflow-hidden shadow-2xl border border-gray-700">
+            <div class="w-56 bg-gray-800 border-r border-gray-700 p-4 flex flex-col gap-2">
+                <h3 class="text-xs font-bold text-gray-500 uppercase mb-2 px-2">Menu Produk</h3>
+                <button @click="tab='variants'" :class="tab=='variants'?'bg-blue-600 text-white shadow':'text-gray-400 hover:bg-gray-700 hover:text-white'" class="text-left px-4 py-3 rounded-lg text-sm font-bold transition flex items-center gap-3"><i class="ph ph-tag"></i> Varian Paket</button>
+                <button @click="tab='bump'" :class="tab=='bump'?'bg-blue-600 text-white shadow':'text-gray-400 hover:bg-gray-700 hover:text-white'" class="text-left px-4 py-3 rounded-lg text-sm font-bold transition flex items-center gap-3"><i class="ph ph-plus-circle"></i> Order Bump</button>
+                <button @click="tab='coupons'" :class="tab=='coupons'?'bg-blue-600 text-white shadow':'text-gray-400 hover:bg-gray-700 hover:text-white'" class="text-left px-4 py-3 rounded-lg text-sm font-bold transition flex items-center gap-3"><i class="ph ph-ticket"></i> Kupon Diskon</button>
             </div>
-            <div class="flex-grow p-6 overflow-y-auto">
-                <div class="flex justify-between mb-4"><h2 class="text-xl font-bold">Konfigurasi Produk</h2><button @click="modal=null" class="text-2xl text-red-500 font-bold hover:scale-110 transition">&times;</button></div>
+            <div class="flex-grow p-8 overflow-y-auto bg-gray-900">
                 
                 <div x-show="tab=='variants'">
-                    <button @click="addVariant" class="bg-blue-600 text-white text-xs px-3 py-1 rounded mb-4 font-bold">+ Tambah Paket</button>
-                    <template x-for="(v, i) in page.config.variants">
-                        <div class="border p-3 mb-2 rounded bg-gray-50 grid grid-cols-12 gap-2 items-center hover:shadow-sm transition">
-                            <div class="col-span-4"><input x-model="v.name" placeholder="Nama Paket" class="border p-2 w-full text-sm rounded"></div>
-                            <div class="col-span-3"><input x-model="v.price" type="number" placeholder="Harga" class="border p-2 w-full text-sm rounded"></div>
-                            <div class="col-span-4"><input x-model="v.desc" placeholder="Deskripsi" class="border p-2 w-full text-sm rounded"></div>
-                            <button @click="page.config.variants.splice(i,1)" class="col-span-1 text-red-500 font-bold hover:bg-red-100 rounded p-1">&times;</button>
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold">Varian Produk</h2>
+                        <button @click="addVariant" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition"><i class="ph ph-plus"></i> Tambah</button>
+                    </div>
+                    <div class="space-y-3">
+                        <template x-for="(v, i) in page.config.variants">
+                            <div class="p-4 rounded-xl bg-gray-800 border border-gray-700 grid grid-cols-12 gap-4 items-center group">
+                                <div class="col-span-1 text-center text-gray-500 font-mono text-xs" x-text="i+1"></div>
+                                <div class="col-span-4">
+                                    <label class="text-[10px] text-gray-500 uppercase font-bold">Nama Paket</label>
+                                    <input x-model="v.name" class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none">
+                                </div>
+                                <div class="col-span-3">
+                                    <label class="text-[10px] text-gray-500 uppercase font-bold">Harga (Rp)</label>
+                                    <input x-model="v.price" type="number" class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none">
+                                </div>
+                                <div class="col-span-3">
+                                    <label class="text-[10px] text-gray-500 uppercase font-bold">Deskripsi Singkat</label>
+                                    <input x-model="v.desc" class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none">
+                                </div>
+                                <div class="col-span-1 text-right">
+                                    <button @click="page.config.variants.splice(i,1)" class="text-red-500 hover:bg-red-900/50 p-2 rounded transition"><i class="ph ph-trash"></i></button>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="page.config.variants.length === 0" class="text-center py-10 text-gray-600 border-2 border-dashed border-gray-800 rounded-xl">
+                            Belum ada varian produk.
                         </div>
-                    </template>
+                    </div>
                 </div>
 
-                <div x-show="tab=='bump'" class="space-y-4">
-                    <label class="flex gap-2 p-3 border rounded bg-yellow-50 cursor-pointer"><input type="checkbox" x-model="page.config.order_bump.active" class="accent-orange-500"><span class="font-bold">Aktifkan Order Bump</span></label>
-                    <div x-show="page.config.order_bump.active" class="grid gap-3 p-4 border rounded">
-                        <input x-model="page.config.order_bump.product_name" placeholder="Nama Produk Tambahan" class="border p-2 w-full rounded">
-                        <input x-model="page.config.order_bump.price" type="number" placeholder="Harga Tambahan" class="border p-2 w-full rounded">
-                        <textarea x-model="page.config.order_bump.description" placeholder="Kalimat Penawaran" class="border p-2 w-full h-20 rounded"></textarea>
+                <div x-show="tab=='bump'" class="max-w-lg">
+                    <h2 class="text-xl font-bold mb-6">Order Bump (Upsell)</h2>
+                    <label class="flex items-center gap-3 p-4 border border-gray-700 rounded-xl bg-gray-800 cursor-pointer hover:border-blue-500 transition mb-6">
+                        <input type="checkbox" x-model="page.config.order_bump.active" class="w-5 h-5 accent-blue-600 rounded">
+                        <span class="font-bold text-gray-200">Aktifkan Penawaran Tambahan di Checkout</span>
+                    </label>
+                    <div x-show="page.config.order_bump.active" class="space-y-4 pl-1">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Nama Produk Tambahan</label>
+                            <input x-model="page.config.order_bump.product_name" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Harga Tambahan (Rp)</label>
+                            <input x-model="page.config.order_bump.price" type="number" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Kalimat Penawaran (Persuasif)</label>
+                            <textarea x-model="page.config.order_bump.description" rows="3" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm focus:border-blue-500 outline-none"></textarea>
+                        </div>
                     </div>
                 </div>
 
                 <div x-show="tab=='coupons'">
-                    <button @click="addCoupon" class="bg-green-600 text-white text-xs px-3 py-1 rounded mb-4 font-bold">+ Kupon Baru</button>
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold">Kupon Diskon</h2>
+                        <button @click="addCoupon" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition"><i class="ph ph-plus"></i> Buat Kupon</button>
+                    </div>
                     <template x-for="(c, i) in page.config.coupons">
-                        <div class="flex gap-2 mb-2 items-center">
-                            <input x-model="c.code" placeholder="KODE" class="border p-2 uppercase w-1/3 rounded font-mono">
-                            <select x-model="c.type" class="border p-2 rounded bg-white"><option value="percent">%</option><option value="fixed">Rp</option></select>
-                            <input x-model="c.value" type="number" class="border p-2 w-1/3 rounded">
-                            <button @click="page.config.coupons.splice(i,1)" class="text-red-500 font-bold px-3 hover:bg-red-100 rounded">&times;</button>
+                        <div class="flex gap-3 mb-3 items-center bg-gray-800 p-3 rounded-lg border border-gray-700">
+                            <div class="bg-gray-900 px-3 py-2 rounded font-mono text-yellow-400 font-bold tracking-wider border border-gray-700">
+                                <input x-model="c.code" class="bg-transparent outline-none uppercase w-24 text-center" placeholder="KODE">
+                            </div>
+                            <select x-model="c.type" class="bg-gray-900 border border-gray-700 text-white rounded px-3 py-2 text-sm outline-none">
+                                <option value="percent">Persen (%)</option>
+                                <option value="fixed">Potongan (Rp)</option>
+                            </select>
+                            <input x-model="c.value" type="number" class="bg-gray-900 border border-gray-700 text-white rounded px-3 py-2 text-sm w-32 outline-none" placeholder="Nilai">
+                            <button @click="page.config.coupons.splice(i,1)" class="ml-auto text-gray-500 hover:text-red-500 p-2"><i class="ph ph-x-circle text-xl"></i></button>
                         </div>
                     </template>
                 </div>
@@ -134,31 +246,46 @@
         </div>
     </div>
 
-    <div x-show="modal==='settings'" x-cloak class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
-        <div class="bg-white text-gray-800 w-96 p-6 rounded-lg shadow-xl">
-            <h2 class="font-bold mb-4">API Settings (Quick)</h2>
-            <p class="text-xs text-gray-500 mb-2">Untuk pengaturan lengkap, gunakan menu Settings di Dashboard.</p>
-            <select x-model="cred.provider" class="w-full border p-2 mb-2 rounded"><option value="midtrans">Midtrans</option><option value="cloudinary">Cloudinary</option></select>
-            <textarea x-model="cred.data" class="w-full border p-2 h-32 text-xs font-mono mb-4 rounded bg-gray-50" placeholder='{"server_key":"..."}'></textarea>
-            <div class="flex justify-end gap-2"><button @click="modal=null" class="text-sm px-3">Batal</button><button @click="saveCreds" class="bg-blue-600 text-white px-3 py-1 rounded text-sm font-bold">Simpan</button></div>
+    <div x-show="modal==='settings'" x-cloak class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center" @click.self="modal=null">
+        <div class="bg-gray-800 text-white w-96 p-6 rounded-xl border border-gray-700 shadow-2xl">
+            <h2 class="font-bold text-lg mb-4 flex items-center gap-2"><i class="ph ph-key"></i> Quick API Settings</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Provider</label>
+                    <select x-model="cred.provider" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded-lg text-sm outline-none">
+                        <option value="midtrans">Midtrans Payment</option>
+                        <option value="cloudinary">Cloudinary Images</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">JSON Data</label>
+                    <textarea x-model="cred.data" class="w-full bg-gray-900 border border-gray-700 p-3 h-32 text-xs font-mono rounded-lg outline-none text-gray-300" placeholder='{"server_key":"SB-Mid-..."}'></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <button @click="modal=null" class="text-sm text-gray-400 hover:text-white transition">Batal</button>
+                <button @click="saveCreds" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition">Simpan Kredensial</button>
+            </div>
         </div>
     </div>
 
     <script>
         function app() {
             return {
-                isLoggedIn: false, loading: false, modal: null, tab: 'variants', 
-                editorMode: 'simple', 
+                isLoggedIn: false, 
+                loading: false, 
+                modal: null, 
+                tab: 'variants',
+                device: 'Desktop', // Desktop, Tablet, Mobile
                 
-                auth: {password:''},
-                page: { slug:'', title:'', config: {variants:[], coupons:[], order_bump:{active:false}} },
-                cred: {provider:'midtrans', data:''},
+                auth: { password: '' },
+                page: { slug: '', title: '', config: { variants:[], coupons:[], order_bump:{active:false} } },
+                cred: { provider: 'midtrans', data: '' },
 
                 init() { 
                     const p = localStorage.getItem('admin_pass'); 
-                    const savedMode = localStorage.getItem('editor_mode');
-                    if(savedMode) this.editorMode = savedMode;
-                    
                     // Cek URL Params untuk Slug
                     const urlParams = new URLSearchParams(window.location.search);
                     const slugParam = urlParams.get('slug');
@@ -167,17 +294,12 @@
                     if(p) { this.auth.password=p; this.verify(); } 
                 },
 
-                toggleMode() {
-                    this.editorMode = this.editorMode === 'simple' ? 'advanced' : 'simple';
-                    localStorage.setItem('editor_mode', this.editorMode);
-                },
-
                 async verify() { 
                     try { 
-                        const r=await fetch('/api/login',{method:'POST',body:JSON.stringify({password:this.auth.password})}); 
+                        const r = await fetch('/api/login', { method: 'POST', body: JSON.stringify({password: this.auth.password}) }); 
                         if((await r.json()).success) { 
-                            this.isLoggedIn=true; 
-                            localStorage.setItem('admin_pass',this.auth.password); 
+                            this.isLoggedIn = true; 
+                            localStorage.setItem('admin_pass', this.auth.password); 
                             this.initGrapes(); 
                         } 
                     } catch(e){} 
@@ -185,63 +307,111 @@
                 
                 async login() { if(this.auth.password) await this.verify(); },
 
-                addVariant(){ this.page.config.variants.push({id:Date.now(),name:'',price:0,desc:''}) },
-                addCoupon(){ this.page.config.coupons.push({code:'',type:'percent',value:0}) },
+                // Helper Functions
+                setDevice(d) {
+                    this.device = d;
+                    if(d==='Desktop') window.editor.runCommand('set-device-desktop');
+                    if(d==='Tablet') window.editor.runCommand('set-device-tablet');
+                    if(d==='Mobile') window.editor.runCommand('set-device-mobile');
+                },
+                cmd(c) { window.editor.runCommand(c); },
+
+                // Product Logic
+                addVariant() { this.page.config.variants.push({ id:Date.now(), name:'', price:0, desc:'' }) },
+                addCoupon() { this.page.config.coupons.push({ code:'', type:'percent', value:0 }) },
                 
                 async saveCreds() { 
                     try { 
-                        await fetch('/api/admin/credentials',{method:'POST',headers:{'Authorization':this.auth.password},body:JSON.stringify({provider:this.cred.provider,data:JSON.parse(this.cred.data)})}); 
-                        alert('API Key Tersimpan!'); this.modal=null; 
-                    } catch(e){ alert('JSON Error'); } 
+                        await fetch('/api/admin/credentials', { method:'POST', headers:{'Authorization':this.auth.password}, body:JSON.stringify({provider:this.cred.provider, data:JSON.parse(this.cred.data)}) }); 
+                        alert('Kredensial tersimpan aman!'); this.modal=null; 
+                    } catch(e){ alert('Format JSON Salah!'); } 
                 },
 
                 async savePage() { 
-                    if(!this.page.slug) return alert('Isi Slug!'); 
-                    this.loading=true; 
-                    await fetch('/api/admin/pages',{method:'POST',headers:{'Authorization':this.auth.password},body:JSON.stringify({slug:this.page.slug, title:this.page.title, html:editor.getHtml(), css:editor.getCss(), product_config:this.page.config})}); 
-                    this.loading=false; 
-                    alert('Berhasil Disimpan!'); 
+                    if(!this.page.slug) return alert('Slug tidak boleh kosong!'); 
+                    this.loading = true; 
+                    try {
+                        await fetch('/api/admin/pages', {
+                            method: 'POST',
+                            headers: { 'Authorization': this.auth.password },
+                            body: JSON.stringify({
+                                slug: this.page.slug, 
+                                title: this.page.title, 
+                                html: editor.getHtml(), 
+                                css: editor.getCss(), 
+                                product_config: this.page.config
+                            })
+                        });
+                        alert('Halaman Berhasil Disimpan! 🚀'); 
+                    } catch(e) { alert('Gagal menyimpan.'); }
+                    this.loading = false; 
                 },
 
-                previewPage() { if(this.page.slug) window.open('/'+this.page.slug,'_blank'); },
+                previewPage() { if(this.page.slug) window.open('/'+this.page.slug, '_blank'); },
 
                 initGrapes() {
                     setTimeout(() => {
                         window.editor = grapesjs.init({
                             container: '#gjs',
                             height: '100%',
+                            fromElement: false,
                             storageManager: false,
                             plugins: ['gjs-preset-webpage'],
-                            styleManager: {
-                                sectors: [
-                                    { name: 'Typography', open: false, buildProps: ['font-family', 'font-size', 'font-weight', 'color'] },
-                                    { name: 'Decorations', open: false, buildProps: ['background-color', 'border-radius', 'box-shadow'] },
-                                    { name: 'Layout', open: false, buildProps: ['width', 'height', 'padding', 'margin', 'display'] }
+                            pluginsOpts: {
+                                'gjs-preset-webpage': {
+                                    modalImportTitle: 'Import',
+                                    modalImportLabel: '<div style="margin-bottom: 10px; font-size: 13px;">Paste HTML here</div>',
+                                    modalImportContent: '',
+                                }
+                            },
+                            // PANEL CONFIG (Kita sembunyikan top panel lewat CSS, tapi biarkan block manager dll)
+                            panels: { defaults: [] }, 
+                            deviceManager: {
+                                devices: [
+                                    { name: 'Desktop', width: '' },
+                                    { name: 'Tablet', width: '768px', widthMedia: '992px' },
+                                    { name: 'Mobile', width: '320px', widthMedia: '480px' },
                                 ]
                             },
-                            assetManager: { upload: false },
-                            blockManager: { appendTo: '#blocks' }
+                            blockManager: {
+                                appendTo: '#blocks', // Default
+                            }
                         });
 
-                        // Jika ada slug, load datanya
-                        if(this.page.slug) {
-                            fetch('/api/admin/pages/'+this.page.slug).then(r=>r.json()).then(d=>{
-                                if(d.id) { 
-                                    this.page.title=d.title; 
-                                    this.page.config=d.product_config_json||this.page.config; 
-                                    editor.setComponents(d.html_content); 
-                                    editor.setStyle(d.css_content); 
-                                }
-                            });
-                        }
+                        // Tambahkan CSS Custom ke Canvas agar sesuai tema
+                        editor.on('load', () => {
+                            const body = editor.Canvas.getBody();
+                            body.style.backgroundColor = '#111827'; // Dark canvas
+                            body.style.color = '#fff';
+                        });
 
-                        // Widget Checkout
-                        editor.Blocks.add('checkout-pro', { label:'🛒 Checkout Pro', category:'PRO WIDGETS', attributes:{class:'fa fa-shopping-cart'}, content: `
-                            <div style="padding:20px; text-align:center; border:2px dashed #ccc; background:#f9f9f9; font-weight:bold; color:#555;">
-                                [ FORM CHECKOUT OTOMATIS ]<br><span style="font-size:12px; font-weight:normal">Akan dirender saat live</span>
+                        // WIDGET KHUSUS: CHECKOUT FORM
+                        editor.Blocks.add('checkout-pro', { 
+                            label: '<div class="flex items-center gap-2"><i class="fa fa-shopping-cart"></i> Checkout Form</div>', 
+                            category: 'E-COMMERCE', 
+                            attributes: { class:'gjs-fonts gjs-f-b1' }, 
+                            content: `
+                            <div style="padding:40px 20px; text-align:center; border:2px dashed #3b82f6; background:#1e293b; color:#94a3b8; border-radius:12px; font-family:sans-serif;">
+                                <div style="font-size:40px; margin-bottom:10px;">🛒</div>
+                                <h3 style="color:white; margin:0 0 10px 0;">Checkout Form Area</h3>
+                                <p style="font-size:12px;">Form checkout lengkap (Nama, WA, Kurir, Payment) akan muncul otomatis di sini saat halaman dibuka oleh pembeli.</p>
                             </div>
                         `});
-                    }, 200);
+
+                        // Load Data Halaman
+                        if(this.page.slug) {
+                            fetch('/api/admin/pages/'+this.page.slug)
+                                .then(r=>r.json())
+                                .then(d => {
+                                    if(d.id) { 
+                                        this.page.title = d.title; 
+                                        this.page.config = d.product_config_json || this.page.config; 
+                                        if(d.html_content) editor.setComponents(d.html_content); 
+                                        if(d.css_content) editor.setStyle(d.css_content); 
+                                    }
+                                });
+                        }
+                    }, 100); // Delay sedikit agar DOM siap
                 }
             }
         }
