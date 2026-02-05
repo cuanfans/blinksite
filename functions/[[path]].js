@@ -277,15 +277,15 @@ async function renderPage(c, page) {
         document.addEventListener('DOMContentLoaded', () => {
             const checkoutContainer = document.querySelector('[data-gjs-type="checkout-widget"]');
             if(checkoutContainer) {
-                console.log('Checkout Widget Ready');
+                console.log('Checkout Widget Detected');
             }
         });
     </script>`;
 
-    // 4. HTML CONSTRUCTION
+    // 4. HTML CONSTRUCTION (FIXING GAP WITHOUT REMOVING INJECTS)
     return c.html(`
     <!DOCTYPE html>
-    <html lang="id">
+    <html lang="id" style="margin:0; padding:0;">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -300,34 +300,29 @@ async function renderPage(c, page) {
         <meta property="og:description" content="${settings.og_description || settings.seo_description || ''}" />
         ${settings.og_image ? `<meta property="og:image" content="${settings.og_image}" />` : ''}
 
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="${settings.og_title || settings.seo_title || page.title}" />
-        <meta name="twitter:description" content="${settings.og_description || settings.seo_description || ''}" />
-        ${settings.og_image ? `<meta name="twitter:image" content="${settings.og_image}" />` : ''}
-
         <script src="https://cdn.tailwindcss.com"></script>
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
         <style>
-            /* CSS RESET UNTUK MENGHILANGKAN GAP ABU-ABU */
+            /* Reset CSS Agresif untuk hapus gap 100px */
             html, body {
-                margin: 0;
-                padding: 0;
+                margin: 0 !important;
+                padding: 0 !important;
                 width: 100%;
                 height: 100%;
                 overflow-x: hidden;
-                background-color: #ffffff; /* Default Putih */
             }
-            body > * {
-                margin-top: 0; /* Cegah margin collapse elemen pertama */
+            /* Mencegah margin elemen pertama "bocor" ke atas body */
+            body::before {
+                content: "";
+                display: table;
             }
-            
             ${page.css_content}
             [x-cloak] { display: none !important; }
         </style>
 
         ${headScripts}
     </head>
-    <body class="antialiased">
+    <body class="antialiased" style="margin:0; padding:0;">
         ${page.html_content}
         
         ${appScript}
