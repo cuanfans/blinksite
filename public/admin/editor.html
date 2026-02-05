@@ -22,24 +22,27 @@
         body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: #f8fafc; color: #334155; }
         [x-cloak] { display: none !important; }
 
-        /* Hapus UI Bawaan */
-        .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-panels { display: none !important; }
+        /* Hapus UI Bawaan GrapesJS */
+        .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-panels, .gjs-cv-canvas .gjs-highlighter-sel { display: none !important; }
         
-        /* Canvas */
+        /* Canvas Wrapper & Background */
         .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f1f5f9; }
         
-        /* --- PANEL KANAN (WEBFLOW STYLE) --- */
-        
-        /* Tab Menu */
+        /* Frame Wrapper (Untuk Device Simulation) */
+        .gjs-frame-wrapper {
+            margin: 0 auto; /* Tengah secara horizontal */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            background: white;
+            transition: width 0.3s ease-in-out; /* Animasi transisi ukuran device */
+        }
+
+        /* --- PANEL KANAN STYLE --- */
         .panel-tabs button { position: relative; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; }
         .panel-tabs button.active { color: #2563eb; background: #eff6ff; }
         .panel-tabs button.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: #2563eb; }
 
-        /* Block Manager Grid */
         .gjs-blocks-c { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; }
-        .gjs-block-category .gjs-title { background: #f1f5f9; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: 700; color: #475569; padding: 6px 10px; text-transform: uppercase; cursor: pointer; }
         
-        /* Block Item */
         .gjs-block { 
             width: 100% !important; min-height: 70px !important; padding: 10px !important; margin: 0 !important;
             background: white; border: 1px solid #e2e8f0; border-radius: 6px;
@@ -48,10 +51,9 @@
         }
         .gjs-block:hover { border-color: #2563eb; color: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1); }
         .gjs-block-label { font-size: 10px; font-weight: 600; margin: 0; text-transform: capitalize; text-align: center; line-height: 1.2; }
-        /* Icon SVG Size */
         .gjs-block svg, .gjs-block i { width: 20px; height: 20px; font-size: 20px; fill: currentColor; }
 
-        /* Style Manager Inputs */
+        /* Inputs */
         .gjs-field { background: white; border: 1px solid #cbd5e1; border-radius: 4px; color: #334155; padding: 3px; }
         .gjs-field input, .gjs-field select { font-size: 11px; color: #334155; width: 100%; }
         .gjs-sm-sector { border-bottom: 1px solid #e2e8f0; }
@@ -60,21 +62,18 @@
         .gjs-sm-property { width: 100%; margin-bottom: 0; }
         .gjs-sm-property__name { font-size: 10px; margin-bottom: 3px; color: #64748b; font-weight: 500; }
         
-        /* Input Width Helpers */
         .gjs-sm-property--width, .gjs-sm-property--height, 
         .gjs-sm-property--font-size, .gjs-sm-property--font-weight,
         .gjs-sm-property--margin-top, .gjs-sm-property--margin-bottom, 
         .gjs-sm-property--padding-top, .gjs-sm-property--padding-bottom { width: 48%; }
 
-        /* Layer Manager */
+        /* Layers */
         .gjs-layer-item { padding: 6px 10px; border-bottom: 1px solid #f1f5f9; background: white; font-size: 12px; }
         .gjs-layer-item.gjs-selected { background: #eff6ff; color: #2563eb; border-left: 3px solid #2563eb; }
         
-        /* Scrollbar Halus */
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 
@@ -88,15 +87,17 @@
             <div class="h-5 w-px bg-gray-200"></div>
             <div class="flex items-center bg-gray-50 rounded-md border border-gray-200 px-2 py-1">
                 <span class="text-gray-400 text-xs mr-1">/</span>
-                <input x-model="page.slug" class="bg-transparent text-xs font-bold text-gray-700 outline-none w-32" placeholder="slug-halaman">
+                <input x-model="page.slug" class="bg-transparent text-xs font-bold text-gray-700 outline-none w-24" placeholder="slug-halaman">
             </div>
         </div>
 
         <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-50 rounded-lg border border-gray-200 p-0.5 shadow-sm">
-            <button @click="setDevice('Desktop')" :class="device=='Desktop' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-desktop"></i></button>
-            <button @click="setDevice('Tablet')" :class="device=='Tablet' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet"></i></button>
-            <button @click="setDevice('Mobile')" :class="device=='Mobile' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile"></i></button>
+            <button @click="setDevice('desktop')" :class="device=='desktop' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition" title="Desktop 100%"><i class="ph ph-desktop"></i></button>
+            <button @click="setDevice('tablet')" :class="device=='tablet' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition" title="Tablet 768px"><i class="ph ph-device-tablet"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition" title="Mobile 375px"><i class="ph ph-device-mobile"></i></button>
+            
             <div class="w-px h-4 bg-gray-300 mx-2"></div>
+            
             <button @click="cmd('core:undo')" class="text-gray-500 hover:text-black p-1.5 transition"><i class="ph ph-arrow-u-up-left"></i></button>
             <button @click="cmd('core:redo')" class="text-gray-500 hover:text-black p-1.5 transition"><i class="ph ph-arrow-u-up-right"></i></button>
             <button @click="cmd('core:preview')" class="text-gray-500 hover:text-blue-600 p-1.5 transition"><i class="ph ph-eye"></i></button>
@@ -112,7 +113,7 @@
 
     <div class="flex h-[calc(100vh-3rem)] overflow-hidden">
         
-        <div class="flex-1 relative bg-gray-100 flex flex-col justify-center transition-all duration-300">
+        <div class="flex-1 relative bg-gray-100 flex flex-col justify-center transition-all duration-300 p-4">
             <div id="gjs" class="flex-1 shadow-inner outline-none"></div>
         </div>
 
@@ -135,8 +136,7 @@
 
             <div class="flex-1 overflow-y-auto bg-white relative custom-scroll">
                 
-                <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-10">
-                    </div>
+                <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-10"></div>
 
                 <div x-show="tab=='styles'">
                     <div id="selectors-container" class="p-2 border-b border-gray-100"></div>
@@ -196,7 +196,7 @@
         function editorApp() {
             return {
                 loading: false,
-                device: 'Desktop',
+                device: 'desktop', // Default state (lowercase)
                 tab: 'blocks',
                 page: { slug: '', title: '', config: { variants:[], coupons:[], order_bump:{active:false} } },
                 cred: { provider: 'midtrans', data: '' },
@@ -211,12 +211,15 @@
                     this.initGrapes();
                 },
 
-                // Tools
+                // --- DEVICE SWITCHER LOGIC (FIXED) ---
                 setDevice(d) {
                     this.device = d;
-                    const map = { 'Desktop': 'set-device-desktop', 'Tablet': 'set-device-tablet', 'Mobile': 'set-device-mobile' };
-                    if(window.editor) window.editor.runCommand(map[d]);
+                    // Gunakan API Resmi GrapesJS: setDevice(id)
+                    if(window.editor) {
+                        window.editor.setDevice(d);
+                    }
                 },
+
                 cmd(c) { window.editor.runCommand(c); },
 
                 // Logic Data
@@ -261,27 +264,46 @@
                             fromElement: false,
                             storageManager: false,
                             
-                            // PLUGINS (LOAD SEMUA AGAR LENGKAP)
+                            // 1. PLUGINS (LOAD SEMUA)
                             plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'gjs-preset-webpage'],
                             pluginsOpts: {
-                                'gjs-blocks-basic': { 
-                                    flexGrid: true, // Aktifkan Flexbox Grid
-                                    stylePrefix: 'b-' 
-                                },
+                                'gjs-blocks-basic': { flexGrid: true },
                                 'grapesjs-plugin-forms': {},
                                 'gjs-preset-webpage': {
                                     modalImportTitle: 'Import',
                                     modalImportLabel: '',
                                     modalImportContent: '',
-                                    // Matikan blocks dari preset agar tidak duplikat dengan basic
-                                    blocks: [], 
+                                    blocks: [], // Matikan blocks preset agar tidak duplikat
                                     formsOpts: false,
                                     navbarOpts: false,
                                     countdownOpts: false
                                 }
                             },
                             
-                            // UI MAPPING (PANEL KANAN)
+                            // 2. DEVICE MANAGER (DEFINISI UKURAN FIX)
+                            deviceManager: {
+                                devices: [
+                                    {
+                                        id: 'desktop',
+                                        name: 'Desktop',
+                                        width: '', // Full width
+                                    },
+                                    {
+                                        id: 'tablet',
+                                        name: 'Tablet',
+                                        width: '768px',
+                                        widthMedia: '992px',
+                                    },
+                                    {
+                                        id: 'mobile',
+                                        name: 'Mobile',
+                                        width: '375px', // Ukuran iPhone umum
+                                        widthMedia: '480px',
+                                    },
+                                ],
+                            },
+
+                            // 3. UI MAPPING
                             blockManager: { appendTo: '#blocks-container' },
                             layerManager: { appendTo: '#layers-container' },
                             selectorManager: { appendTo: '#selectors-container' },
@@ -295,7 +317,7 @@
                                 ]
                             },
                             
-                            // UPLOAD CONFIG
+                            // 4. UPLOAD CONFIG
                             assetManager: {
                                 upload: '/api/admin/upload-image',
                                 uploadName: 'file',
@@ -304,13 +326,12 @@
                             }
                         });
 
-                        // Tambahkan CUSTOM BLOCKS (Layout Section & Columns)
+                        // CUSTOM BLOCKS
                         const bm = editor.BlockManager;
                         
-                        // 1. SECTION (Wadah Utama)
                         bm.add('section', {
                             label: 'Section',
-                            category: 'Basic',
+                            category: 'Layout',
                             attributes: { class: 'fa fa-square' },
                             content: `<section style="padding: 50px 20px; min-height: 150px; display:flex; flex-direction:column; align-items:center;">
                                 <h2 style="margin-bottom:10px;">Judul Section</h2>
@@ -318,10 +339,9 @@
                             </section>`
                         });
 
-                        // 2. CHECKOUT WIDGET (Penting!)
                         bm.add('checkout-pro', {
                             label: 'Checkout Form',
-                            category: 'Extra',
+                            category: 'E-Commerce',
                             attributes: { class: 'fa fa-shopping-cart' },
                             content: `<div style="padding: 20px; border: 2px dashed #3b82f6; background: #eff6ff; text-align: center; border-radius: 8px;">
                                 <strong style="color: #1e40af;">[ FORM CHECKOUT ]</strong>
