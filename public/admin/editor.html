@@ -11,63 +11,70 @@
     <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs"></script>
     
-    <script src="https://unpkg.com/grapesjs-preset-webpage"></script>
     <script src="https://unpkg.com/grapesjs-blocks-basic"></script>
+    <script src="https://unpkg.com/grapesjs-plugin-forms"></script>
+    <script src="https://unpkg.com/grapesjs-preset-webpage"></script>
     
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* --- UI FRAMEWORK --- */
-        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: #f1f5f9; color: #334155; }
+        /* --- GLOBAL STYLE --- */
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: #f8fafc; color: #334155; }
         [x-cloak] { display: none !important; }
 
-        /* Hapus UI Bawaan GrapesJS */
+        /* Hapus UI Bawaan */
         .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-panels { display: none !important; }
         
         /* Canvas */
         .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f1f5f9; }
         
-        /* --- PANEL STYLING (Webflow Style) --- */
+        /* --- PANEL KANAN (WEBFLOW STYLE) --- */
         
-        /* Tab Navigation */
-        .panel-tabs button { position: relative; color: #64748b; }
-        .panel-tabs button.active { color: #2563eb; }
-        .panel-tabs button.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: #2563eb; }
+        /* Tab Menu */
+        .panel-tabs button { position: relative; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; }
+        .panel-tabs button.active { color: #2563eb; background: #eff6ff; }
+        .panel-tabs button.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: #2563eb; }
 
-        /* Block Manager (Add Elements) */
+        /* Block Manager Grid */
         .gjs-blocks-c { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; }
+        .gjs-block-category .gjs-title { background: #f1f5f9; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: 700; color: #475569; padding: 6px 10px; text-transform: uppercase; cursor: pointer; }
         
         /* Block Item */
         .gjs-block { 
-            width: auto !important; min-height: auto !important; padding: 12px 8px !important;
+            width: 100% !important; min-height: 70px !important; padding: 10px !important; margin: 0 !important;
             background: white; border: 1px solid #e2e8f0; border-radius: 6px;
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
             transition: all 0.2s; cursor: grab; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
         }
         .gjs-block:hover { border-color: #2563eb; color: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1); }
-        .gjs-block-label { font-size: 10px; font-weight: 600; margin: 0; text-transform: capitalize; }
-        .gjs-block svg, .gjs-block i { width: 24px; height: 24px; fill: currentColor; font-size: 24px; }
+        .gjs-block-label { font-size: 10px; font-weight: 600; margin: 0; text-transform: capitalize; text-align: center; line-height: 1.2; }
+        /* Icon SVG Size */
+        .gjs-block svg, .gjs-block i { width: 20px; height: 20px; font-size: 20px; fill: currentColor; }
 
         /* Style Manager Inputs */
-        .gjs-field { background: white; border: 1px solid #cbd5e1; border-radius: 4px; color: #334155; padding: 2px; }
-        .gjs-field input, .gjs-field select { font-size: 11px; color: #334155; }
+        .gjs-field { background: white; border: 1px solid #cbd5e1; border-radius: 4px; color: #334155; padding: 3px; }
+        .gjs-field input, .gjs-field select { font-size: 11px; color: #334155; width: 100%; }
         .gjs-sm-sector { border-bottom: 1px solid #e2e8f0; }
         .gjs-sm-title { background: #f8fafc; font-size: 11px; font-weight: 700; color: #475569; padding: 8px 12px; border-top: 1px solid #e2e8f0; cursor: pointer; display: flex; justify-content: space-between; }
-        .gjs-sm-properties { padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .gjs-sm-properties { padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
         .gjs-sm-property { width: 100%; margin-bottom: 0; }
-        .gjs-sm-property__name { font-size: 10px; margin-bottom: 2px; color: #64748b; }
+        .gjs-sm-property__name { font-size: 10px; margin-bottom: 3px; color: #64748b; font-weight: 500; }
         
-        /* Helper Classes for Style Inputs Width */
-        .gjs-sm-property--width, .gjs-sm-property--height, .gjs-sm-property--font-size, .gjs-sm-property--font-weight { width: 48%; }
-        
+        /* Input Width Helpers */
+        .gjs-sm-property--width, .gjs-sm-property--height, 
+        .gjs-sm-property--font-size, .gjs-sm-property--font-weight,
+        .gjs-sm-property--margin-top, .gjs-sm-property--margin-bottom, 
+        .gjs-sm-property--padding-top, .gjs-sm-property--padding-bottom { width: 48%; }
+
         /* Layer Manager */
         .gjs-layer-item { padding: 6px 10px; border-bottom: 1px solid #f1f5f9; background: white; font-size: 12px; }
-        .gjs-layer-item.gjs-selected { background: #eff6ff; color: #2563eb; border-left: 2px solid #2563eb; }
-        .gjs-layer-vis { margin-right: 8px; }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+        .gjs-layer-item.gjs-selected { background: #eff6ff; color: #2563eb; border-left: 3px solid #2563eb; }
+        
+        /* Scrollbar Halus */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 
@@ -79,13 +86,13 @@
                 <i class="ph ph-arrow-left text-lg"></i>
             </a>
             <div class="h-5 w-px bg-gray-200"></div>
-            <div class="flex items-center bg-gray-100 rounded-md border border-gray-200 px-2 py-1">
+            <div class="flex items-center bg-gray-50 rounded-md border border-gray-200 px-2 py-1">
                 <span class="text-gray-400 text-xs mr-1">/</span>
-                <input x-model="page.slug" class="bg-transparent text-xs font-bold text-gray-700 outline-none w-24" placeholder="slug-halaman">
+                <input x-model="page.slug" class="bg-transparent text-xs font-bold text-gray-700 outline-none w-32" placeholder="slug-halaman">
             </div>
         </div>
 
-        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-50 rounded-lg border border-gray-200 p-0.5">
+        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-50 rounded-lg border border-gray-200 p-0.5 shadow-sm">
             <button @click="setDevice('Desktop')" :class="device=='Desktop' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-desktop"></i></button>
             <button @click="setDevice('Tablet')" :class="device=='Tablet' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet"></i></button>
             <button @click="setDevice('Mobile')" :class="device=='Mobile' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile"></i></button>
@@ -96,7 +103,7 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-xs font-bold transition flex items-center gap-2 disabled:opacity-50">
+            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-xs font-bold transition flex items-center gap-2 disabled:opacity-50 shadow-md shadow-blue-200">
                 <i x-show="loading" class="ph ph-spinner animate-spin"></i>
                 <span x-text="loading ? 'Saving...' : 'Publish'"></span>
             </button>
@@ -109,10 +116,10 @@
             <div id="gjs" class="flex-1 shadow-inner outline-none"></div>
         </div>
 
-        <div class="w-[300px] bg-white border-l border-gray-200 flex flex-col z-20 shrink-0 shadow-xl">
+        <div class="w-[280px] bg-white border-l border-gray-200 flex flex-col z-20 shrink-0 shadow-xl">
             
             <div class="flex border-b border-gray-200 bg-white panel-tabs">
-                <button @click="tab='blocks'" :class="tab=='blocks' ? 'active' : ''" class="flex-1 py-3 transition hover:bg-gray-50" title="Add Elements">
+                <button @click="tab='blocks'" :class="tab=='blocks' ? 'active' : ''" class="flex-1 py-3 transition hover:bg-gray-50" title="Add">
                     <i class="ph ph-plus-square text-xl"></i>
                 </button>
                 <button @click="tab='styles'" :class="tab=='styles' ? 'active' : ''" class="flex-1 py-3 transition hover:bg-gray-50" title="Styles">
@@ -121,7 +128,7 @@
                 <button @click="tab='layers'" :class="tab=='layers' ? 'active' : ''" class="flex-1 py-3 transition hover:bg-gray-50" title="Layers">
                     <i class="ph ph-list-dashes text-xl"></i>
                 </button>
-                <button @click="tab='settings'" :class="tab=='settings' ? 'active' : ''" class="flex-1 py-3 transition hover:bg-gray-50" title="Settings">
+                <button @click="tab='settings'" :class="tab=='settings' ? 'active' : ''" class="flex-1 py-3 transition hover:bg-gray-50" title="Config">
                     <i class="ph ph-gear text-xl"></i>
                 </button>
             </div>
@@ -142,7 +149,6 @@
                     
                     <div>
                         <h3 class="text-xs font-bold uppercase text-gray-400 mb-3 border-b pb-1">Produk & Checkout</h3>
-                        
                         <div class="space-y-3">
                             <div class="bg-gray-50 p-3 rounded border border-gray-200">
                                 <label class="text-xs font-bold text-gray-600 block mb-2">Varian Produk</label>
@@ -180,7 +186,6 @@
                             <button @click="saveCreds" class="w-full bg-gray-800 text-white py-1.5 rounded text-xs font-bold">Simpan Key</button>
                         </div>
                     </div>
-
                 </div>
 
             </div>
@@ -192,8 +197,7 @@
             return {
                 loading: false,
                 device: 'Desktop',
-                tab: 'blocks', // Default tab active
-                
+                tab: 'blocks',
                 page: { slug: '', title: '', config: { variants:[], coupons:[], order_bump:{active:false} } },
                 cred: { provider: 'midtrans', data: '' },
                 authPass: localStorage.getItem('admin_pass'),
@@ -215,7 +219,7 @@
                 },
                 cmd(c) { window.editor.runCommand(c); },
 
-                // Logic
+                // Logic Data
                 addVariant() { this.page.config.variants.push({ id:Date.now(), name:'', price:0, desc:'' }) },
                 
                 async saveCreds() {
@@ -256,39 +260,42 @@
                             height: '100%',
                             fromElement: false,
                             storageManager: false,
-                            // PLUGIN UTAMA: Preset Webpage (Grid, Section, Text, Image)
-                            plugins: ['gjs-preset-webpage'], 
+                            
+                            // PLUGINS (LOAD SEMUA AGAR LENGKAP)
+                            plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'gjs-preset-webpage'],
                             pluginsOpts: {
+                                'gjs-blocks-basic': { 
+                                    flexGrid: true, // Aktifkan Flexbox Grid
+                                    stylePrefix: 'b-' 
+                                },
+                                'grapesjs-plugin-forms': {},
                                 'gjs-preset-webpage': {
-                                    // Kita matikan panel bawaan preset ini agar pakai panel custom kita
                                     modalImportTitle: 'Import',
                                     modalImportLabel: '',
                                     modalImportContent: '',
-                                    blocks: ['link-block', 'quote', 'text-basic'],
+                                    // Matikan blocks dari preset agar tidak duplikat dengan basic
+                                    blocks: [], 
                                     formsOpts: false,
                                     navbarOpts: false,
                                     countdownOpts: false
                                 }
                             },
                             
-                            // MAPPING KE UI KITA
-                            blockManager: { 
-                                appendTo: '#blocks-container',
-                                custom: true // Biar kita bisa style sendiri lewat CSS
-                            },
+                            // UI MAPPING (PANEL KANAN)
+                            blockManager: { appendTo: '#blocks-container' },
                             layerManager: { appendTo: '#layers-container' },
                             selectorManager: { appendTo: '#selectors-container' },
                             styleManager: { 
                                 appendTo: '#styles-container',
                                 sectors: [
-                                    { name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'color', 'line-height', 'text-align', 'text-decoration', 'font-style'] },
+                                    { name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'color', 'line-height', 'text-align', 'text-decoration'] },
                                     { name: 'Layout', open: false, buildProps: ['display', 'flex-direction', 'justify-content', 'align-items', 'width', 'height', 'padding', 'margin'] },
                                     { name: 'Background', open: false, buildProps: ['background-color', 'background-image'] },
                                     { name: 'Borders', open: false, buildProps: ['border', 'border-radius', 'box-shadow'] }
                                 ]
                             },
                             
-                            // ASET MANAGER (Cloudinary)
+                            // UPLOAD CONFIG
                             assetManager: {
                                 upload: '/api/admin/upload-image',
                                 uploadName: 'file',
@@ -297,13 +304,13 @@
                             }
                         });
 
-                        // CUSTOM BLOCKS (Penting: Tambahkan manual jika preset kurang)
+                        // Tambahkan CUSTOM BLOCKS (Layout Section & Columns)
                         const bm = editor.BlockManager;
                         
                         // 1. SECTION (Wadah Utama)
                         bm.add('section', {
                             label: 'Section',
-                            category: 'Layout',
+                            category: 'Basic',
                             attributes: { class: 'fa fa-square' },
                             content: `<section style="padding: 50px 20px; min-height: 150px; display:flex; flex-direction:column; align-items:center;">
                                 <h2 style="margin-bottom:10px;">Judul Section</h2>
@@ -311,21 +318,10 @@
                             </section>`
                         });
 
-                        // 2. COLUMNS
-                        bm.add('2-columns', {
-                            label: '2 Columns',
-                            category: 'Layout',
-                            attributes: { class: 'fa fa-columns' },
-                            content: `<div style="display: flex; gap: 20px; width: 100%;">
-                                <div style="flex: 1; padding: 10px; min-height: 100px;">Kolom Kiri</div>
-                                <div style="flex: 1; padding: 10px; min-height: 100px;">Kolom Kanan</div>
-                            </div>`
-                        });
-
-                        // 3. CHECKOUT WIDGET
+                        // 2. CHECKOUT WIDGET (Penting!)
                         bm.add('checkout-pro', {
                             label: 'Checkout Form',
-                            category: 'E-Commerce',
+                            category: 'Extra',
                             attributes: { class: 'fa fa-shopping-cart' },
                             content: `<div style="padding: 20px; border: 2px dashed #3b82f6; background: #eff6ff; text-align: center; border-radius: 8px;">
                                 <strong style="color: #1e40af;">[ FORM CHECKOUT ]</strong>
@@ -333,7 +329,7 @@
                             </div>`
                         });
 
-                        // LOAD DATA
+                        // Load Data
                         if(this.page.slug) {
                             fetch('/api/admin/pages/'+this.page.slug).then(r=>r.json()).then(d=>{
                                 if(d.id) { 
@@ -345,7 +341,7 @@
                             });
                         }
 
-                        // SET CANVAS STYLE
+                        // Canvas Style
                         editor.on('load', () => {
                             editor.Canvas.getBody().style.backgroundColor = '#ffffff';
                         });
