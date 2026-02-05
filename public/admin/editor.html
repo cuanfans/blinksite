@@ -272,20 +272,49 @@
                         bm.add('checkout-pro', { label: 'Form Checkout', category: 'E-Commerce', attributes:{class:'ph ph-shopping-cart'}, content: `<div data-gjs-type="checkout-widget" style="padding:20px; border:2px dashed #3b82f6; background:#eff6ff; text-align:center; border-radius:8px;"><strong style="color:#1e40af;">[ FORM CHECKOUT ]</strong><p style="font-size:12px; color:#64748b;">Akan muncul saat live.</p></div>` });
 
                         editor.on('load', () => {
-                            editor.Canvas.getBody().style.backgroundColor = '#ffffff';
-                            if(this.page.slug) {
-                                fetch('/api/admin/pages/'+this.page.slug).then(r=>r.json()).then(d=>{
-                                    if(d.id) {
-                                        this.page.title=d.title; this.page.product_type=d.product_type||'physical';
-                                        try{ this.page.config=JSON.parse(d.product_config_json||'{}'); }catch(e){ this.page.config={variants:[],settings:{}}; }
-                                        if(!this.page.config.settings) this.page.config.settings={seo_title:d.title};
-                                        if(!this.page.config.shipping) this.page.config.shipping={weight:1000};
-                                        if(d.html_content) editor.setComponents(d.html_content);
-                                        if(d.css_content) editor.setStyle(d.css_content);
+                        // Memaksa body canvas bersih dari margin default browser editor
+                        const body = editor.Canvas.getBody();
+                        body.style.backgroundColor = '#ffffff';
+                        body.style.margin = '0';
+                        body.style.padding = '0';
+                    
+                        if(this.page.slug) {
+                            fetch('/api/admin/pages/'+this.page.slug).then(r=>r.json()).then(d=>{
+                                if(d.id) {
+                                    this.page.title = d.title; 
+                                    this.page.product_type = d.product_type || 'physical';
+                                    
+                                    try { 
+                                        this.page.config = JSON.parse(d.product_config_json || '{}'); 
+                                    } catch(e) { 
+                                        this.page.config = {variants:[], settings:{}}; 
                                     }
-                                });
-                            }
-                        });
+                                    
+                                    if(!this.page.config.settings) this.page.config.settings = {seo_title:d.title};
+                                    if(!this.page.config.shipping) this.page.config.shipping = {weight:1000};
+                    
+                                    // --- FIX: PEMBERSIHAN KONTEN SEBELUM LOAD ---
+                                    let rawHtml = d.html_content || '';
+                                    
+                                    // Hapus section kosong penyebab gap abu-abu jika terdeteksi string eksak-nya
+                                    const ghostSection = '<section class="py-20 px-4 text-center bg-gray-100"><div id="iilw"></div></section>';
+                                    if (rawHtml.includes(ghostSection)) {
+                                        rawHtml = rawHtml.replace(ghostSection, '');
+                                    }
+                    
+                                    // Masukkan komponen dan style
+                                    editor.setComponents(rawHtml);
+                                    if (d.css_content) editor.setStyle(d.css_content);
+                                    
+                                    // --- PENTING: Paksa GrapesJS sinkronisasi layer agar section hantu terlihat di navigator ---
+                                    setTimeout(() => {
+                                        editor.UndoManager.clear(); // Reset history agar load awal bersih
+                                        editor.refresh(); 
+                                    }, 200);
+                                }
+                            });
+                        }
+                    });
                     }, 100);
                 }
             }
