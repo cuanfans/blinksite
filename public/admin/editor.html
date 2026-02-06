@@ -332,10 +332,9 @@
                         assetManager: { upload: false, autoAdd: true, uploadFile: async (e) => { /* Upload */ } }
                     });
 
-                    // --- 3. COMPONENT DEFINITIONS ---
+                    // --- 3. COMPONENT DEFINITIONS (UNCHANGED) ---
                     const domc = editor.DomComponents;
 
-                    // TABLE CELL - Make editable
                     domc.addType('cell', {
                         model: {
                             defaults: {
@@ -348,7 +347,6 @@
                         }
                     });
 
-                    // TABLE COMMANDS
                     editor.Commands.add('table-add-row', editor => {
                         const selected = editor.getSelected();
                         const table = selected.closest('table');
@@ -382,7 +380,6 @@
                        }
                     });
 
-                    // TABLE TYPE
                     domc.addType('table', {
                         model: {
                             defaults: {
@@ -397,7 +394,6 @@
                         }
                     });
 
-                    // ICONIFY
                     domc.addType('iconify-icon', {
                         model: {
                             defaults: {
@@ -418,136 +414,14 @@
                     bm.add('container-fluid', { label: 'Container', category: 'Layout', content: `<div style="width:90%; max-width:1200px; margin:0 auto; padding:20px; min-height:50px;"></div>` });
                     bm.add('section-std', { label: 'Section', category: 'Layout', content: `<section style="padding:60px 0; background-color:#fff;"><div style="width:90%; max-width:1100px; margin:0 auto; padding:0 20px;"></div></section>` });
                     
-                    // PURE TABLE - FULLY EDITABLE
-                    bm.add('table-pure', {
-                        label: 'Pure Table',
-                        category: 'Tables',
-                        attributes: { class: 'ph ph-table' },
-                        content: `<div style="overflow-x:auto;">
-                            <table style="width:100%; border-collapse:collapse; border:1px solid #e2e8f0;">
-                                <thead>
-                                    <tr style="background:#f8fafc;">
-                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 1</th>
-                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 2</th>
-                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 3</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 1</td>
-                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 2</td>
-                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 3</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 1</td>
-                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 2</td>
-                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 3</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>`
-                    });
-
-                    // PRICELIST - TERPISAH 3 KOLOM
-                    bm.add('pricelist-tpl', {
-                        label: 'Pricelist Cards',
-                        category: 'Content',
-                        attributes: { class: 'ph ph-tag' },
-                        content: `<section style="padding:60px 20px; background:#f8fafc;">
-                            <div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(3, 1fr); gap:30px;">
-                                <div style="padding:30px; border:1px solid #e2e8f0; background:#fff; border-radius:8px; text-align:center;">
-                                    <h3 style="font-size:20px; font-weight:700; margin:0 0 15px 0;">Basic Plan</h3>
-                                    <p style="font-size:32px; font-weight:700; color:#2563eb; margin:10px 0;">Rp 99.000</p>
-                                    <p style="font-size:14px; color:#64748b; margin:15px 0;">Per bulan</p>
-                                    <ul style="list-style:none; padding:0; margin:20px 0; text-align:left;">
-                                        <li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature A</li>
-                                        <li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature B</li>
-                                        <li style="padding:8px 0;">✗ Feature C</li>
-                                    </ul>
-                                    <button style="width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Pilih Plan</button>
-                                </div>
-                                <div style="padding:30px; border:2px solid #2563eb; background:#fff; border-radius:8px; text-align:center; transform:scale(1.05);">
-                                    <div style="display:inline-block; background:#2563eb; color:#fff; padding:5px 15px; border-radius:20px; font-size:12px; font-weight:700; margin-bottom:15px;">POPULER</div>
-                                    <h3 style="font-size:20px; font-weight:700; margin:10px 0 15px 0;">Pro Plan</h3>
-                                    <p style="font-size:32px; font-weight:700; color:#2563eb; margin:10px 0;">Rp 199.000</p>
-                                    <p style="font-size:14px; color:#64748b; margin:15px 0;">Per bulan</p>
-                                    <ul style="list-style:none; padding:0; margin:20px 0; text-align:left;">
-                                        <li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature A</li>
-                                        <li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature B</li>
-                                        <li style="padding:8px 0;">✓ Feature C</li>
-                                    </ul>
-                                    <button style="width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Pilih Plan</button>
-                                </div>
-                                <div style="padding:30px; border:1px solid #e2e8f0; background:#fff; border-radius:8px; text-align:center;">
-                                    <h3 style="font-size:20px; font-weight:700; margin:0 0 15px 0;">Enterprise</h3>
-                                    <p style="font-size:32px; font-weight:700; color:#2563eb; margin:10px 0;">Custom</p>
-                                    <p style="font-size:14px; color:#64748b; margin:15px 0;">Hubungi kami</p>
-                                    <ul style="list-style:none; padding:0; margin:20px 0; text-align:left;">
-                                        <li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature A</li>
-                                        <li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature B</li>
-                                        <li style="padding:8px 0;">✓ Feature C</li>
-                                    </ul>
-                                    <button style="width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Hubungi Sales</button>
-                                </div>
-                            </div>
-                        </section>`
-                    });
-
-                    // COMPARISON TABLE - MENYATU
-                    bm.add('comparison-tpl', {
-                        label: 'Comparison Table',
-                        category: 'Content',
-                        attributes: { class: 'ph ph-table' },
-                        content: `<section style="padding:60px 20px;">
-                            <div style="max-width:1000px; margin:0 auto;">
-                                <div style="overflow-x:auto;">
-                                    <table style="width:100%; border-collapse:collapse; border:1px solid #e6edf3;">
-                                        <thead>
-                                            <tr>
-                                                <th style="padding:14px; border:1px solid #e6edf3; background:#f8fafc; text-align:left; font-weight:700;">Feature</th>
-                                                <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;">Basic</th>
-                                                <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;">Pro</th>
-                                                <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;">Enterprise</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Feature A</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Feature B</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Feature C</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Priority Support</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </section>`
-                    });
-
                     bm.add('iconify-blk', { label: 'Iconify', category: 'Media', attributes: { class: 'ph ph-star' }, content: { type: 'iconify-icon' } });
                     bm.add('header-1', { label: 'Header Center', category: 'Headers', content: `<header style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:center;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px;" /></header>` });
                     bm.add('header-2', { label: 'Header Left', category: 'Headers', content: `<header style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px;" /><nav><a href="#" style="margin-left:15px;">Home</a></nav></header>` });
                     bm.add('header-3', { label: 'Header Right', category: 'Headers', content: `<header style="padding:15px 20px; display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px;" /><nav><a href="#" style="margin-right:15px;">Home</a></nav></header>` });
                     bm.add('header-4', { label: 'Header Stack', category: 'Headers', content: `<header style="padding:20px; text-align:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:50px; margin-bottom:15px;" /><nav><a href="#">Home</a></nav></header>` });
                     bm.add('hero-tpl', { label: 'Hero', category: 'Content', content: `<section style="padding:80px 20px; text-align:center; background:#f8fafc;"><h1 style="font-size:3rem; margin-bottom:20px;">Headline</h1><p>Subheadline.</p></section>` });
+                    bm.add('hero-image', { label: 'Hero + Image', category: 'Content', attributes: { class: 'ph ph-image' }, content: `<section style="padding:80px 20px; background:#f8fafc;"><div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center;"><div><h1 style="font-size:3rem; margin:0 0 20px 0;">Headline</h1><p style="font-size:18px; color:#64748b; margin:0;">Subheadline text here with image on the right side.</p></div><div><img src="https://via.placeholder.com/500x400" style="width:100%; border-radius:8px;" /></div></div></section>` });
+                    bm.add('pricelist-tpl', { label: 'Pricelist Cards', category: 'Content', attributes: { class: 'ph ph-tag' }, content: `<section style="padding:60px 20px; background:#f8fafc;"><div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(3, 1fr); gap:30px;"><div style="padding:30px; border:1px solid #e2e8f0; background:#fff; border-radius:8px; text-align:center;"><h3 style="font-size:20px; font-weight:700; margin:0 0 15px 0;">Basic Plan</h3><p style="font-size:32px; font-weight:700; color:#2563eb; margin:10px 0;">Rp 99.000</p><p style="font-size:14px; color:#64748b; margin:15px 0;">Per bulan</p><ul style="list-style:none; padding:0; margin:20px 0; text-align:left;"><li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature A</li><li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature B</li><li style="padding:8px 0;">✗ Feature C</li></ul><button style="width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Pilih Plan</button></div><div style="padding:30px; border:2px solid #2563eb; background:#fff; border-radius:8px; text-align:center; transform:scale(1.05);"><div style="display:inline-block; background:#2563eb; color:#fff; padding:5px 15px; border-radius:20px; font-size:12px; font-weight:700; margin-bottom:15px;">POPULER</div><h3 style="font-size:20px; font-weight:700; margin:10px 0 15px 0;">Pro Plan</h3><p style="font-size:32px; font-weight:700; color:#2563eb; margin:10px 0;">Rp 199.000</p><p style="font-size:14px; color:#64748b; margin:15px 0;">Per bulan</p><ul style="list-style:none; padding:0; margin:20px 0; text-align:left;"><li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature A</li><li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature B</li><li style="padding:8px 0;">✓ Feature C</li></ul><button style="width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Pilih Plan</button></div><div style="padding:30px; border:1px solid #e2e8f0; background:#fff; border-radius:8px; text-align:center;"><h3 style="font-size:20px; font-weight:700; margin:0 0 15px 0;">Enterprise</h3><p style="font-size:32px; font-weight:700; color:#2563eb; margin:10px 0;">Custom</p><p style="font-size:14px; color:#64748b; margin:15px 0;">Hubungi kami</p><ul style="list-style:none; padding:0; margin:20px 0; text-align:left;"><li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature A</li><li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature B</li><li style="padding:8px 0;">✓ Feature C</li></ul><button style="width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Hubungi Sales</button></div></div></section>` });
                     bm.add('video-yt', { label: 'YouTube', category: 'Media', content: { type: 'video', provider: 'yt', style: { height: '350px', width: '100%' } } });
                     bm.add('checkout-pro', { label: 'Checkout', category: 'E-Commerce', content: `<div data-gjs-type="checkout-widget" style="padding:20px; border:2px dashed #3b82f6; text-align:center;"><strong>[ CHECKOUT ]</strong></div>` });
 
