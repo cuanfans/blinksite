@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor Pro - Clean & Stable</title>
+    <title>LandingBuilder - Ultimate Editor</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
     
@@ -21,21 +24,24 @@
 
     <style>
         /* RESET */
-        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; color: #1e293b; }
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: #fff; color: #1e293b; }
         [x-cloak] { display: none !important; }
         
-        /* GRAPESJS CUSTOMIZATION */
+        /* GRAPESJS UI OVERRIDES */
         .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-panels, .gjs-pn-buttons { display: none !important; }
         .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f8fafc; }
         .gjs-selected { outline: 2px solid #2563eb !important; outline-offset: -2px; }
         
-        /* PANEL & TABS */
+        /* COLOR PICKER FIX */
+        .gjs-field-color-picker { width: 100%; }
+        
+        /* PANEL KANAN */
         .panel-tabs { display: flex; border-bottom: 1px solid #e2e8f0; background: #fff; }
         .panel-tabs button { flex: 1; padding: 12px; color: #94a3b8; font-size: 20px; transition: all 0.2s; }
         .panel-tabs button:hover { color: #334155; background: #f8fafc; }
         .panel-tabs button.active { color: #2563eb; border-bottom: 2px solid #2563eb; background: #eff6ff; }
 
-        /* BLOCK MANAGER */
+        /* BLOCKS */
         .gjs-blocks-c { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
         .gjs-block { width: 100% !important; min-height: auto !important; padding: 15px 5px !important; margin: 0 !important; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: grab; transition: all 0.15s; }
         .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
@@ -55,8 +61,8 @@
 <body x-data="editorApp()">
 
     <div class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none">
-        <template x-for="notif in notifications" :key="notif.id">
-            <div x-show="notif.show" 
+        <template x-for="n in notifications" :key="n.id">
+            <div x-show="n.show" 
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="translate-y-2 opacity-0"
                  x-transition:enter-end="translate-y-0 opacity-100"
@@ -64,11 +70,11 @@
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
                  class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-l-4 min-w-[250px] bg-white"
-                 :class="notif.type === 'success' ? 'border-green-500' : 'border-red-500'">
-                <i class="ph text-xl" :class="notif.type === 'success' ? 'ph-check-circle text-green-500' : 'ph-warning-circle text-red-500'"></i>
+                 :class="n.type === 'success' ? 'border-green-500' : 'border-red-500'">
+                <i class="ph text-xl" :class="n.type === 'success' ? 'ph-check-circle text-green-500' : 'ph-warning-circle text-red-500'"></i>
                 <div>
-                    <h4 class="text-xs font-bold text-gray-800" x-text="notif.title"></h4>
-                    <p class="text-[10px] text-gray-500" x-text="notif.message"></p>
+                    <h4 class="text-xs font-bold text-gray-800" x-text="n.title"></h4>
+                    <p class="text-[10px] text-gray-500" x-text="n.msg"></p>
                 </div>
             </div>
         </template>
@@ -109,22 +115,22 @@
         </div>
         <div class="w-[320px] bg-white border-l border-gray-200 flex flex-col z-20 shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.05)]">
             <div class="panel-tabs">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'active':''"><i class="ph ph-plus-square"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'active':''"><i class="ph ph-paint-brush"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'active':''"><i class="ph ph-sliders"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'active':''"><i class="ph ph-tree-structure"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'active':''" title="Elements"><i class="ph ph-plus-square"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'active':''" title="Design"><i class="ph ph-paint-brush"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'active':''" title="Settings"><i class="ph ph-sliders"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'active':''" title="Navigator"><i class="ph ph-tree-structure"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto bg-white relative custom-scroll">
                 <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-20"></div>
                 <div x-show="tab=='styles'"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="pb-20"></div></div>
-                <div x-show="tab=='traits'"><div class="p-3 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b">Settings</div><div id="traits-container" class="p-2 pb-20"></div></div>
+                <div x-show="tab=='traits'"><div class="p-3 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b">PROPERTIES</div><div id="traits-container" class="p-2 pb-20"></div></div>
                 <div x-show="tab=='layers'" id="layers-container" class="absolute inset-0 pb-20"></div>
             </div>
         </div>
     </div>
 
     <div x-show="showSettings" x-cloak class="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
-        <div class="w-[400px] h-full bg-white shadow-2xl flex flex-col" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0">
+        <div class="w-[400px] h-full bg-white shadow-2xl flex flex-col" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
                 <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-blue-600"></i> Page Configuration</h2>
                 <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
@@ -212,6 +218,94 @@
     </div>
 
     <script>
+    // --- 1. SUPER TABLE LOGIC & ICONIFY INTEGRATION ---
+    const addCustomFeatures = (editor) => {
+        
+        // A. ICONIFY COMPONENT (New)
+        editor.DomComponents.addType('iconify-icon', {
+            model: {
+                defaults: {
+                    tagName: 'iconify-icon',
+                    droppable: false,
+                    attributes: { icon: 'mdi:home', width: '32' },
+                    traits: [
+                        { name: 'icon', label: 'Icon Code (e.g. ph:rocket)' },
+                        { name: 'width', label: 'Size (px)', type: 'number' },
+                        { name: 'color', label: 'Color', type: 'color' }
+                    ]
+                }
+            }
+        });
+
+        // B. SUPER TABLE COMPONENT (Working Logic)
+        editor.DomComponents.addType('super-table', {
+            model: {
+                defaults: {
+                    tagName: 'table',
+                    classes: ['w-full', 'border-collapse', 'border', 'border-gray-200'],
+                    traits: [
+                        {
+                            type: 'button',
+                            text: '➕ Tambah Kolom',
+                            full: true,
+                            command: (editor, trait) => {
+                                const table = trait.target;
+                                // Add TH to Thead
+                                const theadRow = table.find('thead tr')[0];
+                                if(theadRow) theadRow.append('<th style="padding:10px; border:1px solid #ddd;">New Header</th>');
+                                // Add TD to Tbody Rows
+                                const tbodyRows = table.find('tbody tr');
+                                tbodyRows.forEach(row => row.append('<td style="padding:10px; border:1px solid #ddd;">New Cell</td>'));
+                            }
+                        },
+                        {
+                            type: 'button',
+                            text: '➖ Hapus Kolom Akhir',
+                            full: true,
+                            command: (editor, trait) => {
+                                const table = trait.target;
+                                const theadRow = table.find('thead tr')[0];
+                                if(theadRow && theadRow.components().length > 0) theadRow.components().at(theadRow.components().length-1).remove();
+                                
+                                const tbodyRows = table.find('tbody tr');
+                                tbodyRows.forEach(row => {
+                                    if(row.components().length > 0) row.components().at(row.components().length-1).remove();
+                                });
+                            }
+                        },
+                        {
+                            type: 'button',
+                            text: '➕ Tambah Baris',
+                            full: true,
+                            command: (editor, trait) => {
+                                const table = trait.target;
+                                const tbody = table.find('tbody')[0];
+                                const rows = tbody.components();
+                                // Clone last row to keep style
+                                if(rows.length > 0) {
+                                    tbody.append(rows.at(rows.length-1).clone());
+                                } else {
+                                    tbody.append('<tr><td>Cell</td></tr>');
+                                }
+                            }
+                        },
+                        {
+                            type: 'button',
+                            text: '➖ Hapus Baris Akhir',
+                            full: true,
+                            command: (editor, trait) => {
+                                const table = trait.target;
+                                const tbody = table.find('tbody')[0];
+                                if(tbody && tbody.components().length > 0) tbody.components().at(tbody.components().length-1).remove();
+                            }
+                        }
+                    ]
+                }
+            }
+        });
+    };
+
+    // --- 2. EDITOR APP (ALPINE) ---
     function editorApp() {
         return {
             loading: false, showSettings: false, device: 'desktop', tab: 'blocks',
@@ -237,15 +331,12 @@
             addVariant() { this.page.config.variants.push({id:Date.now(), name:'', price:0}) },
             
             async saveCreds() {
-                try { await fetch('/api/admin/credentials', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({provider:this.cred.provider, data:JSON.parse(this.cred.data)})}); this.notify('Berhasil', 'Kredensial disimpan!', 'success'); } catch(e){ this.notify('Gagal', 'Format JSON salah.', 'error'); }
+                try { await fetch('/api/admin/credentials', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({provider:this.cred.provider, data:JSON.parse(this.cred.data)})}); this.notify('Berhasil','Key tersimpan!'); } catch(e){ this.notify('Gagal','Format JSON salah.','error'); }
             },
             
             async savePage() {
                 this.loading=true;
-                try { 
-                    await fetch('/api/admin/pages', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({slug:this.page.slug, title:this.page.title, product_type:this.page.product_type, html:editor.getHtml(), css:editor.getCss(), product_config:this.page.config})}); 
-                    this.notify('Sukses', 'Halaman berhasil disimpan.', 'success');
-                } catch(e){ this.notify('Error', 'Gagal menyimpan data.', 'error'); }
+                try { await fetch('/api/admin/pages', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({slug:this.page.slug, title:this.page.title, product_type:this.page.product_type, html:editor.getHtml(), css:editor.getCss(), product_config:this.page.config})}); this.notify('Sukses','Halaman tersimpan!'); } catch(e){ this.notify('Error','Gagal simpan data.','error'); }
                 this.loading=false;
             },
             
@@ -260,14 +351,8 @@
                         layerManager: { appendTo: '#layers-container' },
                         selectorManager: { appendTo: '#selectors-container' },
                         traitManager: { appendTo: '#traits-container' },
-                        styleManager: { 
-                            appendTo: '#styles-container', 
-                            sectors: [
-                                { name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'], properties: [{ property: 'color', type: 'color' }] }, 
-                                { name: 'Dimensions', open: false, buildProps: ['width', 'height', 'padding', 'margin'] }, 
-                                { name: 'Decorations', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'], properties: [{ property: 'background-color', type: 'color' }, { property: 'border-color', type: 'color' }] }
-                            ] 
-                        },
+                        // COLOR PICKER FIX: Explicitly define 'color' type
+                        styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'], properties: [{ property: 'color', type: 'color' }] }, { name: 'Dimensions', open: false, buildProps: ['width', 'height', 'padding', 'margin'] }, { name: 'Decorations', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'], properties: [{ property: 'background-color', type: 'color' }, { property: 'border-color', type: 'color' }] }] },
                         assetManager: { 
                             upload: false, autoAdd: true,
                             uploadFile: async (e) => {
@@ -280,13 +365,16 @@
                                         try {
                                             const res = await fetch('/api/admin/upload-image', {method:'POST', headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('admin_pass') }, body: JSON.stringify({ image: reader.result, filename: file.name })});
                                             const json = await res.json();
-                                            if(json.data) { window.editor.AssetManager.add(json.data); this.notify('Upload', 'Gambar berhasil diupload!', 'success'); } else { this.notify('Gagal', 'Upload gagal.', 'error'); }
-                                        } catch(err) { this.notify('Error', 'Koneksi bermasalah.', 'error'); }
+                                            if(json.data) { window.editor.AssetManager.add(json.data); this.notify('Upload','Berhasil!'); } else { this.notify('Gagal','Upload gagal.','error'); }
+                                        } catch(err) { this.notify('Error','Koneksi bermasalah.','error'); }
                                     };
                                 }
                             }
                         }
                     });
+
+                    // APPLY CUSTOM FEATURES
+                    addCustomFeatures(window.editor);
 
                     const bm = editor.BlockManager;
 
@@ -305,7 +393,40 @@
                     bm.add('features-tpl', { label: 'Features Grid', category: 'Templates', attributes:{class:'ph ph-grid-three'}, content: `<section style="padding:60px 20px;"><div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(3, 1fr); gap:30px;"><div style="text-align:center; padding:20px;"><h3>Fitur 1</h3></div><div style="text-align:center; padding:20px;"><h3>Fitur 2</h3></div><div style="text-align:center; padding:20px;"><h3>Fitur 3</h3></div></div></section>` });
                     bm.add('pricelist-tpl', { label: 'Pricelist', category: 'Templates', attributes:{class:'ph ph-tag'}, content: `<section style="padding:60px 20px;"><div style="max-width:1000px; margin:0 auto; display:grid; grid-template-columns:repeat(3,1fr); gap:20px;"><div style="padding:20px; border:1px solid #eee; text-align:center;"><h3>Basic</h3><p>Rp 99rb</p></div><div style="padding:20px; border:1px solid #eee; text-align:center; background:#f0f9ff;"><h3>Pro</h3><p>Rp 199rb</p></div><div style="padding:20px; border:1px solid #eee; text-align:center;"><h3>Expert</h3><p>Rp 499rb</p></div></div></section>` });
 
-                    // 4. WIDGETS
+                    // 4. SUPER TABLE (PURE & DYNAMIC)
+                    bm.add('super-table', {
+                        label: 'Pure Table', category: 'Tables', attributes: { class: 'ph ph-table' },
+                        content: {
+                            type: 'super-table', // PENTING: Tipe ini yang punya tombol Add Col/Row
+                            content: `
+                            <div style="overflow-x:auto; padding:20px;">
+                                <table style="width:100%; border-collapse:collapse; border:1px solid #ddd;">
+                                    <thead style="background:#f9fafb;">
+                                        <tr>
+                                            <th style="padding:10px; border:1px solid #ddd;">Header 1</th>
+                                            <th style="padding:10px; border:1px solid #ddd;">Header 2</th>
+                                            <th style="padding:10px; border:1px solid #ddd;">Header 3</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding:10px; border:1px solid #ddd;">Data 1</td>
+                                            <td style="padding:10px; border:1px solid #ddd;">Data 2</td>
+                                            <td style="padding:10px; border:1px solid #ddd;">Data 3</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>`
+                        }
+                    });
+
+                    // 5. ICONIFY (NEW)
+                    bm.add('iconify', {
+                        label: 'Iconify Icon', category: 'Media', attributes: { class: 'ph ph-star' },
+                        content: { type: 'iconify-icon', attributes: { icon: 'ph:heart-fill', width: '48', style:'color:#2563eb' } }
+                    });
+
+                    // 6. WIDGETS
                     bm.add('video-yt', { label: 'YouTube', category: 'Media', attributes:{class:'ph ph-youtube-logo'}, content: { type: 'video', provider: 'yt', style: { height: '350px', width: '100%' } } });
                     bm.add('checkout-pro', { label: 'Form Checkout', category: 'E-Commerce', attributes:{class:'ph ph-shopping-cart'}, content: `<div data-gjs-type="checkout-widget" style="padding:20px; border:2px dashed #3b82f6; background:#eff6ff; text-align:center; border-radius:8px;"><strong>[ FORM CHECKOUT ]</strong></div>` });
                     bm.add('custom-code-blk', { label: 'Embed Code', category: 'Extra', attributes:{class:'ph ph-code'}, content: { type: 'custom-code', content: '' } });
