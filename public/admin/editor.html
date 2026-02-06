@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LandingBuilder Ultimate - Professional Editor</title>
+    <title>LandingBuilder Ultimate - Fixed Edition</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -20,34 +20,41 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* RESET */
-        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: #fff; color: #1e293b; }
+        /* RESET & CORE */
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: #ffffff; color: #1e293b; }
         [x-cloak] { display: none !important; }
         
-        /* GRAPESJS CUSTOMIZATION */
+        /* GRAPESJS UI OVERRIDES */
         .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-panels, .gjs-pn-buttons { display: none !important; }
         .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f8fafc; }
+        .gjs-frame-wrapper { box-shadow: 0 0 40px rgba(0,0,0,0.05); }
         .gjs-selected { outline: 2px solid #2563eb !important; outline-offset: -2px; }
         
-        /* PANEL KANAN */
+        /* FIX COLOR PICKER VISIBILITY */
+        .gjs-field-color-picker { width: 100%; }
+        .gjs-input-holder { width: 100%; }
+        
+        /* SIDEBAR TABS */
         .panel-tabs { display: flex; border-bottom: 1px solid #e2e8f0; background: #fff; }
-        .panel-tabs button { flex: 1; padding: 12px; color: #94a3b8; font-size: 20px; transition: all 0.2s; }
+        .panel-tabs button { flex: 1; padding: 12px; color: #94a3b8; font-size: 20px; border-bottom: 2px solid transparent; transition: all 0.2s; }
         .panel-tabs button:hover { color: #334155; background: #f8fafc; }
-        .panel-tabs button.active { color: #2563eb; border-bottom: 2px solid #2563eb; background: #eff6ff; }
+        .panel-tabs button.active { color: #2563eb; border-bottom-color: #2563eb; background: #eff6ff; }
 
         /* BLOCK MANAGER */
         .gjs-blocks-c { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
         .gjs-block { width: 100% !important; min-height: auto !important; padding: 15px 5px !important; margin: 0 !important; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: grab; transition: all 0.15s; }
-        .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 4px; color: #475569; }
-        .gjs-block-category .gjs-title { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 8px 12px; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-1px); }
+        .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 2px; }
+        .gjs-block svg, .gjs-block i { width: 24px; height: 24px; font-size: 24px; fill: currentColor; }
+        .gjs-block-category .gjs-title { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 8px 12px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; cursor: pointer; }
 
-        /* INPUTS */
+        /* INPUTS & FIELDS */
         .input-std { width: 100%; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px; font-size: 12px; outline: none; transition: border-color 0.2s; }
         .input-std:focus { border-color: #2563eb; }
         
         /* SCROLLBAR */
         ::-webkit-scrollbar { width: 5px; } 
+        ::-webkit-scrollbar-track { background: transparent; } 
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     </style>
 </head>
@@ -55,21 +62,10 @@
 <body x-data="editorApp()">
 
     <div class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none">
-        <template x-for="notif in notifications" :key="notif.id">
-            <div x-show="notif.show" 
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="translate-y-2 opacity-0"
-                 x-transition:enter-end="translate-y-0 opacity-100"
-                 x-transition:leave="transition ease-in duration-100"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-l-4 min-w-[250px] bg-white"
-                 :class="notif.type === 'success' ? 'border-green-500' : 'border-red-500'">
-                <i class="ph text-xl" :class="notif.type === 'success' ? 'ph-check-circle text-green-500' : 'ph-warning-circle text-red-500'"></i>
-                <div>
-                    <h4 class="text-xs font-bold text-gray-800" x-text="notif.title"></h4>
-                    <p class="text-[10px] text-gray-500" x-text="notif.message"></p>
-                </div>
+        <template x-for="n in notifications" :key="n.id">
+            <div x-show="n.show" x-transition.duration.300ms class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-l-4 bg-white min-w-[250px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
+                <i class="ph text-xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
+                <div><h4 class="text-xs font-bold text-gray-800" x-text="n.title"></h4><p class="text-[10px] text-gray-500" x-text="n.msg"></p></div>
             </div>
         </template>
     </div>
@@ -78,25 +74,25 @@
         <div class="flex items-center gap-4">
             <a href="/admin/pages" class="text-gray-400 hover:text-blue-600 transition"><i class="ph ph-arrow-left text-xl"></i></a>
             <div class="h-6 w-px bg-gray-200"></div>
-            <div class="flex flex-col">
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Page Slug</span>
-                <input x-model="page.slug" class="bg-transparent font-mono font-bold text-sm text-gray-700 outline-none w-48 placeholder-gray-300" placeholder="nama-halaman">
+            <div>
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Page Slug</span>
+                <input x-model="page.slug" class="bg-transparent font-mono font-bold text-sm text-gray-700 outline-none w-48 placeholder-gray-300" placeholder="landing-page-name">
             </div>
         </div>
         
         <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
-            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow-sm text-blue-600':'text-gray-400 hover:text-gray-600'" class="p-2 rounded-md transition"><i class="ph ph-desktop text-lg"></i></button>
-            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow-sm text-blue-600':'text-gray-400 hover:text-gray-600'" class="p-2 rounded-md transition"><i class="ph ph-device-tablet text-lg"></i></button>
-            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow-sm text-blue-600':'text-gray-400 hover:text-gray-600'" class="p-2 rounded-md transition"><i class="ph ph-device-mobile text-lg"></i></button>
+            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow-sm text-blue-600':'text-gray-400'" class="p-2 rounded-md transition"><i class="ph ph-desktop text-lg"></i></button>
+            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow-sm text-blue-600':'text-gray-400'" class="p-2 rounded-md transition"><i class="ph ph-device-tablet text-lg"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow-sm text-blue-600':'text-gray-400'" class="p-2 rounded-md transition"><i class="ph ph-device-mobile text-lg"></i></button>
             <div class="w-px h-5 bg-gray-300 mx-2"></div>
-            <button @click="cmd('core:preview')" class="text-gray-500 hover:text-blue-600 p-2" title="Preview"><i class="ph ph-eye text-lg"></i></button>
+            <button @click="cmd('core:preview')" class="text-gray-500 hover:text-blue-600 p-2"><i class="ph ph-eye text-lg"></i></button>
             <button @click="cmd('core:undo')" class="text-gray-400 hover:text-gray-700 p-2"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
             <button @click="cmd('core:redo')" class="text-gray-400 hover:text-gray-700 p-2"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
         </div>
 
         <div class="flex items-center gap-3">
-            <button @click="showSettings=true" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-2 rounded-md text-xs font-bold flex items-center gap-2"><i class="ph ph-gear-six text-lg"></i> Settings</button>
-            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-xs font-bold transition flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-500/30">
+            <button @click="showSettings=true" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-2 rounded-md text-xs font-bold flex items-center gap-2 border border-gray-200"><i class="ph ph-gear-six text-lg"></i> Settings</button>
+            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md text-xs font-bold transition flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-500/30">
                 <i x-show="loading" class="ph ph-spinner animate-spin"></i> 
                 <span x-text="loading ? 'SAVING...' : 'PUBLISH PAGE'"></span>
             </button>
@@ -163,7 +159,7 @@
                         <h3 class="text-xs font-bold text-purple-600 uppercase tracking-wider">Order Bump</h3>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" x-model="page.config.order_bump.active" class="sr-only peer">
-                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-purple-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
                         </label>
                     </div>
                     <div x-show="page.config.order_bump.active" class="space-y-3 bg-purple-50 p-4 rounded-lg border border-purple-100">
@@ -228,13 +224,9 @@
                 this.initGrapes();
             },
 
-            notify(title, message, type = 'success') {
-                const id = Date.now();
-                this.notifications.push({ id, title, message, type, show: true });
-                setTimeout(() => {
-                    const idx = this.notifications.findIndex(n => n.id === id);
-                    if(idx > -1) this.notifications[idx].show = false;
-                }, 3000);
+            notify(title, msg, type='success') {
+                const id=Date.now(); this.notifications.push({id, title, msg, type, show:true});
+                setTimeout(()=>{ const idx=this.notifications.findIndex(n=>n.id===id); if(idx>-1)this.notifications[idx].show=false; }, 3000);
             },
 
             setDevice(d) { this.device=d; window.editor.setDevice(d); },
@@ -265,7 +257,15 @@
                         layerManager: { appendTo: '#layers-container' },
                         selectorManager: { appendTo: '#selectors-container' },
                         traitManager: { appendTo: '#traits-container' },
-                        styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'] }, { name: 'Dimensions', open: false, buildProps: ['width', 'height', 'max-width', 'min-height', 'padding', 'margin'] }, { name: 'Layout', open: false, buildProps: ['display', 'flex-direction', 'justify-content', 'align-items', 'gap'] }, { name: 'Decorations', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'] }] },
+                        // FIX: Memaksa properties Color untuk selalu muncul sebagai color input
+                        styleManager: { 
+                            appendTo: '#styles-container', 
+                            sectors: [
+                                { name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'], properties: [{ property: 'color', type: 'color' }] }, 
+                                { name: 'Dimensions', open: false, buildProps: ['width', 'height', 'padding', 'margin'] }, 
+                                { name: 'Decorations', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'], properties: [{ property: 'background-color', type: 'color' }, { property: 'border-color', type: 'color' }] }
+                            ] 
+                        },
                         assetManager: { 
                             upload: false, autoAdd: true,
                             uploadFile: async (e) => {
@@ -293,31 +293,33 @@
                     bm.add('section-std', { label: 'Section', category: 'Layout', attributes: {class:'ph ph-square'}, content: `<section style="padding:60px 0; background-color:#fff;"><div style="width:90%; max-width:1100px; margin:0 auto; padding:0 20px;"></div></section>` });
 
                     // 2. HEADERS (4 VARIANT)
-                    bm.add('header-simple', { label: 'Header Center', category: 'Headers', attributes:{class:'ph ph-list'}, content: `<header style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:center;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /></header>` });
-                    bm.add('header-left', { label: 'Header Left', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, content: `<header style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /><nav><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Home</a><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Contact</a></nav></header>` });
-                    bm.add('header-right', { label: 'Header Right', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, content: `<header style="padding:15px 20px; display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /><nav><a href="#" style="margin-right:15px; color:#333; text-decoration:none;">Home</a><a href="#" style="margin-right:15px; color:#333; text-decoration:none;">About</a></nav></header>` });
-                    bm.add('header-stack', { label: 'Header Stack', category: 'Headers', attributes:{class:'ph ph-rows'}, content: `<header style="padding:20px; text-align:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:50px; margin-bottom:15px; object-fit:contain;" /><nav><a href="#" style="margin:0 10px; color:#333; text-decoration:none;">Home</a><a href="#" style="margin:0 10px; color:#333; text-decoration:none;">About</a></nav></header>` });
+                    bm.add('header-1', { label: 'Header Center', category: 'Headers', attributes:{class:'ph ph-list'}, content: `<header style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:center;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /></header>` });
+                    bm.add('header-2', { label: 'Header Left', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, content: `<header style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /><nav><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Home</a><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Contact</a></nav></header>` });
+                    bm.add('header-3', { label: 'Header Right', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, content: `<header style="padding:15px 20px; display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /><nav><a href="#" style="margin-right:15px; color:#333; text-decoration:none;">Home</a><a href="#" style="margin-right:15px; color:#333; text-decoration:none;">About</a></nav></header>` });
+                    bm.add('header-4', { label: 'Header Stack', category: 'Headers', attributes:{class:'ph ph-rows'}, content: `<header style="padding:20px; text-align:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:50px; margin-bottom:15px; object-fit:contain;" /><nav><a href="#" style="margin:0 10px; color:#333; text-decoration:none;">Home</a><a href="#" style="margin:0 10px; color:#333; text-decoration:none;">About</a></nav></header>` });
 
                     // 3. CONTENT BLOCKS
                     bm.add('hero-tpl', { label: 'Hero Section', category: 'Templates', attributes:{class:'ph ph-layout'}, content: `<section style="padding:80px 20px; text-align:center; background:#f8fafc;"><h1 style="font-size:3rem; margin-bottom:20px;">Headline</h1><p>Subheadline text here.</p></section>` });
                     bm.add('features-tpl', { label: 'Features Grid', category: 'Templates', attributes:{class:'ph ph-grid-three'}, content: `<section style="padding:60px 20px;"><div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(3, 1fr); gap:30px;"><div style="text-align:center; padding:20px;"><h3>Fitur 1</h3></div><div style="text-align:center; padding:20px;"><h3>Fitur 2</h3></div><div style="text-align:center; padding:20px;"><h3>Fitur 3</h3></div></div></section>` });
                     bm.add('pricelist-tpl', { label: 'Pricelist', category: 'Templates', attributes:{class:'ph ph-tag'}, content: `<section style="padding:60px 20px;"><div style="max-width:1000px; margin:0 auto; display:grid; grid-template-columns:repeat(3,1fr); gap:20px;"><div style="padding:20px; border:1px solid #eee; text-align:center;"><h3>Basic</h3><p>Rp 99rb</p></div><div style="padding:20px; border:1px solid #eee; text-align:center; background:#f0f9ff;"><h3>Pro</h3><p>Rp 199rb</p></div><div style="padding:20px; border:1px solid #eee; text-align:center;"><h3>Expert</h3><p>Rp 499rb</p></div></div></section>` });
 
-                    // 4. COMPARISON TABLE (PURE HTML - NATIVE EDIT)
-                    bm.add('comparison-simple', {
-                        label: 'Compare Table', category: 'Templates', attributes: { class: 'ph ph-shield-check' },
+                    // 4. COMPARISON TABLE (FIXED: 3 COLUMNS SYNC)
+                    bm.add('comparison-head-to-head', {
+                        label: 'Comparison Table', category: 'Templates', attributes: { class: 'ph ph-shield-check' },
                         content: `<section style="padding:40px 20px; background:#fff;">
-                            <div style="max-width:800px; margin:0 auto; border:1px solid #e2e8f0; border-radius:8px;">
+                            <div style="max-width:800px; margin:0 auto; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
                                 <div style="display:flex; background:#1e293b; color:#fff; padding:15px; font-weight:bold; text-align:center;">
-                                    <div style="flex:1;">FITUR</div><div style="flex:1; color:#60a5fa;">KAMI</div><div style="flex:1; opacity:0.6;">LAIN</div>
+                                    <div style="flex:1;">FITUR</div>
+                                    <div style="flex:1; color:#60a5fa;">KAMI</div>
+                                    <div style="flex:1; opacity:0.6;">LAIN</div>
                                 </div>
                                 <div style="display:flex; padding:15px; border-bottom:1px solid #eee; align-items:center; text-align:center;">
-                                    <div style="flex:1; text-align:left; font-weight:bold;">Baris 1</div>
+                                    <div style="flex:1; text-align:left; font-weight:bold;">Nama Fitur</div>
                                     <div style="flex:1; color:#16a34a;"><i class="ph ph-check-circle text-2xl"></i></div>
                                     <div style="flex:1; color:#ef4444;"><i class="ph ph-x-circle text-2xl"></i></div>
                                 </div>
                                 <div style="display:flex; padding:15px; border-bottom:1px solid #eee; align-items:center; text-align:center;">
-                                    <div style="flex:1; text-align:left; font-weight:bold;">Baris 2</div>
+                                    <div style="flex:1; text-align:left; font-weight:bold;">Nama Fitur</div>
                                     <div style="flex:1; color:#16a34a;"><i class="ph ph-check-circle text-2xl"></i></div>
                                     <div style="flex:1; color:#ef4444;"><i class="ph ph-x-circle text-2xl"></i></div>
                                 </div>
@@ -325,7 +327,7 @@
                         </section>`
                     });
 
-                    // 5. CUSTOM TABLE (PURE HTML - NATIVE EDIT)
+                    // 5. CUSTOM TABLE (NATIVE HTML)
                     bm.add('custom-table-simple', {
                         label: 'Custom Table', category: 'Templates', attributes: { class: 'ph ph-table' },
                         content: `<div style="padding:20px; overflow-x:auto;">
@@ -339,9 +341,14 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td style="padding:12px; border:1px solid #eee;">Isi 1</td>
-                                        <td style="padding:12px; border:1px solid #eee;">Isi 2</td>
-                                        <td style="padding:12px; border:1px solid #eee;">Isi 3</td>
+                                        <td style="padding:12px; border:1px solid #eee;">Data 1</td>
+                                        <td style="padding:12px; border:1px solid #eee;">Data 2</td>
+                                        <td style="padding:12px; border:1px solid #eee;">Data 3</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:12px; border:1px solid #eee;">Data 1</td>
+                                        <td style="padding:12px; border:1px solid #eee;">Data 2</td>
+                                        <td style="padding:12px; border:1px solid #eee;">Data 3</td>
                                     </tr>
                                 </tbody>
                             </table>
