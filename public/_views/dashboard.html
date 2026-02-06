@@ -1,95 +1,66 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin</title>
-    
+    <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' };
-    </script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
     <script src="/js/layout.js"></script>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
-    
+<body>
     <admin-layout>
-        
-        <div x-data="dashboard()" x-init="init()" class="space-y-6">
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border dark:border-gray-700 flex items-center gap-4">
-                    <div class="p-3 bg-blue-100 text-blue-600 rounded-lg">
-                        <i class="ph ph-users text-2xl"></i>
-                    </div>
+        <div x-data="dashboardApp()" x-init="init()">
+            <header class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Selamat Datang, Admin!</h2>
+                <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Ringkasan performa bisnis Anda.</p>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex justify-between items-center">
                     <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Total Pengunjung</p>
-                        <h3 class="text-2xl font-bold" x-text="stats.visitors">0</h3>
+                        <p class="text-xs font-bold text-gray-400 uppercase">Total Halaman</p>
+                        <h3 class="text-3xl font-black text-gray-800 dark:text-white mt-1" x-text="stats.pages">0</h3>
+                    </div>
+                    <div class="h-12 w-12 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-2xl">
+                        <i class="ph ph-files"></i>
                     </div>
                 </div>
-
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border dark:border-gray-700 flex items-center gap-4">
-                    <div class="p-3 bg-green-100 text-green-600 rounded-lg">
-                        <i class="ph ph-currency-dollar text-2xl"></i>
-                    </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex justify-between items-center">
                     <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Pendapatan</p>
-                        <h3 class="text-2xl font-bold" x-text="formatRupiah(stats.revenue)">Rp 0</h3>
+                        <p class="text-xs font-bold text-gray-400 uppercase">Total Leads</p>
+                        <h3 class="text-3xl font-black text-gray-800 dark:text-white mt-1" x-text="stats.leads">0</h3>
+                    </div>
+                    <div class="h-12 w-12 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-2xl">
+                        <i class="ph ph-users"></i>
                     </div>
                 </div>
-
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border dark:border-gray-700 flex items-center gap-4">
-                    <div class="p-3 bg-purple-100 text-purple-600 rounded-lg">
-                        <i class="ph ph-chart-line-up text-2xl"></i>
-                    </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex justify-between items-center">
                     <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Konversi</p>
-                        <h3 class="text-2xl font-bold"><span x-text="stats.conversion">0</span>%</h3>
+                        <p class="text-xs font-bold text-gray-400 uppercase">Penjualan (Est)</p>
+                        <h3 class="text-3xl font-black text-gray-800 dark:text-white mt-1">Rp 0</h3>
+                    </div>
+                    <div class="h-12 w-12 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full flex items-center justify-center text-2xl">
+                        <i class="ph ph-currency-dollar"></i>
                     </div>
                 </div>
             </div>
-
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-lg">
-                <h2 class="text-3xl font-bold mb-2">Selamat Datang di BlinkSite! 🚀</h2>
-                <p class="opacity-90 mb-6">Kelola halaman landing page dan pantau penjualan Anda dari sini.</p>
-                <div class="flex gap-3">
-                    <a href="/admin/pages" class="bg-white text-blue-700 px-4 py-2 rounded-lg font-bold hover:bg-gray-100 transition">
-                        Kelola Halaman
-                    </a>
-                    <a href="/admin/editor" class="bg-blue-800 bg-opacity-50 text-white px-4 py-2 rounded-lg font-bold hover:bg-opacity-70 transition border border-white/20">
-                        Buat Baru +
-                    </a>
-                </div>
-            </div>
-
         </div>
-    </admin-layout>
 
-    <script>
-        function dashboard() {
-            return {
-                stats: { visitors: 0, revenue: 0, conversion: 0 },
-                
-                async init() {
-                    try {
-                        // Ambil data dari API stats yang sudah kita buat
-                        const res = await fetch('/api/admin/analytics-data');
+        <script>
+            function dashboardApp() {
+                return {
+                    stats: { pages: 0, leads: 0 },
+                    async init() {
+                        const res = await fetch('/api/admin/pages');
                         if(res.ok) {
-                            this.stats = await res.json();
+                            const data = await res.json();
+                            this.stats.pages = data.length;
                         }
-                    } catch(e) {
-                        console.error("Gagal load stats", e);
                     }
-                },
-
-                formatRupiah(angka) {
-                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(angka);
                 }
             }
-        }
-    </script>
+        </script>
+    </admin-layout>
 </body>
 </html>
