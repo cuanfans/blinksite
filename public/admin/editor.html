@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor Pro - LandingBuilder Ultimate</title>
+    <title>LandingBuilder Ultimate - Professional Editor</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
     
@@ -20,186 +21,207 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* RESET & CORE */
-        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: #ffffff; color: #1e293b; }
+        /* RESET */
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: #fff; color: #1e293b; }
         [x-cloak] { display: none !important; }
+        
+        /* GRAPESJS CUSTOMIZATION */
         .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-panels, .gjs-pn-buttons { display: none !important; }
-        .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f1f5f9; }
-        .gjs-frame-wrapper { box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f8fafc; }
+        .gjs-frame-wrapper { box-shadow: 0 0 40px rgba(0,0,0,0.05); }
+        
+        /* Highlight Selection elementor-like */
         .gjs-selected { outline: 2px solid #2563eb !important; outline-offset: -2px; }
-
-        /* SIDEBAR TABS */
+        
+        /* PANEL KANAN */
         .panel-tabs { display: flex; border-bottom: 1px solid #e2e8f0; background: #fff; }
-        .panel-tabs button { flex: 1; padding: 12px; color: #94a3b8; font-size: 20px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .panel-tabs button { flex: 1; padding: 12px; color: #94a3b8; font-size: 20px; transition: all 0.2s; }
         .panel-tabs button:hover { color: #334155; background: #f8fafc; }
-        .panel-tabs button.active { color: #2563eb; border-bottom-color: #2563eb; background: #eff6ff; }
+        .panel-tabs button.active { color: #2563eb; border-bottom: 2px solid #2563eb; background: #eff6ff; }
 
         /* BLOCK MANAGER */
         .gjs-blocks-c { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
         .gjs-block { width: 100% !important; min-height: auto !important; padding: 15px 5px !important; margin: 0 !important; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: grab; transition: all 0.15s; }
-        .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-1px); }
-        .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 2px; }
-        .gjs-block svg, .gjs-block i { width: 24px; height: 24px; font-size: 24px; fill: currentColor; }
-        .gjs-block-category .gjs-title { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 8px 12px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; cursor: pointer; }
+        .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 4px; color: #475569; }
+        .gjs-block-category .gjs-title { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 8px 12px; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* INPUTS & FIELDS */
-        .gjs-field { background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; color: #334155; }
-        .gjs-field input, .gjs-field select { font-size: 11px; width: 100%; background: transparent; }
-        .gjs-sm-sector { border-bottom: 1px solid #e2e8f0; }
-        .gjs-sm-title { background: #f8fafc; font-size: 11px; font-weight: 600; color: #475569; padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; }
+        /* INPUTS */
+        .input-std { width: 100%; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px; font-size: 12px; outline: none; transition: border-color 0.2s; }
+        .input-std:focus { border-color: #2563eb; }
         
         /* SCROLLBAR */
         ::-webkit-scrollbar { width: 5px; } 
-        ::-webkit-scrollbar-track { background: transparent; } 
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     </style>
 </head>
 
 <body x-data="editorApp()">
 
-    <header class="h-12 bg-white border-b border-gray-200 flex justify-between items-center px-4 z-50 relative shrink-0">
-        <div class="flex items-center gap-3">
-            <a href="/admin/pages" class="text-gray-500 hover:text-blue-600 transition p-1.5 rounded hover:bg-gray-100"><i class="ph ph-arrow-left text-lg"></i></a>
-            <div class="h-5 w-px bg-gray-200"></div>
-            <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-gray-400 font-mono">SLUG:</span>
-                <input x-model="page.slug" class="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs font-bold text-gray-700 outline-none w-32 placeholder-slate-400">
+    <div class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none">
+        <template x-for="notif in notifications" :key="notif.id">
+            <div x-show="notif.show" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="translate-y-2 opacity-0"
+                 x-transition:enter-end="translate-y-0 opacity-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-l-4 min-w-[250px] bg-white"
+                 :class="notif.type === 'success' ? 'border-green-500' : 'border-red-500'">
+                <i class="ph text-xl" :class="notif.type === 'success' ? 'ph-check-circle text-green-500' : 'ph-warning-circle text-red-500'"></i>
+                <div>
+                    <h4 class="text-xs font-bold text-gray-800" x-text="notif.title"></h4>
+                    <p class="text-[10px] text-gray-500" x-text="notif.message"></p>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <header class="h-14 bg-white border-b border-gray-200 flex justify-between items-center px-4 z-50 relative shrink-0">
+        <div class="flex items-center gap-4">
+            <a href="/admin/pages" class="text-gray-400 hover:text-blue-600 transition"><i class="ph ph-arrow-left text-xl"></i></a>
+            <div class="h-6 w-px bg-gray-200"></div>
+            <div class="flex flex-col">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Page Slug</span>
+                <input x-model="page.slug" class="bg-transparent font-mono font-bold text-sm text-gray-700 outline-none w-48 placeholder-gray-300" placeholder="nama-halaman">
             </div>
         </div>
         
-        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-50 rounded-lg border border-gray-200 p-0.5">
-            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-blue-50 text-blue-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
-            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-blue-50 text-blue-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
-            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-blue-50 text-blue-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
-            <div class="w-px h-4 bg-gray-300 mx-2"></div>
-            <button @click="cmd('core:undo')" class="text-gray-500 hover:text-black p-1.5"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
-            <button @click="cmd('core:redo')" class="text-gray-500 hover:text-black p-1.5"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
-            <button @click="cmd('core:preview')" class="text-gray-500 hover:text-blue-600 p-1.5"><i class="ph ph-eye text-lg"></i></button>
+        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
+            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow-sm text-blue-600':'text-gray-400 hover:text-gray-600'" class="p-2 rounded-md transition"><i class="ph ph-desktop text-lg"></i></button>
+            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow-sm text-blue-600':'text-gray-400 hover:text-gray-600'" class="p-2 rounded-md transition"><i class="ph ph-device-tablet text-lg"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow-sm text-blue-600':'text-gray-400 hover:text-gray-600'" class="p-2 rounded-md transition"><i class="ph ph-device-mobile text-lg"></i></button>
+            <div class="w-px h-5 bg-gray-300 mx-2"></div>
+            <button @click="cmd('core:preview')" class="text-gray-500 hover:text-blue-600 p-2" title="Preview"><i class="ph ph-eye text-lg"></i></button>
+            <button @click="cmd('core:undo')" class="text-gray-400 hover:text-gray-700 p-2"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
+            <button @click="cmd('core:redo')" class="text-gray-400 hover:text-gray-700 p-2"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
         </div>
 
         <div class="flex items-center gap-3">
-            <button @click="showSettings=true" class="text-slate-500 hover:text-blue-600 flex items-center gap-1 text-xs font-bold bg-gray-50 px-2 py-1.5 rounded border border-gray-200"><i class="ph ph-gear text-lg"></i> Config</button>
-            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-xs font-bold transition flex items-center gap-2 disabled:opacity-50">
-                <i x-show="loading" class="ph ph-spinner animate-spin"></i> <span x-text="loading ? 'Saving...' : 'SIMPAN'"></span>
+            <button @click="showSettings=true" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-2 rounded-md text-xs font-bold flex items-center gap-2"><i class="ph ph-gear-six text-lg"></i> Settings</button>
+            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-xs font-bold transition flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-500/30">
+                <i x-show="loading" class="ph ph-spinner animate-spin"></i> 
+                <span x-text="loading ? 'SAVING...' : 'PUBLISH PAGE'"></span>
             </button>
         </div>
     </header>
 
-    <div class="flex h-[calc(100vh-3rem)] overflow-hidden">
-        <div class="flex-1 relative bg-gray-100 flex flex-col items-center justify-center p-8 overflow-hidden">
-            <div id="gjs" class="flex-1 w-full h-full shadow-lg rounded-sm overflow-hidden border border-gray-300 bg-white"></div>
+    <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+        <div class="flex-1 relative bg-[#f8fafc] flex flex-col items-center justify-center p-8 overflow-hidden">
+            <div id="gjs" class="flex-1 w-full h-full shadow-xl rounded-lg overflow-hidden border border-gray-300 bg-white ring-4 ring-gray-100"></div>
         </div>
         
-        <div class="w-[300px] bg-white border-l border-gray-200 flex flex-col z-20 shrink-0 shadow-lg">
+        <div class="w-[320px] bg-white border-l border-gray-200 flex flex-col z-20 shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.05)]">
             <div class="panel-tabs">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'active':''" title="Elements"><i class="ph ph-squares-four"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'active':''" title="Style"><i class="ph ph-paint-brush"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'active':''" title="Traits"><i class="ph ph-sliders-horizontal"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'active':''" title="Layers"><i class="ph ph-list-dashes"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'active':''" title="Elements"><i class="ph ph-plus-square"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'active':''" title="Design"><i class="ph ph-paint-brush"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'active':''" title="Settings"><i class="ph ph-sliders"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'active':''" title="Navigator"><i class="ph ph-tree-structure"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto bg-white relative custom-scroll">
-                <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-10"></div>
-                <div x-show="tab=='styles'"><div id="selectors-container" class="p-2 border-b"></div><div id="styles-container" class="pb-10"></div></div>
-                <div x-show="tab=='traits'"><div class="p-3 bg-blue-50 text-blue-700 text-xs font-bold border-b mb-2">PROPERTIES</div><div id="traits-container" class="pb-10 px-2"></div></div>
-                <div x-show="tab=='layers'" id="layers-container" class="absolute inset-0 pb-10"></div>
+                <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-20"></div>
+                <div x-show="tab=='styles'"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="pb-20"></div></div>
+                <div x-show="tab=='traits'"><div class="p-3 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b">Element Settings</div><div id="traits-container" class="p-2 pb-20"></div></div>
+                <div x-show="tab=='layers'" id="layers-container" class="absolute inset-0 pb-20"></div>
             </div>
         </div>
     </div>
 
-    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
-        <div class="w-[450px] h-full bg-white shadow-2xl flex flex-col transition-transform duration-300" x-transition:enter="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="translate-x-0" x-transition:leave-end="translate-x-full">
-            <div class="p-4 border-b bg-gray-50 flex justify-between items-center"><h2 class="font-bold text-gray-800"><i class="ph ph-faders"></i> Page Config</h2><button @click="showSettings = false"><i class="ph ph-x"></i></button></div>
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
+        <div class="w-[400px] h-full bg-white shadow-2xl flex flex-col" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full">
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-blue-600"></i> Page Configuration</h2>
+                <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
+            </div>
             
-            <div class="flex-1 overflow-y-auto p-5 space-y-6 custom-scroll">
+            <div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scroll">
                 <div>
-                    <h3 class="text-xs font-bold text-blue-600 uppercase mb-2 border-b pb-1">Product & Type</h3>
-                    <div class="flex bg-gray-100 p-1 rounded mb-3">
-                        <button @click="page.product_type='physical'" :class="page.product_type=='physical'?'bg-white shadow':''" class="flex-1 py-1 text-xs font-bold rounded transition">Fisik</button>
-                        <button @click="page.product_type='digital'" :class="page.product_type=='digital'?'bg-white shadow':''" class="flex-1 py-1 text-xs font-bold rounded transition">Digital</button>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Product Type</h3>
+                    <div class="flex bg-gray-100 p-1 rounded-lg mb-4">
+                        <button @click="page.product_type='physical'" :class="page.product_type=='physical'?'bg-white shadow text-blue-600':''" class="flex-1 py-1.5 text-xs font-bold rounded-md transition">PHYSICAL</button>
+                        <button @click="page.product_type='digital'" :class="page.product_type=='digital'?'bg-white shadow text-blue-600':''" class="flex-1 py-1.5 text-xs font-bold rounded-md transition">DIGITAL</button>
                     </div>
-                    <div x-show="page.product_type==='physical'"><label class="text-[10px] font-bold text-gray-500">Berat (gram)</label><input x-model="page.config.shipping.weight" type="number" class="w-full border rounded p-1.5 text-xs"></div>
-                    
-                    <div class="mt-3">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1">VARIAN PRODUK</label>
-                        <template x-for="(v, i) in page.config.variants">
-                            <div class="flex gap-1 mb-1 items-center bg-gray-50 p-1 rounded border">
-                                <input x-model="v.name" class="flex-1 border rounded px-2 text-xs" placeholder="Nama Varian">
-                                <input x-model="v.price" type="number" class="w-20 border rounded px-2 text-xs" placeholder="Harga">
-                                <button @click="page.config.variants.splice(i,1)" class="text-red-500 hover:bg-red-100 p-1 rounded"><i class="ph ph-trash"></i></button>
-                            </div>
-                        </template>
-                        <button @click="addVariant" class="w-full border-2 border-dashed border-blue-200 text-xs text-blue-600 font-bold py-1.5 rounded mt-1">+ Tambah Varian</button>
+                    <div x-show="page.product_type==='physical'">
+                        <label class="text-[11px] font-bold text-gray-600">Shipping Weight (gram)</label>
+                        <input x-model="page.config.shipping.weight" type="number" class="input-std mt-1">
                     </div>
                 </div>
 
-                <div>
-                    <h3 class="text-xs font-bold text-purple-600 uppercase mb-2 border-b pb-1">Order Bump</h3>
-                    <label class="flex items-center gap-2 text-xs font-bold cursor-pointer mb-2">
-                        <input type="checkbox" x-model="page.config.order_bump.active"> Aktifkan Order Bump
-                    </label>
-                    <div x-show="page.config.order_bump.active" class="space-y-2 bg-purple-50 p-3 rounded border border-purple-100">
-                        <input x-model="page.config.order_bump.title" class="w-full border rounded p-1.5 text-xs" placeholder="Judul Penawaran">
-                        <input x-model="page.config.order_bump.price" type="number" class="w-full border rounded p-1.5 text-xs" placeholder="Harga Tambahan">
-                        <textarea x-model="page.config.order_bump.desc" class="w-full border rounded p-1.5 text-xs" rows="2" placeholder="Deskripsi Singkat"></textarea>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="text-xs font-bold text-red-500 uppercase mb-2 border-b pb-1">Kupon Diskon</h3>
+                <div class="border-t pt-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Product Variants</h3>
                     <div class="space-y-2">
-                        <template x-for="(c, i) in page.config.coupons">
-                            <div class="bg-red-50 p-2 rounded border border-red-100 relative">
-                                <button @click="page.config.coupons.splice(i,1)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow"><i class="ph ph-x text-[10px]"></i></button>
-                                <div class="flex gap-1 mb-1">
-                                    <input x-model="c.code" class="flex-1 border rounded px-1.5 py-1 text-[10px] font-bold uppercase" placeholder="KODE KUPON">
-                                    <select x-model="c.type" class="border rounded text-[10px]"><option value="percent">%</option><option value="fixed">Rp</option></select>
-                                </div>
-                                <input x-model="c.value" type="number" class="w-full border rounded px-1.5 py-1 text-[10px]" placeholder="Nilai Potongan">
+                        <template x-for="(v, i) in page.config.variants">
+                            <div class="flex gap-2 items-center">
+                                <input x-model="v.name" class="input-std flex-1" placeholder="Variant Name">
+                                <input x-model="v.price" type="number" class="input-std w-24" placeholder="Price">
+                                <button @click="page.config.variants.splice(i,1)" class="text-red-400 hover:text-red-600"><i class="ph ph-trash text-lg"></i></button>
                             </div>
                         </template>
-                        <button @click="page.config.coupons.push({code:'', type:'percent', value:0})" class="w-full border-2 border-dashed border-red-200 text-xs text-red-600 font-bold py-1.5 rounded">+ Tambah Kupon</button>
+                        <button @click="addVariant" class="w-full border-2 border-dashed border-gray-300 text-gray-500 font-bold text-xs py-2 rounded hover:border-blue-400 hover:text-blue-500 transition">+ Add Variant</button>
                     </div>
                 </div>
 
-                <div>
-                    <h3 class="text-xs font-bold text-green-600 uppercase mb-2 border-b pb-1">SEO & Scripts</h3>
+                <div class="border-t pt-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold text-purple-600 uppercase tracking-wider">Order Bump</h3>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" x-model="page.config.order_bump.active" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+                    <div x-show="page.config.order_bump.active" class="space-y-3 bg-purple-50 p-4 rounded-lg border border-purple-100">
+                        <input x-model="page.config.order_bump.title" class="input-std" placeholder="Bump Title">
+                        <input x-model="page.config.order_bump.price" type="number" class="input-std" placeholder="Price">
+                        <textarea x-model="page.config.order_bump.desc" class="input-std" rows="2" placeholder="Description"></textarea>
+                    </div>
+                </div>
+
+                <div class="border-t pt-6">
+                    <h3 class="text-xs font-bold text-red-500 uppercase tracking-wider mb-3">Coupons</h3>
                     <div class="space-y-3">
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-500">Judul Halaman</label>
-                            <input x-model="page.config.settings.seo_title" class="w-full border rounded p-1.5 text-xs" placeholder="SEO Title">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-500">Deskripsi</label>
-                            <textarea x-model="page.config.settings.seo_description" class="w-full border rounded p-1.5 text-xs" rows="2" placeholder="Meta Description"></textarea>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-500">Favicon & OG Image</label>
-                            <input x-model="page.config.settings.favicon" class="w-full border rounded p-1.5 text-xs font-mono mb-1" placeholder="https://... (Favicon)">
-                            <input x-model="page.config.settings.og_image" class="w-full border rounded p-1.5 text-xs font-mono" placeholder="https://... (OG Image)">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-500">Custom Scripts</label>
-                            <textarea x-model="page.config.settings.custom_head" class="w-full border rounded p-1.5 text-xs font-mono mb-1 h-16" placeholder="<head> Code (Pixel/GTM)"></textarea>
-                            <textarea x-model="page.config.settings.custom_footer" class="w-full border rounded p-1.5 text-xs font-mono h-16" placeholder="<body> Footer Code"></textarea>
-                        </div>
+                        <template x-for="(c, i) in page.config.coupons">
+                            <div class="bg-red-50 p-3 rounded-lg border border-red-100 relative group">
+                                <button @click="page.config.coupons.splice(i,1)" class="absolute -top-2 -right-2 bg-white text-red-500 rounded-full p-0.5 shadow border border-red-100"><i class="ph ph-x"></i></button>
+                                <div class="flex gap-2 mb-2">
+                                    <input x-model="c.code" class="input-std font-bold uppercase text-red-600" placeholder="CODE">
+                                    <select x-model="c.type" class="input-std w-20"><option value="percent">%</option><option value="fixed">IDR</option></select>
+                                </div>
+                                <input x-model="c.value" type="number" class="input-std" placeholder="Value">
+                            </div>
+                        </template>
+                        <button @click="page.config.coupons.push({code:'', type:'percent', value:0})" class="w-full py-2 text-xs font-bold text-red-500 border border-red-200 rounded hover:bg-red-50 transition">+ Add Coupon</button>
                     </div>
                 </div>
 
-                <div>
-                    <h3 class="text-xs font-bold text-gray-600 uppercase mb-2 border-b pb-1">API Key</h3>
-                    <select x-model="cred.provider" class="w-full border rounded p-1.5 text-xs mb-2"><option value="midtrans">Midtrans</option><option value="cloudinary">Cloudinary</option></select>
-                    <textarea x-model="cred.data" class="w-full border rounded p-1.5 text-xs font-mono" rows="3" placeholder='JSON Config'></textarea>
-                    <button @click="saveCreds" class="w-full bg-slate-800 text-white py-1.5 rounded text-xs font-bold mt-2 hover:bg-slate-900 transition">Simpan Kredensial</button>
+                <div class="border-t pt-6 space-y-4">
+                    <h3 class="text-xs font-bold text-green-600 uppercase tracking-wider">SEO & Tracking</h3>
+                    <div><label class="text-[10px] font-bold text-gray-500">SEO Title</label><input x-model="page.config.settings.seo_title" class="input-std"></div>
+                    <div><label class="text-[10px] font-bold text-gray-500">Description</label><textarea x-model="page.config.settings.seo_description" class="input-std" rows="2"></textarea></div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="text-[10px] font-bold text-gray-500">Favicon</label><input x-model="page.config.settings.favicon" class="input-std"></div>
+                        <div><label class="text-[10px] font-bold text-gray-500">OG Image</label><input x-model="page.config.settings.og_image" class="input-std"></div>
+                    </div>
+                    <div><label class="text-[10px] font-bold text-gray-500">Custom Head</label><textarea x-model="page.config.settings.custom_head" class="input-std font-mono text-[10px]" rows="3"></textarea></div>
+                    <div><label class="text-[10px] font-bold text-gray-500">Custom Footer</label><textarea x-model="page.config.settings.custom_footer" class="input-std font-mono text-[10px]" rows="3"></textarea></div>
+                </div>
+
+                <div class="border-t pt-6 bg-gray-50 -mx-6 px-6 pb-6">
+                    <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3 pt-4">Integrations</h3>
+                    <select x-model="cred.provider" class="input-std mb-2 bg-white"><option value="midtrans">Midtrans</option><option value="cloudinary">Cloudinary</option></select>
+                    <textarea x-model="cred.data" class="input-std font-mono text-[10px] bg-white" rows="3" placeholder='{"serverKey": "..."}'></textarea>
+                    <button @click="saveCreds" class="w-full bg-gray-800 text-white py-2 rounded mt-3 text-xs font-bold hover:bg-black transition">Save Credentials</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-    // --- 1. GLOBAL TABLE LOGIC (SMART CLONE SYSTEM) ---
-    // Logika ini memungkinkan user menambah baris dengan menduplikasi baris terakhir
+    // --- SMART TABLE LOGIC (AUTO-DETECT WRAPPER) ---
     const addTableLogic = (editor) => {
-        editor.DomComponents.addType('dynamic-table', {
+        const componentType = 'smart-table';
+        
+        editor.DomComponents.addType(componentType, {
             model: {
                 defaults: {
                     droppable: true,
@@ -207,30 +229,39 @@
                     traits: [
                         {
                             type: 'button',
-                            text: '➕ Tambah Baris (Clone)',
+                            text: '➕ Tambah Baris',
                             full: true,
                             command: (editor) => {
                                 const selected = editor.getSelected();
-                                // Mencari container baris (bisa tbody atau div container)
-                                const body = selected.find('.table-body-area')[0] || selected.find('tbody')[0];
+                                // LOGIKA BARU: Cari elemen induk table-body-area secara rekursif
+                                const body = selected.closest('.table-body-area') || selected.find('.table-body-area')[0];
                                 
                                 if (body) {
-                                    // Ambil baris terakhir untuk di-clone agar formatnya sama
+                                    // Clone baris terakhir agar style konsisten
                                     const rows = body.components();
                                     const lastRow = rows.at(rows.length - 1);
-                                    
                                     if(lastRow) {
-                                        // CLONE BARIS TERAKHIR
-                                        const newRow = lastRow.clone();
-                                        body.append(newRow);
+                                        body.append(lastRow.clone());
                                     } else {
-                                        // Fallback jika kosong (jarang terjadi)
                                         body.append('<div>Baris Baru</div>');
                                     }
                                 } else {
-                                    alert('Silakan klik pada GARIS LUAR tabel/container, bukan pada teksnya!');
+                                    // Fallback jika user mengklik diluar konteks
+                                    alert('Mohon klik pada bagian tabel yang ingin ditambah barisnya.');
                                 }
                             },
+                        },
+                        {
+                            type: 'button',
+                            text: '➖ Hapus Baris Terakhir',
+                            full: true,
+                            command: (editor) => {
+                                const selected = editor.getSelected();
+                                const body = selected.closest('.table-body-area') || selected.find('.table-body-area')[0];
+                                if(body && body.components().length > 0) {
+                                    body.components().at(body.components().length - 1).remove();
+                                }
+                            }
                         }
                     ],
                 },
@@ -238,10 +269,11 @@
         });
     };
 
-    // --- 2. EDITOR APP (ALPINE JS) ---
+    // --- APP CONTROLLER ---
     function editorApp() {
         return {
             loading: false, showSettings: false, device: 'desktop', tab: 'blocks',
+            notifications: [],
             page: { 
                 slug: '', title: '', product_type: 'physical', 
                 config: { variants:[], shipping:{weight:1000}, order_bump:{active:false, title:'', price:0, desc:''}, coupons:[], settings:{} } 
@@ -256,31 +288,36 @@
                 this.initGrapes();
             },
 
+            // Custom Notification System (Toast)
+            notify(title, message, type = 'success') {
+                const id = Date.now();
+                this.notifications.push({ id, title, message, type, show: true });
+                setTimeout(() => {
+                    const idx = this.notifications.findIndex(n => n.id === id);
+                    if(idx > -1) this.notifications[idx].show = false;
+                }, 3000);
+            },
+
             setDevice(d) { this.device=d; window.editor.setDevice(d); },
             cmd(c) { window.editor.runCommand(c); },
             addVariant() { this.page.config.variants.push({id:Date.now(), name:'', price:0}) },
             
             async saveCreds() {
-                try { await fetch('/api/admin/credentials', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({provider:this.cred.provider, data:JSON.parse(this.cred.data)})}); alert('Tersimpan!'); } catch(e){ alert('JSON Salah'); }
+                try { 
+                    await fetch('/api/admin/credentials', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({provider:this.cred.provider, data:JSON.parse(this.cred.data)})}); 
+                    this.notify('Berhasil', 'Kredensial disimpan!', 'success');
+                } catch(e){ this.notify('Gagal', 'Format JSON salah.', 'error'); }
             },
             
             async savePage() {
                 this.loading=true;
                 try { 
                     await fetch('/api/admin/pages', {
-                        method:'POST', 
-                        headers:{'Authorization':this.authPass}, 
-                        body:JSON.stringify({
-                            slug:this.page.slug, 
-                            title:this.page.title, 
-                            product_type:this.page.product_type, 
-                            html:editor.getHtml(), 
-                            css:editor.getCss(), 
-                            product_config:this.page.config
-                        })
+                        method:'POST', headers:{'Authorization':this.authPass}, 
+                        body:JSON.stringify({slug:this.page.slug, title:this.page.title, product_type:this.page.product_type, html:editor.getHtml(), css:editor.getCss(), product_config:this.page.config})
                     }); 
-                    alert('Berhasil Disimpan!'); 
-                } catch(e){ alert('Gagal Menyimpan'); }
+                    this.notify('Sukses', 'Halaman berhasil disimpan.', 'success');
+                } catch(e){ this.notify('Error', 'Gagal menyimpan data.', 'error'); }
                 this.loading=false;
             },
             
@@ -312,39 +349,44 @@
                                                 body: JSON.stringify({ image: reader.result, filename: file.name })
                                             });
                                             const json = await res.json();
-                                            if(json.data) window.editor.AssetManager.add(json.data);
-                                        } catch(err) { alert('Upload Gagal'); }
+                                            if(json.data) {
+                                                window.editor.AssetManager.add(json.data);
+                                                this.notify('Upload', 'Gambar berhasil diupload!', 'success');
+                                            } else { this.notify('Gagal', 'Upload gagal.', 'error'); }
+                                        } catch(err) { this.notify('Error', 'Koneksi bermasalah.', 'error'); }
                                     };
                                 }
                             }
                         }
                     });
 
-                    // CALL CUSTOM TABLE LOGIC
+                    // APPLY CUSTOM LOGIC
                     addTableLogic(window.editor);
 
                     const bm = editor.BlockManager;
 
                     // 1. LAYOUTS
                     bm.add('container-fluid', { label: 'Container (Fluid)', category: 'Layout', attributes: {class:'ph ph-arrows-out-line-horizontal'}, content: `<div style="width:90%; max-width:1200px; margin:0 auto; padding:20px; min-height:50px;"></div>` });
-                    bm.add('section-std', { label: 'Section', category: 'Layout', attributes: {class:'ph ph-square'}, content: `<section style="padding:60px 0; background-color:#fff;"><div style="width:90%; max-width:1100px; margin:0 auto;"></div></section>` });
+                    bm.add('section-std', { label: 'Section', category: 'Layout', attributes: {class:'ph ph-square'}, content: `<section style="padding:60px 0; background-color:#fff;"><div style="width:90%; max-width:1100px; margin:0 auto; padding:0 20px;"></div></section>` });
 
-                    // 2. HEADERS
-                    bm.add('header-simple', { label: 'Header Logo', category: 'Headers', attributes:{class:'ph ph-list'}, content: `<header style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:center;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /></header>` });
+                    // 2. HEADERS (4 VARIANT)
+                    bm.add('header-simple', { label: 'Header Center', category: 'Headers', attributes:{class:'ph ph-list'}, content: `<header style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:center;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /></header>` });
                     bm.add('header-left', { label: 'Header Left', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, content: `<header style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /><nav><a href="#" style="margin-left:15px; color:#333; text-decoration:none;">Home</a></nav></header>` });
-                    
-                    // 3. CONTENT & PRICING
+                    bm.add('header-right', { label: 'Header Right', category: 'Headers', attributes:{class:'ph ph-sidebar-simple'}, content: `<header style="padding:15px 20px; display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px; object-fit:contain;" /><nav><a href="#" style="margin-right:15px; color:#333; text-decoration:none;">Home</a></nav></header>` });
+                    bm.add('header-stack', { label: 'Header Stack', category: 'Headers', attributes:{class:'ph ph-rows'}, content: `<header style="padding:20px; text-align:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:50px; margin-bottom:15px; object-fit:contain;" /><nav><a href="#" style="margin:0 10px; color:#333; text-decoration:none;">Home</a><a href="#" style="margin:0 10px; color:#333; text-decoration:none;">About</a></nav></header>` });
+
+                    // 3. CONTENT BLOCKS
                     bm.add('hero-tpl', { label: 'Hero Section', category: 'Templates', attributes:{class:'ph ph-layout'}, content: `<section style="padding:80px 20px; text-align:center; background:#f8fafc;"><h1 style="font-size:3rem; margin-bottom:20px;">Headline</h1><p>Subheadline text here.</p></section>` });
                     bm.add('features-tpl', { label: 'Features Grid', category: 'Templates', attributes:{class:'ph ph-grid-three'}, content: `<section style="padding:60px 20px;"><div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(3, 1fr); gap:30px;"><div style="text-align:center; padding:20px;"><h3>Fitur 1</h3></div><div style="text-align:center; padding:20px;"><h3>Fitur 2</h3></div><div style="text-align:center; padding:20px;"><h3>Fitur 3</h3></div></div></section>` });
                     bm.add('pricelist-tpl', { label: 'Pricelist', category: 'Templates', attributes:{class:'ph ph-tag'}, content: `<section style="padding:60px 20px;"><div style="max-width:1000px; margin:0 auto; display:grid; grid-template-columns:repeat(3,1fr); gap:20px;"><div style="padding:20px; border:1px solid #eee; text-align:center;"><h3>Basic</h3><p>Rp 99rb</p></div><div style="padding:20px; border:1px solid #eee; text-align:center; background:#f0f9ff;"><h3>Pro</h3><p>Rp 199rb</p></div><div style="padding:20px; border:1px solid #eee; text-align:center;"><h3>Expert</h3><p>Rp 499rb</p></div></div></section>` });
 
-                    // 4. COMPARISON TABLE (MODERN & EDITABLE)
+                    // 4. COMPARISON TABLE (SMART)
                     bm.add('comparison-head-to-head', {
                         label: 'Comparison Table',
                         category: 'Templates',
                         attributes: { class: 'ph ph-shield-check' },
                         content: {
-                            type: 'dynamic-table', // Menggunakan logika Add Row
+                            type: 'smart-table',
                             content: `<section style="padding:60px 20px; background:#f8fafc;">
                                 <div style="max-width:800px; margin:0 auto; background:#fff; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0;">
                                     <div style="display:flex; background:#1e293b; color:#fff; padding:15px; text-align:center;">
@@ -354,7 +396,7 @@
                                     </div>
                                     <div class="table-body-area">
                                         <div style="display:flex; padding:15px; border-bottom:1px solid #f1f5f9; align-items:center; text-align:center;">
-                                            <div style="flex:1; text-align:left; font-weight:bold; color:#475569; padding-left:10px;">Edit Fitur Ini</div>
+                                            <div style="flex:1; text-align:left; font-weight:bold; color:#475569; padding-left:10px;">Fitur 1</div>
                                             <div style="flex:1; color:#16a34a;"><i class="ph ph-check-circle" style="font-size:24px;"></i></div>
                                             <div style="flex:1; color:#94a3b8;"><i class="ph ph-x-circle" style="font-size:24px;"></i></div>
                                         </div>
@@ -364,30 +406,26 @@
                         }
                     });
 
-                    // 5. CUSTOM TABLE (PURE TABLE - NEW FEATURE)
-                    bm.add('custom-table-block', {
+                    // 5. CUSTOM TABLE (NEW)
+                    bm.add('custom-table-editable', {
                         label: 'Custom Table',
                         category: 'Templates',
                         attributes: { class: 'ph ph-table' },
                         content: {
-                            type: 'dynamic-table',
+                            type: 'smart-table',
                             content: `<div style="overflow-x:auto; padding:20px;">
-                                <table style="width:100%; border-collapse:collapse; border:1px solid #e2e8f0;">
-                                    <thead style="background:#f1f5f9;">
-                                        <tr>
-                                            <th style="padding:12px; border:1px solid #cbd5e1; text-align:left;">Header A</th>
-                                            <th style="padding:12px; border:1px solid #cbd5e1; text-align:left;">Header B</th>
-                                            <th style="padding:12px; border:1px solid #cbd5e1; text-align:left;">Header C</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="table-body-area">
-                                        <tr>
-                                            <td style="padding:12px; border:1px solid #e2e8f0;">Cell 1</td>
-                                            <td style="padding:12px; border:1px solid #e2e8f0;">Cell 2</td>
-                                            <td style="padding:12px; border:1px solid #e2e8f0;">Cell 3</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div class="table-body-area" style="display:table; width:100%; border-collapse:collapse;">
+                                    <div style="display:table-row; background:#f1f5f9; font-weight:bold;">
+                                        <div style="display:table-cell; padding:12px; border:1px solid #eee;">Header A</div>
+                                        <div style="display:table-cell; padding:12px; border:1px solid #eee;">Header B</div>
+                                        <div style="display:table-cell; padding:12px; border:1px solid #eee;">Header C</div>
+                                    </div>
+                                    <div style="display:table-row;">
+                                        <div style="display:table-cell; padding:12px; border:1px solid #eee;">Data 1</div>
+                                        <div style="display:table-cell; padding:12px; border:1px solid #eee;">Data 2</div>
+                                        <div style="display:table-cell; padding:12px; border:1px solid #eee;">Data 3</div>
+                                    </div>
+                                </div>
                             </div>`
                         }
                     });
