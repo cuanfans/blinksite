@@ -31,26 +31,55 @@
         body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; color: #1e293b; }
         [x-cloak] { display: none !important; }
         
-        /* GRAPESJS UI OVERRIDES (CRITICAL FOR COLOR PICKER) */
+        /* GRAPESJS UI OVERRIDES - CRITICAL FIX FOR COLOR PICKER */
+        /* JANGAN sembunyikan .gjs-pn-panels atau .gjs-pn-buttons karena color picker
+           dan semua popover GrapesJS memerlukan container ini untuk render/muncul */
         .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views { display: none !important; }
         
-        /* Panel properties harus visible tapi tidak menghalangi
-           NOTE: sebelumnya panel dibuat width/height 0 — itu mencegah
-           color picker popup ter-render. Ubah jadi auto agar popover
-           (color picker) dapat muncul. Pointer-events di-enable agar
-           elemen popover dapat diklik. */
+        /* Allow panels to exist dan positioning untuk popover (color picker) */
         .gjs-pn-panels {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: auto;     /* allow popovers to position */
-            height: auto;    /* allow popovers to show */
-            z-index: 9999;
-            overflow: visible;
+            position: fixed !important;
+            bottom: auto !important;
+            left: auto !important;
+            top: 0 !important;
+            right: 0 !important;
+            width: auto !important;
+            height: auto !important;
+            z-index: 9999 !important;
+            overflow: visible !important;
             display: block !important;
-            pointer-events: auto;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
-        .gjs-pn-panels * { pointer-events: auto; } /* Re-enable click for popups */
+
+        /* Ensure panel children (popover, dropdown, color picker) are clickable */
+        .gjs-pn-panels * {
+            pointer-events: auto !important;
+        }
+
+        /* Color picker modal dan popover styles */
+        .gjs-popover {
+            z-index: 10000 !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .gjs-color-picker,
+        .gjs-color-option {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        /* Ensure dropdown/menu for color picker visible */
+        .gjs-menu {
+            z-index: 10000 !important;
+            display: block !important;
+        }
 
         .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f8fafc; }
         .gjs-selected { outline: 2px solid #2563eb !important; outline-offset: -2px; }
@@ -170,7 +199,7 @@
     </div>
 
     <script>
-    // --- 1. ICONIFY PICKER LOGIC (PATCHED) ---
+    // --- 1. ICONIFY PICKER LOGIC (UNCHANGED) ---
     (function(){
       let iconifyPickerState = { model: null };
       const modal = document.getElementById('iconify-picker-modal');
@@ -234,7 +263,6 @@
            const m = iconifyPickerState.model;
            if(typeof m.addAttributes === 'function') {
                m.addAttributes({ icon: iconName });
-               // Try to force re-render of the canvas item
                try { m.view && m.view.render && m.view.render(); } catch(e){}
            }
         }
@@ -250,7 +278,6 @@
       clearBtn.addEventListener('click', ()=>{ input.value=''; input.focus(); });
       modal.addEventListener('click', (e)=>{ if(e.target === modal) closeIconifyPicker(); });
 
-      // Init Grapes integration
       const initInterval = setInterval(()=>{
         if(window.editor){
             window.editor.on('component:dblclick', (model) => {
@@ -262,7 +289,7 @@
       }, 500);
     })();
 
-    // --- 2. MAIN EDITOR APP ---
+    // --- 2. MAIN EDITOR APP (UNCHANGED EXCEPT TABLE/PRICELIST) ---
     function editorApp() {
         return {
             loading: false, showSettings: false, device: 'desktop', tab: 'blocks',
@@ -299,7 +326,6 @@
                         layerManager: { appendTo: '#layers-container' },
                         selectorManager: { appendTo: '#selectors-container' },
                         traitManager: { appendTo: '#traits-container' },
-                        // FIX COLOR PICKER & PANEL VISIBILITY
                         styleManager: { 
                             appendTo: '#styles-container', 
                             sectors: [
@@ -311,280 +337,154 @@
                         assetManager: { upload: false, autoAdd: true, uploadFile: async (e) => { /* Upload */ } }
                     });
 
-                    // --- 3. COMPONENT DEFINITIONS & TABLE TOOLING (IMPROVED) ---
+                    // --- 3. TABLE & CELL COMPONENT SETUP (FIXED FOR EDITING) ---
                     const domc = editor.DomComponents;
 
-                    // Ensure a basic 'textnode' type exists for cell content (keeps editing simple)
-                    // (do not change other types/handlers)
+                    // Register textnode jika belum ada (untuk content editable dalam cell)
                     try {
-                      domc.addType('textnode', {
-                        model: {
-                          defaults: {
-                            editable: true
-                          }
-                        },
-                        view: {}
-                      });
-                    } catch(e){ /* ignore if already registered */ }
+                        domc.addType('textnode', {
+                            model: {
+                                defaults: {
+                                    editable: true,
+                                    components: []
+                                }
+                            },
+                            view: {}
+                        });
+                    } catch(e) {}
 
-                    // CELL type: td/th. Force editable and keep small default.
+                    // Cell type - force editable true dan allow inline editing
                     domc.addType('cell', {
                         model: {
                             defaults: {
                                 tagName: 'td',
+                                editable: true,
+                                droppable: false,
                                 draggable: false,
-                                droppable: true,
-                                editable: true, // Force editable
-                                // Use a simple text node inside which is editable
-                                components: [{ type: 'textnode', content: 'Cell' }],
-                                // Allow inline styles via Style Manager color picker etc.
-                                traits: []
+                                resizable: false
                             }
                         }
                     });
 
-                    // Robust helper: find ancestor by tagName on a component model
-                    const findAncestorByTag = (model, tag) => {
-                        if(!model) return null;
-                        let m = model;
-                        tag = (tag || '').toLowerCase();
-                        while(m) {
-                            const t = (m.get && m.get('tagName')) ? (''+m.get('tagName')).toLowerCase() : (m.tagName || '').toLowerCase();
-                            if(t === tag) return m;
-                            m = (typeof m.parent === 'function') ? m.parent() : (m.parent || null);
-                        }
-                        return null;
-                    };
-
-                    // Helper to get all rows (tr components) in a table (thead + tbody)
-                    const getTableRows = (table) => {
-                        if(!table) return [];
-                        const rows = [];
-                        const findRows = (comp) => {
-                            const tag = comp.get('tagName') ? comp.get('tagName').toLowerCase() : '';
-                            if(tag === 'tr') rows.push(comp);
-                            const comps = comp.components ? comp.components() : [];
-                            if(Array.isArray(comps)) {
-                                comps.forEach(c => findRows(c));
-                            }
-                        };
-                        const comps = table.components ? table.components() : [];
-                        comps.forEach(c => findRows(c));
-                        return rows;
-                    };
-
-                    // Command: add row below the currently selected row (or append to tbody)
-                    editor.Commands.add('table-add-row', {
-                        run(editor, sender) {
-                            const sel = editor.getSelected();
-                            if(!sel) return;
-                            const table = findAncestorByTag(sel, 'table');
-                            if(!table) return;
-                            // find tbody if present, else use table
-                            const tbody = (table.components && table.components().models.find(m => (m.get('tagName')||'').toLowerCase()==='tbody')) || table;
-                            const rows = tbody.components ? tbody.components() : [];
-                            if(rows.length === 0) {
-                                // create a default row with one cell
-                                tbody.append({ tagName: 'tr', components: [{ type: 'cell', components: [{ type: 'textnode', content: 'Cell' }] }] });
-                                return;
-                            }
-                            // Clone last row structure
-                            const lastRow = rows[rows.length - 1];
-                            tbody.append(lastRow.clone());
-                        }
-                    });
-
-                    // Command: add column to every row (appends a new td)
-                    editor.Commands.add('table-add-col', {
-                        run(editor, sender) {
-                            const sel = editor.getSelected();
-                            if(!sel) return;
-                            const table = findAncestorByTag(sel, 'table');
-                            if(!table) return;
-                            const rows = getTableRows(table);
-                            if(rows.length === 0) {
-                                // create simple structure if none found
-                                table.append({ tagName: 'tr', components: [{ type: 'cell', components: [{ type: 'textnode', content: 'Cell' }] }] });
-                                return;
-                            }
-                            rows.forEach(row => {
-                                // add a new td cell
-                                row.append({ type: 'cell', components: [{ type: 'textnode', content: 'Cell' }], attributes: { style: 'padding:10px; border:1px solid #ddd;' } });
-                            });
-                        }
-                    });
-
-                    // Command: delete selected row (if more than 1)
-                    editor.Commands.add('table-del-row', {
-                        run(editor, sender) {
-                            const sel = editor.getSelected();
-                            if(!sel) return;
-                            const row = findAncestorByTag(sel, 'tr');
-                            if(!row) return;
-                            const parent = row.parent ? row.parent() : null;
-                            const siblings = parent && parent.components ? parent.components() : [];
-                            if((siblings && siblings.length) > 1) row.remove();
-                            else alert('Minimal sisakan 1 baris.');
-                        }
-                    });
-
-                    // Command: delete last column from every row (ensure at least 1 column remains)
-                    editor.Commands.add('table-del-col', {
-                        run(editor, sender) {
-                            const sel = editor.getSelected();
-                            if(!sel) return;
-                            const table = findAncestorByTag(sel, 'table');
-                            if(!table) return;
-                            const rows = getTableRows(table);
-                            if(rows.length === 0) return;
-                            // Check current min cells across rows
-                            let minCells = Infinity;
-                            const rowCells = rows.map(r => {
-                                const cells = (r.components && r.components().models.filter(c => ((c.get && c.get('tagName')||'').toLowerCase()==='td' || (c.get && c.get('tagName')||'').toLowerCase()==='th'))) || [];
-                                if(cells.length < minCells) minCells = cells.length;
-                                return cells;
-                            });
-                            if(minCells <= 1) { alert('Minimal sisakan 1 kolom.'); return; }
-                            rowCells.forEach(cells => {
-                                if(cells.length > 0) {
-                                    cells[cells.length - 1].remove();
-                                }
-                            });
-                        }
-                    });
-
-                    // Table type: add toolbar/traits for row/col manipulation
+                    // Table type
                     domc.addType('table', {
                         model: {
                             defaults: {
                                 tagName: 'table',
-                                traits: [
-                                    { type: 'button', text: '➕ Row', full: true, command: 'table-add-row' },
-                                    { type: 'button', text: '➕ Col', full: true, command: 'table-add-col' },
-                                    { type: 'button', text: '➖ Row', full: true, command: 'table-del-row' },
-                                    { type: 'button', text: '➖ Col', full: true, command: 'table-del-col' }
-                                ],
-                                style: { width: '100%', borderCollapse: 'collapse' }
+                                droppable: ['tr'],
+                                draggable: false
                             }
                         }
                     });
 
-                    // When a component is selected, ensure nearest td/th is editable (fix inline-edit when text node selected)
+                    // Make cells editable saat selection berubah
                     editor.on('component:selected', (model) => {
                         if(!model) return;
-                        // If the model itself is a cell, ensure editable
-                        const tag = model.get && model.get('tagName') ? (''+model.get('tagName')).toLowerCase() : '';
-                        if(tag === 'td' || tag === 'th' || (model.is && model.is('cell'))) {
-                            try { model.set && model.set('editable', true); } catch(e){}
+                        
+                        // Jika selected model adalah cell atau td/th, pastikan editable
+                        const tag = model.get && model.get('tagName') ? (model.get('tagName') || '').toLowerCase() : '';
+                        if(tag === 'td' || tag === 'th') {
+                            model.set('editable', true);
                             return;
                         }
-                        // Traverse up to find a td/th
+
+                        // Jika selected adalah teks dalam cell, cari parent TD/TH dan set editable
                         let parent = model;
                         while(parent) {
-                            const pTag = parent.get && parent.get('tagName') ? (''+parent.get('tagName')).toLowerCase() : '';
-                            if(pTag === 'td' || pTag === 'th' || (parent.is && parent.is('cell'))) {
-                                try { parent.set && parent.set('editable', true); } catch(e){}
+                            const parentTag = parent.get && parent.get('tagName') ? (parent.get('tagName') || '').toLowerCase() : '';
+                            if(parentTag === 'td' || parentTag === 'th') {
+                                parent.set('editable', true);
                                 break;
                             }
-                            parent = (typeof parent.parent === 'function') ? parent.parent() : (parent.parent || null);
+                            parent = typeof parent.parent === 'function' ? parent.parent() : null;
                         }
                     });
 
-                    // --- 4. BLOCKS: tables + pricelist/comparison (UPDATED) ---
+                    // --- 4. BLOCKS MANAGEMENT (UPDATED TABLE/PRICELIST ONLY) ---
                     const bm = editor.BlockManager;
                     bm.add('container-fluid', { label: 'Container', category: 'Layout', content: `<div style="width:90%; max-width:1200px; margin:0 auto; padding:20px; min-height:50px;"></div>` });
                     bm.add('section-std', { label: 'Section', category: 'Layout', content: `<section style="padding:60px 0; background-color:#fff;"><div style="width:90%; max-width:1100px; margin:0 auto; padding:0 20px;"></div></section>` });
                     
-                    // PURE TABLE (editable cells + table traits)
+                    // PURE TABLE - EDITABLE VERSION
                     bm.add('table-pure', {
                         label: 'Pure Table',
                         category: 'Tables',
                         attributes: { class: 'ph ph-table' },
-                        content: {
-                            type: 'table',
-                            components: [
-                                {
-                                    tagName: 'thead',
-                                    components: [
-                                        { tagName: 'tr', components: [
-                                            { type:'cell', tagName: 'th', components: [{ type:'textnode', content: 'Header 1' }], attributes: { style: 'padding:12px; border:1px solid #e2e8f0; text-align:left; background:#f8fafc;' } },
-                                            { type:'cell', tagName: 'th', components: [{ type:'textnode', content: 'Header 2' }], attributes: { style: 'padding:12px; border:1px solid #e2e8f0; text-align:left; background:#f8fafc;' } },
-                                            { type:'cell', tagName: 'th', components: [{ type:'textnode', content: 'Header 3' }], attributes: { style: 'padding:12px; border:1px solid #e2e8f0; text-align:left; background:#f8fafc;' } }
-                                        ] }
-                                    ]
-                                },
-                                {
-                                    tagName: 'tbody',
-                                    components: [
-                                        { tagName: 'tr', components: [
-                                            { type:'cell', components:[{ type:'textnode', content:'Cell 1' }], attributes: { style: 'padding:12px; border:1px solid #e2e8f0;' } },
-                                            { type:'cell', components:[{ type:'textnode', content:'Cell 2' }], attributes: { style: 'padding:12px; border:1px solid #e2e8f0;' } },
-                                            { type:'cell', components:[{ type:'textnode', content:'Cell 3' }], attributes: { style: 'padding:12px; border:1px solid #e2e8f0;' } }
-                                        ] },
-                                        { tagName: 'tr', components: [
-                                            { type:'cell', components:[{ type:'textnode', content:'Cell 1' }] , attributes: { style: 'padding:12px; border:1px solid #e2e8f0;' } },
-                                            { type:'cell', components:[{ type:'textnode', content:'Cell 2' }] , attributes: { style: 'padding:12px; border:1px solid #e2e8f0;' } },
-                                            { type:'cell', components:[{ type:'textnode', content:'Cell 3' }] , attributes: { style: 'padding:12px; border:1px solid #e2e8f0;' } }
-                                        ] }
-                                    ]
-                                }
-                            ],
-                            style: { width: '100%', borderCollapse: 'collapse' }
-                        }
+                        content: `
+                            <table style="width:100%; border-collapse:collapse; border:1px solid #e2e8f0;">
+                                <thead>
+                                    <tr style="background:#f8fafc;">
+                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;" contenteditable="true">Header 1</th>
+                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;" contenteditable="true">Header 2</th>
+                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;" contenteditable="true">Header 3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;" contenteditable="true">Cell 1</td>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;" contenteditable="true">Cell 2</td>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;" contenteditable="true">Cell 3</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;" contenteditable="true">Cell 1</td>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;" contenteditable="true">Cell 2</td>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;" contenteditable="true">Cell 3</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        `
                     });
 
-                    // PRICELIST -> make this a proper comparison/pricelist table (fully editable)
+                    // PRICELIST / COMPARISON TABLE - FULLY EDITABLE
                     bm.add('pricelist-tpl', {
                         label: 'Pricelist / Comparison',
                         category: 'Content',
                         attributes: { class: 'ph ph-tag' },
-                        content: {
-                            type: 'table',
-                            components: [
-                                {
-                                    tagName: 'thead',
-                                    components: [
-                                        { tagName: 'tr', components: [
-                                            { type:'cell', tagName: 'th', components:[{ type:'textnode', content:'Plan' }], attributes: { style: 'padding:14px; border:1px solid #e6edf3; background:#f8fafc; text-align:left; font-weight:700;' } },
-                                            { type:'cell', tagName: 'th', components:[{ type:'textnode', content:'Basic' }], attributes: { style: 'padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;' } },
-                                            { type:'cell', tagName: 'th', components:[{ type:'textnode', content:'Pro' }], attributes: { style: 'padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;' } },
-                                            { type:'cell', tagName: 'th', components:[{ type:'textnode', content:'Enterprise' }], attributes: { style: 'padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;' } }
-                                        ] }
-                                    ]
-                                },
-                                {
-                                    tagName: 'tbody',
-                                    components: [
-                                        // Price row
-                                        { tagName: 'tr', components: [
-                                            { type:'cell', tagName: 'td', components:[{ type:'textnode', content:'Price' }], attributes: { style: 'padding:12px; border:1px solid #e6edf3; font-weight:600;' } },
-                                            { type:'cell', tagName: 'td', components:[{ type:'textnode', content:'Rp 99.000' }], attributes: { style: 'padding:12px; border:1px solid #e6edf3; text-align:center;' } },
-                                            { type:'cell', tagName: 'td', components:[{ type:'textnode', content:'Rp 199.000' }], attributes: { style: 'padding:12px; border:1px solid #e6edf3; text-align:center; background:#f0f9ff;' } },
-                                            { type:'cell', tagName: 'td', components:[{ type:'textnode', content:'Custom' }], attributes: { style: 'padding:12px; border:1px solid #e6edf3; text-align:center;' } }
-                                        ] },
-                                        // Feature rows (editable)
-                                        { tagName: 'tr', components: [
-                                            { type:'cell', tagName: 'td', components:[{ type:'textnode', content:'Feature A' }], attributes: { style: 'padding:12px; border:1px solid #e6edf3;' } },
-                                            { type:'cell', tagName: 'td', components:[{ type:'textnode', content:'Yes' }], attributes: { style: 'padding:12px; border:1px solid #e6edf3; text-align:center;' } },
-                                            { type:'cell', tagName: 'td', components:[{ type:'textnode', content:'Yes' }], attributes: { style: 'padding:12px; border:1px solid #e6edf3; text-align:center;' } },
-                                            { type:'cell', tagName: 'td', components:[{ type:'textnode', content:'Yes' }], attributes: { style: 'padding:12px; border:1px solid #e6edf3; text-align:center;' } }
-                                        ] },
-                                        { tagName: 'tr', components: [
-                                            { type:'cell', tagName: 'td', components:[{ type:'textnode', content:'Feature B' }], attributes: { style: 'padding:12px; border:1px solid #e6edf3;' } },
-                                            { type:'cell', tagName: 'td', components:[{ type:'textnode', content:'No' }], attributes: { style: 'padding:12px; border:1px solid #e6edf3; text-align:center;' } },
-                                            { type:'cell', tagName: 'td', components:[{ type:'textnode', content:'Yes' }], attributes: { style: 'padding:12px; border:1px solid #e6edf3; text-align:center;' } },
-                                            { type:'cell', tagName: 'td', components:[{ type:'textnode', content:'Yes' }], attributes: { style: 'padding:12px; border:1px solid #e6edf3; text-align:center;' } }
-                                        ] }
-                                    ]
-                                }
-                            ],
-                            style: { width: '100%', borderCollapse: 'collapse', maxWidth: '1000px', margin: '0 auto' }
-                        }
+                        content: `
+                            <section style="padding:60px 20px;">
+                                <div style="max-width:1000px; margin:0 auto;">
+                                    <table style="width:100%; border-collapse:collapse; border:1px solid #e6edf3;">
+                                        <thead>
+                                            <tr>
+                                                <th style="padding:14px; border:1px solid #e6edf3; background:#f8fafc; text-align:left; font-weight:700;" contenteditable="true">Plan</th>
+                                                <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;" contenteditable="true">Basic</th>
+                                                <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;" contenteditable="true">Pro</th>
+                                                <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;" contenteditable="true">Enterprise</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;" contenteditable="true">Price</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">Rp 99.000</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center; background:#f0f9ff;" contenteditable="true">Rp 199.000</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">Custom</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:12px; border:1px solid #e6edf3;" contenteditable="true">Feature A</td>
+                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✓</td>
+                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✓</td>
+                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:12px; border:1px solid #e6edf3;" contenteditable="true">Feature B</td>
+                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✗</td>
+                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✓</td>
+                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:12px; border:1px solid #e6edf3;" contenteditable="true">Feature C</td>
+                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✗</td>
+                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✗</td>
+                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✓</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
+                        `
                     });
 
                     bm.add('iconify-blk', { label: 'Iconify', category: 'Media', attributes: { class: 'ph ph-star' }, content: { type: 'iconify-icon' } });
-                    
-                    // Headers, Content, Widgets (Standard)
                     bm.add('header-1', { label: 'Header Center', category: 'Headers', content: `<header style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:center;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px;" /></header>` });
                     bm.add('header-2', { label: 'Header Left', category: 'Headers', content: `<header style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px;" /><nav><a href="#" style="margin-left:15px;">Home</a></nav></header>` });
                     bm.add('header-3', { label: 'Header Right', category: 'Headers', content: `<header style="padding:15px 20px; display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;"><img src="https://via.placeholder.com/150x50?text=LOGO" style="height:40px;" /><nav><a href="#" style="margin-right:15px;">Home</a></nav></header>` });
@@ -592,9 +492,6 @@
                     bm.add('hero-tpl', { label: 'Hero', category: 'Content', content: `<section style="padding:80px 20px; text-align:center; background:#f8fafc;"><h1 style="font-size:3rem; margin-bottom:20px;">Headline</h1><p>Subheadline.</p></section>` });
                     bm.add('video-yt', { label: 'YouTube', category: 'Media', content: { type: 'video', provider: 'yt', style: { height: '350px', width: '100%' } } });
                     bm.add('checkout-pro', { label: 'Checkout', category: 'E-Commerce', content: `<div data-gjs-type="checkout-widget" style="padding:20px; border:2px dashed #3b82f6; text-align:center;"><strong>[ CHECKOUT ]</strong></div>` });
-
-                    // Ensure style manager popovers are attachable (color picker relies on panels)
-                    // No further changes to other functions.
 
                     editor.on('load', () => {
                         editor.Canvas.getBody().style.backgroundColor = '#ffffff';
