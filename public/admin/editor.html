@@ -101,42 +101,33 @@
         .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 4px; color: #475569; }
         .gjs-block-category .gjs-title { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 8px 12px; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; }
 
-        /* RESPONSIVE EDITOR - MOBILE ONLY */
-        @media (max-width: 768px) {
-            /* Sidebar menjadi bottom sheet di mobile */
+        /* RESPONSIVE - DESKTOP (tetap normal) */
+        @media (min-width: 769px) {
+            .bottom-editor-nav {
+                display: none !important;
+            }
             .sidebar-panel {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                width: 100%;
-                height: 0;
-                background: white;
-                border-top: 1px solid #e2e8f0;
-                z-index: 30;
-                overflow: hidden;
-                transition: height 0.3s ease;
+                display: none !important;
+            }
+        }
+
+        /* RESPONSIVE - MOBILE ONLY */
+        @media (max-width: 768px) {
+            /* Sembunyikan sidebar desktop */
+            .sidebar-desktop {
+                display: none !important;
             }
 
-            .sidebar-panel.active {
-                height: 70vh;
-                box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            /* Simplify header di mobile */
+            .header-slug-section {
+                display: none;
             }
 
-            .sidebar-panel .panel-tabs {
-                position: sticky;
-                top: 0;
-                background: white;
-                z-index: 10;
-                display: flex;
+            .header-device-section {
+                display: none;
             }
 
-            .sidebar-panel .panel-content {
-                height: calc(70vh - 56px);
-                overflow-y: auto;
-            }
-
-            /* Bottom navigation untuk mobile */
+            /* Bottom navigation - hanya tombol, tidak panel */
             .bottom-editor-nav {
                 position: fixed;
                 bottom: 0;
@@ -157,56 +148,74 @@
                 border: none;
                 background: none;
                 color: #94a3b8;
-                font-size: 20px;
+                font-size: 24px;
                 cursor: pointer;
                 transition: all 0.2s;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
 
             .bottom-editor-nav button.active {
                 color: #2563eb;
-                border-top: 2px solid #2563eb;
+                border-top: 3px solid #2563eb;
             }
 
             .bottom-editor-nav button:hover {
                 color: #334155;
             }
 
-            /* Add margin di canvas untuk bottom nav */
+            /* Bottom sheet panel - HIDDEN by default, show only saat diklik */
+            .sidebar-panel {
+                position: fixed;
+                bottom: 56px;
+                left: 0;
+                right: 0;
+                width: 100%;
+                max-height: 0;
+                background: white;
+                border-top: 1px solid #e2e8f0;
+                z-index: 30;
+                overflow: hidden;
+                transition: max-height 0.3s ease-in-out;
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            }
+
+            .sidebar-panel.active {
+                max-height: calc(100vh - 112px);
+            }
+
+            .sidebar-panel .panel-tabs {
+                position: sticky;
+                top: 0;
+                background: white;
+                z-index: 10;
+                display: flex;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .sidebar-panel .panel-content {
+                max-height: calc(100vh - 168px);
+                overflow-y: auto;
+                padding: 8px;
+            }
+
+            /* Adjust canvas untuk bottom nav */
             #gjs {
-                margin-bottom: 56px !important;
+                margin-bottom: 0 !important;
             }
 
-            /* Sembunyikan sidebar desktop di mobile */
-            .sidebar-desktop {
-                display: none !important;
-            }
-
-            /* Simplify header di mobile */
-            .header-slug-section {
-                display: none;
-            }
-
-            .header-device-section {
-                display: none;
-            }
-
-            header .flex.items-center.gap-3 {
-                gap: 8px;
-            }
-
-            header button[class*="px-3"] {
-                padding: 8px 12px;
-                font-size: 11px;
-            }
-
-            /* Settings panel responsive */
+            /* Settings modal responsive */
             .settings-modal {
                 width: 100vw;
                 max-width: 100vw;
             }
 
             .gjs-pn-panels {
-                right: 56px !important;
+                right: auto !important;
+                left: 0 !important;
+                bottom: 64px !important;
             }
         }
     </style>
@@ -269,13 +278,14 @@
         <div class="flex-1 relative bg-[#f8fafc] flex flex-col items-center justify-center p-8 overflow-hidden">
             <div id="gjs" class="flex-1 w-full h-full shadow-xl rounded-lg overflow-hidden border border-gray-300 bg-white ring-4 ring-gray-100"></div>
         </div>
+        
         <!-- SIDEBAR DESKTOP - hanya muncul di desktop -->
         <div class="sidebar-desktop w-[320px] bg-white border-l border-gray-200 flex flex-col z-20 shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.05)]">
             <div class="panel-tabs">
                 <button @click="tab='blocks'" :class="tab=='blocks'?'active':''" title="Elements"><i class="ph ph-plus-square"></i></button>
                 <button @click="tab='styles'" :class="tab=='styles'?'active':''" title="Style"><i class="ph ph-paint-brush"></i></button>
                 <button @click="tab='traits'" :class="tab=='traits'?'active':''" title="Settings"><i class="ph ph-sliders"></i></button>
-                <button @click="tab=='layers'" :class="tab=='layers'?'active':''" title="Layers"><i class="ph ph-tree-structure"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'active':''" title="Layers"><i class="ph ph-tree-structure"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto bg-white relative custom-scroll">
                 <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-20"></div>
@@ -285,28 +295,28 @@
             </div>
         </div>
 
-        <!-- MOBILE BOTTOM SHEET PANEL -->
-        <div class="sidebar-panel" :class="mobileTab ? 'active' : ''">
+        <!-- MOBILE BOTTOM SHEET PANEL - tampil hanya saat di-click dari bottom nav -->
+        <div class="sidebar-panel" :class="mobilePanelOpen ? 'active' : ''">
             <div class="panel-tabs">
-                <button @click="mobileTab='blocks'" :class="mobileTab=='blocks'?'active':''" title="Elements"><i class="ph ph-plus-square"></i></button>
-                <button @click="mobileTab='styles'" :class="mobileTab=='styles'?'active':''" title="Style"><i class="ph ph-paint-brush"></i></button>
-                <button @click="mobileTab='traits'" :class="mobileTab=='traits'?'active':''" title="Settings"><i class="ph ph-sliders"></i></button>
-                <button @click="mobileTab='layers'" :class="mobileTab=='layers'?'active':''" title="Layers"><i class="ph ph-tree-structure"></i></button>
+                <button @click="mobileTab='blocks'" :class="mobileTab=='blocks'?'active':''"><i class="ph ph-plus-square"></i></button>
+                <button @click="mobileTab='styles'" :class="mobileTab=='styles'?'active':''"><i class="ph ph-paint-brush"></i></button>
+                <button @click="mobileTab='traits'" :class="mobileTab=='traits'?'active':''"><i class="ph ph-sliders"></i></button>
+                <button @click="mobileTab='layers'" :class="mobileTab=='layers'?'active':''"><i class="ph ph-tree-structure"></i></button>
             </div>
             <div class="panel-content">
-                <div x-show="mobileTab=='blocks'" id="blocks-container-mobile" class="p-2"></div>
-                <div x-show="mobileTab=='styles'"><div id="selectors-container-mobile" class="p-3 border-b bg-gray-50"></div><div id="styles-container-mobile" class="pb-20"></div></div>
-                <div x-show="mobileTab=='traits'"><div class="p-3 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b">Settings</div><div id="traits-container-mobile" class="p-2 pb-20"></div></div>
-                <div x-show="mobileTab=='layers'" id="layers-container-mobile" class="p-2"></div>
+                <div x-show="mobileTab=='blocks'" id="blocks-container-mobile"></div>
+                <div x-show="mobileTab=='styles'"><div id="selectors-container-mobile" class="p-3 border-b bg-gray-50"></div><div id="styles-container-mobile"></div></div>
+                <div x-show="mobileTab=='traits'"><div class="p-3 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b">Settings</div><div id="traits-container-mobile" class="p-2"></div></div>
+                <div x-show="mobileTab=='layers'" id="layers-container-mobile"></div>
             </div>
         </div>
 
-        <!-- MOBILE BOTTOM NAV -->
+        <!-- MOBILE BOTTOM NAV - hanya tombol kecil, tidak panel langsung terbuka -->
         <div class="bottom-editor-nav">
-            <button @click="mobileTab='blocks'" :class="mobileTab=='blocks'?'active':''"><i class="ph ph-plus-square"></i></button>
-            <button @click="mobileTab='styles'" :class="mobileTab=='styles'?'active':''"><i class="ph ph-paint-brush"></i></button>
-            <button @click="mobileTab='traits'" :class="mobileTab=='traits'?'active':''"><i class="ph ph-sliders"></i></button>
-            <button @click="mobileTab='layers'" :class="mobileTab=='layers'?'active':''"><i class="ph ph-tree-structure"></i></button>
+            <button @click="toggleMobilePanel('blocks')" :class="mobileTab=='blocks' && mobilePanelOpen ? 'active' : ''"><i class="ph ph-plus-square"></i></button>
+            <button @click="toggleMobilePanel('styles')" :class="mobileTab=='styles' && mobilePanelOpen ? 'active' : ''"><i class="ph ph-paint-brush"></i></button>
+            <button @click="toggleMobilePanel('traits')" :class="mobileTab=='traits' && mobilePanelOpen ? 'active' : ''"><i class="ph ph-sliders"></i></button>
+            <button @click="toggleMobilePanel('layers')" :class="mobileTab=='layers' && mobilePanelOpen ? 'active' : ''"><i class="ph ph-tree-structure"></i></button>
             <button @click="showSettings=true"><i class="ph ph-gear-six"></i></button>
         </div>
     </div>
@@ -422,7 +432,7 @@
     // --- 2. MAIN EDITOR APP ---
     function editorApp() {
         return {
-            loading: false, showSettings: false, device: 'desktop', tab: 'blocks', mobileTab: 'blocks',
+            loading: false, showSettings: false, device: 'desktop', tab: 'blocks', mobileTab: 'blocks', mobilePanelOpen: false,
             notifications: [],
             page: { slug: '', title: '', product_type: 'physical', config: { variants:[], shipping:{weight:1000}, order_bump:{active:false, title:'', price:0, desc:''}, coupons:[], settings:{} } },
             cred: { provider: 'midtrans', data: '' },
@@ -433,6 +443,17 @@
                 this.page.slug = params.get('slug');
                 if(!this.authPass) window.location.href='/login';
                 this.initGrapes();
+            },
+
+            toggleMobilePanel(tabName) {
+                // Jika panel sudah terbuka dan tab yang diklik sama, tutup panel
+                if (this.mobilePanelOpen && this.mobileTab === tabName) {
+                    this.mobilePanelOpen = false;
+                } else {
+                    // Jika panel tertutup atau tab berbeda, buka panel dengan tab baru
+                    this.mobileTab = tabName;
+                    this.mobilePanelOpen = true;
+                }
             },
 
             notify(title, msg, type='success') { const id=Date.now(); this.notifications.push({id, title, msg, type, show:true}); setTimeout(()=>{ const idx=this.notifications.findIndex(n=>n.id===id); if(idx>-1)this.notifications[idx].show=false; }, 3000); },
