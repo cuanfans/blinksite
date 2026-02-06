@@ -11,12 +11,8 @@ const app = new Hono()
 const JWT_SECRET = 'BantarCaringin1BantarCaringin2BantarCaringin3'
 
 // ===============================================
-// 0. GLOBAL CONFIG
+// 0. GLOBAL CONFIG & ERROR
 // ===============================================
-app.use('*', async (c, next) => {
-    await next();
-});
-
 app.onError((err, c) => {
     console.error(`[ERROR] ${err.message}`, err.stack);
     return c.json({ success: false, message: 'Internal Server Error' }, 500);
@@ -25,28 +21,35 @@ app.onError((err, c) => {
 async function serveAsset(c, path) {
     try {
         const url = new URL(path, c.req.url);
-        return await c.env.ASSETS.fetch(url);
+        // Tambahkan header anti-cache saat serve HTML Admin
+        const response = await c.env.ASSETS.fetch(url);
+        const newResponse = new Response(response.body, response);
+        newResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        return newResponse;
     } catch (e) {
         return c.text('Asset Not Found', 404);
     }
 }
 
 // ===============================================
-// 1. MIDDLEWARE AUTH (Updated)
+// 1. MIDDLEWARE AUTH (PERBAIKAN TOTAL)
 // ===============================================
 const requireAuth = async (c, next) => {
-    const path = new URL(c.req.url).pathname;
+    const url = new URL(c.req.url);
+    const path = url.pathname;
     
-    // Allow public access + Setup Route
+    // Whitelist Public Paths
     if (path.startsWith('/api/public/') || 
         path === '/admin/login' || 
+        path === '/login' || // Handle login page
         path === '/api/login' || 
-        path === '/api/setup-first-user' || // Route darurat untuk bikin admin
-        path.includes('.')) {
+        path === '/api/setup-first-user' ||
+        path.includes('.') // Assets (css/js/img)
+    ) {
         await next(); return;
     }
 
-    // Cek Token (Support Cookie Web & Header Mobile App)
+    // Cek Token dari Cookie ATAU Header
     let token = getCookie(c, 'auth_token');
     const authHeader = c.req.header('Authorization');
     
@@ -54,6 +57,7 @@ const requireAuth = async (c, next) => {
         token = authHeader.split(' ')[1];
     }
 
+    // Jika tidak ada token
     if (!token) {
         if (path.startsWith('/api/')) return c.json({ error: 'Unauthorized' }, 401);
         return c.redirect('/login');
@@ -62,11 +66,13 @@ const requireAuth = async (c, next) => {
     try {
         const secret = c.env.APP_MASTER_KEY || JWT_SECRET;
         const payload = await verify(token, secret);
-        
-        // Simpan data user di context agar bisa dipakai di route lain
         c.set('user', payload);
         
+        // Paksa header response agar browser TIDAK MENYIMPAN halaman admin
         await next();
+        c.res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        c.res.headers.set('Pragma', 'no-cache');
+        c.res.headers.set('Expires', '0');
     } catch (e) {
         deleteCookie(c, 'auth_token');
         if (path.startsWith('/api/')) return c.json({ error: 'Invalid Token' }, 401);
@@ -74,30 +80,28 @@ const requireAuth = async (c, next) => {
     }
 };
 
+// Terapkan Auth Middleware ke SEMUA route yang diawali /admin dan /api/admin
 app.use('/admin*', requireAuth);
 app.use('/api/admin*', requireAuth);
 
 // ===============================================
-// 2. AUTH & ADMIN ROUTES (RESTRUKTURISASI)
+// 2. AUTH ROUTES
 // ===============================================
-
-// LOGIN BARU (Email + Password)
 app.post('/api/login', async (c) => {
     try {
         const { email, password } = await c.req.json();
         
-        // Cari user berdasarkan email
+        // Jika tabel users belum ada, fallback ke settings (legacy) atau error
+        // Asumsi: Tabel users sudah dibuat sesuai instruksi sebelumnya
         const user = await c.env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
         
-        if (!user) return c.json({ success: false, message: 'Email tidak ditemukan' }, 401);
+        if (!user) return c.json({ success: false, message: 'Akun tidak ditemukan' }, 401);
 
-        // Verifikasi Hash Password
         const inputHash = await sha256(password);
         if (inputHash !== user.password) {
             return c.json({ success: false, message: 'Password Salah' }, 401);
         }
 
-        // Generate Token
         const secret = c.env.APP_MASTER_KEY || JWT_SECRET;
         const token = await sign({ 
             id: user.id, 
@@ -108,42 +112,49 @@ app.post('/api/login', async (c) => {
 
         setCookie(c, 'auth_token', token, { path: '/', secure: true, httpOnly: true, maxAge: 86400, sameSite: 'Lax' });
         
-        return c.json({ success: true, token: token, user: { id: user.id, email: user.email, name: user.name } });
-    } catch (e) { return c.json({ success: false, error: e.message }, 500); }
+        return c.json({ success: true, token: token });
+    } catch (e) { 
+        return c.json({ success: false, error: e.message }, 500); 
+    }
 });
 
-// ROUTE SETUP (Hanya pakai sekali lalu hapus/komentari demi keamanan)
 app.post('/api/setup-first-user', async (c) => {
     try {
         const { email, password, name } = await c.req.json();
         const hashedPassword = await sha256(password);
-        
         await c.env.DB.prepare("INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, 'admin')")
             .bind(email, hashedPassword, name || 'Admin').run();
-            
-        return c.json({ success: true, message: 'User admin berhasil dibuat' });
-    } catch (e) {
-        return c.json({ success: false, error: e.message });
-    }
+        return c.json({ success: true });
+    } catch (e) { return c.json({ success: false, error: e.message }); }
 });
 
-app.get('/api/logout', (c) => { deleteCookie(c, 'auth_token'); return c.redirect('/login'); });
+app.get('/api/logout', (c) => { 
+    deleteCookie(c, 'auth_token'); 
+    return c.redirect('/login'); 
+});
 
-// Admin HTML Mapping
-app.get('/login', (c) => serveAsset(c, '/login.html'));
+// ===============================================
+// 3. ADMIN HTML MAPPING (POINTING KE FOLDER _VIEWS)
+// ===============================================
+// Karena file fisik sudah dipindah ke /public/_views/, user tidak bisa akses langsung.
+// Request harus lewat sini (yang sudah dilindungi middleware requireAuth).
+
+app.get('/login', (c) => serveAsset(c, '/login.html')); // Login tetap public
+
 app.get('/admin', (c) => c.redirect('/admin/dashboard'));
-app.get('/admin/dashboard', (c) => serveAsset(c, '/admin/dashboard.html'));
-app.get('/admin/pages', (c) => serveAsset(c, '/admin/pages.html'));
-app.get('/admin/editor', (c) => serveAsset(c, '/admin/editor.html'));
-app.get('/admin/reports', (c) => serveAsset(c, '/admin/reports.html'));
-app.get('/admin/analytics', (c) => serveAsset(c, '/admin/analytics.html'));
-app.get('/admin/settings', (c) => serveAsset(c, '/admin/settings.html'));
+app.get('/admin/dashboard', (c) => serveAsset(c, '/_views/dashboard.html'));
+app.get('/admin/pages', (c) => serveAsset(c, '/_views/pages.html'));
+app.get('/admin/editor', (c) => serveAsset(c, '/_views/editor.html'));
+app.get('/admin/reports', (c) => serveAsset(c, '/_views/reports.html'));
+app.get('/admin/analytics', (c) => serveAsset(c, '/_views/analytics.html'));
+app.get('/admin/settings', (c) => serveAsset(c, '/_views/settings.html'));
+
+// Cegah akses langsung ke folder _views jika user menebak URLnya
+app.get('/_views*', (c) => c.redirect('/login'));
 
 // ===============================================
-// 3. API DATA ROUTES (API ADMIN)
+// 4. API DATA ROUTES (ADMIN)
 // ===============================================
-
-// GET ALL PAGES
 app.get('/api/admin/pages', async (c) => {
     try {
         const res = await c.env.DB.prepare("SELECT id, slug, title, product_type, created_at FROM pages ORDER BY created_at DESC").all();
@@ -151,7 +162,6 @@ app.get('/api/admin/pages', async (c) => {
     } catch(e) { return c.json({ error: e.message }, 500); }
 });
 
-// SAVE PAGE
 app.post('/api/admin/pages', async (c) => {
     const { slug, title, html, css, product_config, product_type } = await c.req.json();
     try {
@@ -164,7 +174,6 @@ app.post('/api/admin/pages', async (c) => {
     } catch(e) { return c.json({ error: e.message }, 500); }
 });
 
-// GET SINGLE PAGE
 app.get('/api/admin/pages/:slug', async (c) => {
     const slug = c.req.param('slug');
     const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
@@ -172,7 +181,6 @@ app.get('/api/admin/pages/:slug', async (c) => {
     return c.json(page || {});
 });
 
-// 1. Set Homepage
 app.post('/api/admin/set-homepage', async (c) => {
     try {
         const { slug } = await c.req.json();
@@ -181,7 +189,6 @@ app.post('/api/admin/set-homepage', async (c) => {
     } catch (e) { return c.json({ error: e.message }, 500); }
 });
 
-// 2. Get Current Homepage
 app.get('/api/admin/homepage-slug', async (c) => {
     try {
         const s = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
@@ -189,7 +196,6 @@ app.get('/api/admin/homepage-slug', async (c) => {
     } catch(e) { return c.json({ slug: null }); }
 });
 
-// SAVE CREDENTIALS
 app.post('/api/admin/credentials', async (c) => {
     const { provider, data } = await c.req.json();
     const { encrypted, iv } = await encryptJSON(data, c.env.APP_MASTER_KEY || JWT_SECRET);
@@ -204,45 +210,36 @@ app.post('/api/admin/upload-image', uploadImage);
 app.post('/api/shipping/check', checkShipping);
 
 // ===============================================
-// 4. API PUBLIC (FORM & CHECKOUT)
+// 5. API PUBLIC (NO AUTH)
 // ===============================================
-
-// A. FORM KONTAK (Generic)
 app.post('/api/public/submit-form', async (c) => {
     try {
         const body = await c.req.parseBody();
         const name = body['name'] || 'Anonymous';
         const email = body['email'] || '-';
         const message = body['message'] || JSON.stringify(body);
-        
         await c.env.DB.prepare("INSERT INTO leads (name, email, message, created_at) VALUES (?, ?, ?, datetime('now'))")
             .bind(name, email, message).run();
-
         const referer = c.req.header('Referer') || '/';
         return c.redirect(referer + '?status=success');
     } catch (e) { return c.text('Error: ' + e.message, 500); }
 });
 
-// B. FORM CHECKOUT (Order)
 app.post('/api/public/checkout', async (c) => {
     try {
         const { page_id, customer, items, total, shipping } = await c.req.json();
         const orderId = `ORD-${Date.now()}-${Math.floor(Math.random()*1000)}`;
-
         await c.env.DB.prepare(`
             INSERT INTO orders (order_id, page_id, customer_name, customer_phone, customer_address, items_json, total_amount, status, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))
         `).bind(orderId, page_id, customer.name, customer.phone, JSON.stringify(shipping || {}), JSON.stringify(items), total).run();
 
-        // Panggil Payment Engine (Modular)
         let paymentResult = {};
         try {
             paymentResult = await executePayment(c, 'midtrans', total, orderId, customer);
         } catch (err) {
-            console.error("Payment Engine Error:", err);
             return c.json({ success: true, order_id: orderId, method: 'whatsapp', wa_url: `https://wa.me/628123456789?text=Order%20${orderId}` });
         }
-
         return c.json({ success: true, order_id: orderId, payment: paymentResult });
     } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
@@ -250,7 +247,7 @@ app.post('/api/public/checkout', async (c) => {
 app.post('/api/public/shipping', checkShipping);
 
 // ===============================================
-// 5. PUBLIC RENDER ROUTES
+// 6. PUBLIC RENDER & FALLBACK
 // ===============================================
 app.get('/', async (c) => {
     try {
@@ -266,28 +263,21 @@ app.get('/', async (c) => {
 app.get('/:slug', async (c) => {
     const slug = c.req.param('slug');
     if (slug.includes('.')) return c.env.ASSETS.fetch(c.req.raw);
-
     try {
         const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
         if(!page) return c.text('404 Not Found', 404);
-        
         c.env.DB.prepare("INSERT INTO analytics (page_id, event_type, referrer) VALUES (?, 'view', ?)").bind(page.id, c.req.header('Referer') || 'direct').run().catch(()=>{});
-        
         return renderPage(c, page);
     } catch(e) { return c.env.ASSETS.fetch(c.req.raw); }
 });
 
-// ===============================================
-// 6. RENDER ENGINE (FIX GAP & DYNAMIC SCRIPT)
-// ===============================================
 async function renderPage(c, page) {
     const config = JSON.parse(page.product_config_json || '{}');
     const settings = config.settings || {}; 
     const url = c.req.url;
-
     let headScripts = '';
     
-    // 1. PAYMENT GATEWAY SCRIPT (MODULAR - LOAD FROM DB)
+    // Midtrans Script
     let paymentScript = '';
     try {
         const credRow = await c.env.DB.prepare("SELECT * FROM credentials WHERE provider_slug='midtrans'").first();
@@ -295,18 +285,13 @@ async function renderPage(c, page) {
             const creds = await decryptJSON(credRow.encrypted_data, credRow.iv, c.env.APP_MASTER_KEY || JWT_SECRET);
             if (creds && creds.client_key) {
                 const isProd = creds.is_production === true || creds.is_production === "true";
-                const snapUrl = isProd 
-                    ? "https://app.midtrans.com/snap/snap.js" 
-                    : "https://app.sandbox.midtrans.com/snap/snap.js";
-                // INI SCRIPT DINAMIS, BUKAN HARDCODE
+                const snapUrl = isProd ? "https://app.midtrans.com/snap/snap.js" : "https://app.sandbox.midtrans.com/snap/snap.js";
                 paymentScript = `<script src="${snapUrl}" data-client-key="${creds.client_key}"></script>`;
             }
         }
-    } catch (e) {
-        console.error("Failed to inject payment script:", e);
-    }
+    } catch (e) {}
 
-    // 2. PIXELS
+    // Pixels & Tracking
     if (settings.fb_pixel_id) {
         headScripts += `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init', '${settings.fb_pixel_id}');fbq('track', 'PageView');</script><noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${settings.fb_pixel_id}&ev=PageView&noscript=1"/></noscript>`;
     }
@@ -315,7 +300,6 @@ async function renderPage(c, page) {
     }
     if (settings.custom_head) headScripts += settings.custom_head;
 
-    // 3. APP LOGIC
     const appScript = `
     <script>
         window.PAGE_ID = ${page.id};
@@ -323,58 +307,34 @@ async function renderPage(c, page) {
         window.PRODUCT_VARIANTS = ${JSON.stringify(config.variants || [])};
         window.ORDER_BUMP = ${JSON.stringify(config.order_bump || {active:false})};
         window.SHIPPING_CONFIG = ${JSON.stringify(config.shipping || {weight: 1000})};
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            const checkoutContainer = document.querySelector('[data-gjs-type="checkout-widget"]');
-            if(checkoutContainer) {
-                console.log('Checkout Widget Detected');
-            }
-        });
     </script>`;
 
-    // 4. HTML CONSTRUCTION (FIXING GAP WITHOUT REMOVING INJECTS)
     return c.html(`
     <!DOCTYPE html>
     <html lang="id" style="margin:0; padding:0;">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        
         <title>${settings.seo_title || page.title}</title>
         <meta name="description" content="${settings.seo_description || ''}">
         ${settings.favicon ? `<link rel="icon" href="${settings.favicon}">` : ''}
-
         <meta property="og:type" content="website" />
         <meta property="og:url" content="${url}" />
         <meta property="og:title" content="${settings.og_title || settings.seo_title || page.title}" />
         <meta property="og:description" content="${settings.og_description || settings.seo_description || ''}" />
         ${settings.og_image ? `<meta property="og:image" content="${settings.og_image}" />` : ''}
-
         <script src="https://cdn.tailwindcss.com"></script>
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
         <style>
-            /* Reset CSS Agresif untuk hapus gap 100px */
-            html, body {
-                margin: 0 !important;
-                padding: 0 !important;
-                width: 100%;
-                height: 100%;
-                overflow-x: hidden;
-            }
-            /* Mencegah margin elemen pertama "bocor" ke atas body */
-            body::before {
-                content: "";
-                display: table;
-            }
+            html, body { margin: 0 !important; padding: 0 !important; width: 100%; height: 100%; overflow-x: hidden; }
+            body::before { content: ""; display: table; }
             ${page.css_content}
             [x-cloak] { display: none !important; }
         </style>
-
         ${headScripts}
     </head>
     <body class="antialiased" style="margin:0; padding:0;">
         ${page.html_content}
-        
         ${appScript}
         ${paymentScript}
         ${settings.custom_footer || ''}
