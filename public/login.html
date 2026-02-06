@@ -6,36 +6,66 @@
     <title>Admin Login - BlinkSite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web">
 </head>
 <body class="bg-gray-900 flex items-center justify-center min-h-screen font-sans text-gray-100">
 
     <div x-data="loginApp()" class="w-full max-w-sm bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-blue-500 mb-2">BlinkSite</h1>
-            <p class="text-gray-400 text-sm">Masukan password admin untuk melanjutkan</p>
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 mb-4">
+                <i class="ph ph-lock-key text-2xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">BlinkSite</h1>
+            <p class="text-gray-400 text-sm">Masuk untuk mengelola landing page</p>
         </div>
 
-        <form @submit.prevent="submitLogin" class="space-y-6">
+        <form @submit.prevent="submitLogin" class="space-y-5">
             <div>
-                <label class="block text-sm font-bold mb-2 text-gray-300">Password</label>
-                <input type="password" x-model="password" 
-                       class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                       placeholder="••••••••" required>
+                <label class="block text-xs font-bold mb-1 text-gray-400 uppercase tracking-wider">Email Address</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="ph ph-envelope text-gray-500"></i>
+                    </div>
+                    <input type="email" x-model="email" 
+                           class="w-full bg-gray-900 border border-gray-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition sm:text-sm"
+                           placeholder="admin@example.com" required>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold mb-1 text-gray-400 uppercase tracking-wider">Password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="ph ph-key text-gray-500"></i>
+                    </div>
+                    <input type="password" x-model="password" 
+                           class="w-full bg-gray-900 border border-gray-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition sm:text-sm"
+                           placeholder="••••••••" required>
+                </div>
             </div>
 
             <button type="submit" :disabled="loading" 
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition transform active:scale-95 flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition transform active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30">
                 <span x-show="!loading">MASUK DASHBOARD</span>
+                <i x-show="!loading" class="ph ph-arrow-right font-bold"></i>
                 <span x-show="loading" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
             </button>
         </form>
 
-        <p x-show="error" x-transition class="mt-4 text-center text-red-400 text-sm font-bold bg-red-900/30 p-2 rounded border border-red-800" x-text="error"></p>
+        <div x-show="error" x-transition.opacity.duration.300ms class="mt-6 flex items-center gap-2 text-red-400 text-xs font-bold bg-red-900/20 p-3 rounded-lg border border-red-800/50">
+            <i class="ph ph-warning-circle text-lg"></i>
+            <span x-text="error"></span>
+        </div>
+        
+        <p class="mt-8 text-center text-xs text-gray-600">
+            &copy; 2024 BlinkSite Landing Builder
+        </p>
     </div>
 
     <script>
         function loginApp() {
             return {
+                email: '',
                 password: '',
                 loading: false,
                 error: '',
@@ -48,23 +78,33 @@
                         const res = await fetch('/api/login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ password: this.password })
+                            body: JSON.stringify({ 
+                                email: this.email, 
+                                password: this.password 
+                            })
                         });
 
                         const data = await res.json();
 
                         if (res.ok && data.success) {
-                            // SUKSES: Browser otomatis menyimpan Cookie dari server (HttpOnly)
-                            // Tidak perlu simpan localStorage manual.
-                            // Langsung redirect.
+                            // SUKSES: 
+                            // 1. Browser otomatis simpan Cookie HttpOnly untuk Web
+                            // 2. Kita simpan token di localStorage (opsional, tapi berguna untuk API call manual via JS)
+                            if(data.token) {
+                                localStorage.setItem('auth_token', data.token);
+                            }
+                            
+                            // Redirect ke Dashboard
                             window.location.href = '/admin/dashboard';
                         } else {
-                            this.error = data.message || 'Password Salah!';
+                            this.error = data.message || 'Login gagal. Cek email dan password.';
                         }
                     } catch (e) {
-                        this.error = 'Gagal menghubungi server.';
+                        this.error = 'Gagal terhubung ke server. Periksa koneksi internet.';
+                        console.error(e);
+                    } finally {
+                        this.loading = false;
                     }
-                    this.loading = false;
                 }
             }
         }
