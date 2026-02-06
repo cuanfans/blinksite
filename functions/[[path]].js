@@ -32,25 +32,44 @@ async function serveAsset(c, path) {
 }
 
 // ===============================================
-// 1. MIDDLEWARE AUTH
+// 1. MIDDLEWARE AUTH (Updated)
 // ===============================================
 const requireAuth = async (c, next) => {
     const path = new URL(c.req.url).pathname;
-    // Public paths (Login + API Public)
-    if (path.startsWith('/api/public/') || path === '/admin/login' || path === '/api/login' || path.includes('.')) {
+    
+    // Allow public access + Setup Route
+    if (path.startsWith('/api/public/') || 
+        path === '/admin/login' || 
+        path === '/api/login' || 
+        path === '/api/setup-first-user' || // Route darurat untuk bikin admin
+        path.includes('.')) {
         await next(); return;
     }
-    const token = getCookie(c, 'auth_token');
+
+    // Cek Token (Support Cookie Web & Header Mobile App)
+    let token = getCookie(c, 'auth_token');
+    const authHeader = c.req.header('Authorization');
+    
+    if (!token && authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+    }
+
     if (!token) {
         if (path.startsWith('/api/')) return c.json({ error: 'Unauthorized' }, 401);
         return c.redirect('/login');
     }
+
     try {
         const secret = c.env.APP_MASTER_KEY || JWT_SECRET;
-        await verify(token, secret);
+        const payload = await verify(token, secret);
+        
+        // Simpan data user di context agar bisa dipakai di route lain
+        c.set('user', payload);
+        
         await next();
     } catch (e) {
         deleteCookie(c, 'auth_token');
+        if (path.startsWith('/api/')) return c.json({ error: 'Invalid Token' }, 401);
         return c.redirect('/login');
     }
 };
@@ -59,22 +78,53 @@ app.use('/admin*', requireAuth);
 app.use('/api/admin*', requireAuth);
 
 // ===============================================
-// 2. AUTH & ADMIN ROUTES
+// 2. AUTH & ADMIN ROUTES (RESTRUKTURISASI)
 // ===============================================
+
+// LOGIN BARU (Email + Password)
 app.post('/api/login', async (c) => {
     try {
-        const { password } = await c.req.json();
-        const dbSetting = await c.env.DB.prepare("SELECT value FROM settings WHERE key = 'admin_password'").first();
-        const realHash = dbSetting ? dbSetting.value : '';
+        const { email, password } = await c.req.json();
+        
+        // Cari user berdasarkan email
+        const user = await c.env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
+        
+        if (!user) return c.json({ success: false, message: 'Email tidak ditemukan' }, 401);
+
+        // Verifikasi Hash Password
         const inputHash = await sha256(password);
+        if (inputHash !== user.password) {
+            return c.json({ success: false, message: 'Password Salah' }, 401);
+        }
 
-        if (inputHash !== realHash) return c.json({ success: false, message: 'Password Salah' }, 401);
-
+        // Generate Token
         const secret = c.env.APP_MASTER_KEY || JWT_SECRET;
-        const token = await sign({ role: 'admin', exp: Math.floor(Date.now() / 1000) + 86400 }, secret);
+        const token = await sign({ 
+            id: user.id, 
+            email: user.email, 
+            role: user.role, 
+            exp: Math.floor(Date.now() / 1000) + 86400 
+        }, secret);
+
         setCookie(c, 'auth_token', token, { path: '/', secure: true, httpOnly: true, maxAge: 86400, sameSite: 'Lax' });
-        return c.json({ success: true });
+        
+        return c.json({ success: true, token: token, user: { id: user.id, email: user.email, name: user.name } });
     } catch (e) { return c.json({ success: false, error: e.message }, 500); }
+});
+
+// ROUTE SETUP (Hanya pakai sekali lalu hapus/komentari demi keamanan)
+app.post('/api/setup-first-user', async (c) => {
+    try {
+        const { email, password, name } = await c.req.json();
+        const hashedPassword = await sha256(password);
+        
+        await c.env.DB.prepare("INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, 'admin')")
+            .bind(email, hashedPassword, name || 'Admin').run();
+            
+        return c.json({ success: true, message: 'User admin berhasil dibuat' });
+    } catch (e) {
+        return c.json({ success: false, error: e.message });
+    }
 });
 
 app.get('/api/logout', (c) => { deleteCookie(c, 'auth_token'); return c.redirect('/login'); });
