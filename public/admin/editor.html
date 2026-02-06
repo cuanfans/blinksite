@@ -31,54 +31,36 @@
         body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; color: #1e293b; }
         [x-cloak] { display: none !important; }
         
-        /* GRAPESJS UI OVERRIDES - CRITICAL FIX FOR COLOR PICKER */
-        /* JANGAN sembunyikan .gjs-pn-panels atau .gjs-pn-buttons karena color picker
-           dan semua popover GrapesJS memerlukan container ini untuk render/muncul */
+        /* GRAPESJS UI OVERRIDES - COLOR PICKER MUST BE VISIBLE */
         .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views { display: none !important; }
         
-        /* Allow panels to exist dan positioning untuk popover (color picker) */
-        .gjs-pn-panels {
-            position: fixed !important;
-            bottom: auto !important;
+        /* PENTING: jangan hide .gjs-pn-panels karena color picker butuh ini untuk render */
+        /* Cukup posisikan di tempat yang tidak terlihat sehingga popover bisa muncul */
+        .gjs-pn-panels { 
+            position: fixed !important; 
+            bottom: auto !important; 
             left: auto !important;
-            top: 0 !important;
+            top: 0 !important; 
             right: 0 !important;
-            width: auto !important;
-            height: auto !important;
-            z-index: 9999 !important;
+            width: auto !important; 
+            height: auto !important; 
+            z-index: 9999 !important; 
             overflow: visible !important;
-            display: block !important;
             background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
             padding: 0 !important;
             margin: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
         }
-
-        /* Ensure panel children (popover, dropdown, color picker) are clickable */
-        .gjs-pn-panels * {
-            pointer-events: auto !important;
-        }
-
-        /* Color picker modal dan popover styles */
-        .gjs-popover {
-            z-index: 10000 !important;
+        
+        /* Ensure popover/dropdown dapat diklik */
+        .gjs-pn-panels * { pointer-events: auto !important; }
+        
+        /* Color picker popover harus visible */
+        .gjs-color-picker-content {
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
-        }
-
-        .gjs-color-picker,
-        .gjs-color-option {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-
-        /* Ensure dropdown/menu for color picker visible */
-        .gjs-menu {
-            z-index: 10000 !important;
-            display: block !important;
         }
 
         .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f8fafc; }
@@ -263,7 +245,7 @@
            const m = iconifyPickerState.model;
            if(typeof m.addAttributes === 'function') {
                m.addAttributes({ icon: iconName });
-               try { m.view && m.view.render && m.view.render(); } catch(e){}
+               m.view.render();
            }
         }
       }
@@ -281,7 +263,7 @@
       const initInterval = setInterval(()=>{
         if(window.editor){
             window.editor.on('component:dblclick', (model) => {
-                const tag = model.get && model.get('tagName') ? model.get('tagName') : null;
+                const tag = model.get('tagName');
                 if(tag === 'iconify-icon') openIconifyPicker(model);
             });
             clearInterval(initInterval);
@@ -289,7 +271,7 @@
       }, 500);
     })();
 
-    // --- 2. MAIN EDITOR APP (UNCHANGED EXCEPT TABLE/PRICELIST) ---
+    // --- 2. MAIN EDITOR APP (UNCHANGED KECUALI BLOCKS SECTION) ---
     function editorApp() {
         return {
             loading: false, showSettings: false, device: 'desktop', tab: 'blocks',
@@ -337,151 +319,206 @@
                         assetManager: { upload: false, autoAdd: true, uploadFile: async (e) => { /* Upload */ } }
                     });
 
-                    // --- 3. TABLE & CELL COMPONENT SETUP (FIXED FOR EDITING) ---
+                    // --- 3. COMPONENT DEFINITIONS (UNCHANGED) ---
                     const domc = editor.DomComponents;
 
-                    // Register textnode jika belum ada (untuk content editable dalam cell)
-                    try {
-                        domc.addType('textnode', {
-                            model: {
-                                defaults: {
-                                    editable: true,
-                                    components: []
-                                }
-                            },
-                            view: {}
-                        });
-                    } catch(e) {}
-
-                    // Cell type - force editable true dan allow inline editing
                     domc.addType('cell', {
                         model: {
                             defaults: {
                                 tagName: 'td',
-                                editable: true,
-                                droppable: false,
                                 draggable: false,
-                                resizable: false
+                                droppable: true,
+                                editable: true,
+                                components: { type: 'textnode', content: 'Cell' }
                             }
                         }
                     });
 
-                    // Table type
+                    editor.Commands.add('table-add-row', editor => {
+                        const selected = editor.getSelected();
+                        const table = selected.closest('table');
+                        if(table) {
+                            const tbody = table.find('tbody')[0] || table;
+                            const rows = tbody.find('tr');
+                            if(rows.length>0) tbody.append(rows[rows.length-1].clone());
+                            else tbody.append('<tr><td>New</td></tr>');
+                        }
+                    });
+                    editor.Commands.add('table-add-col', editor => {
+                        const selected = editor.getSelected();
+                        const table = selected.closest('table');
+                        if(table) {
+                            table.find('tr').forEach(tr => tr.append('<td style="padding:10px; border:1px solid #ddd;">New</td>'));
+                        }
+                    });
+                    editor.Commands.add('table-del-row', editor => {
+                        const selected = editor.getSelected();
+                        const row = selected.closest('tr');
+                        if(row) row.remove();
+                    });
+                    editor.Commands.add('table-del-col', editor => {
+                       const selected = editor.getSelected();
+                       const table = selected.closest('table');
+                       if(table) {
+                           table.find('tr').forEach(tr => {
+                               const cells = tr.find('td, th');
+                               if(cells.length > 0) cells[cells.length-1].remove();
+                           });
+                       }
+                    });
+
                     domc.addType('table', {
                         model: {
                             defaults: {
                                 tagName: 'table',
-                                droppable: ['tr'],
-                                draggable: false
+                                traits: [
+                                    { type: 'button', text: '➕ Row', command: 'table-add-row' },
+                                    { type: 'button', text: '➕ Col', command: 'table-add-col' },
+                                    { type: 'button', text: '➖ Row', command: 'table-del-row' },
+                                    { type: 'button', text: '➖ Col', command: 'table-del-col' }
+                                ]
                             }
                         }
                     });
 
-                    // Make cells editable saat selection berubah
-                    editor.on('component:selected', (model) => {
-                        if(!model) return;
-                        
-                        // Jika selected model adalah cell atau td/th, pastikan editable
-                        const tag = model.get && model.get('tagName') ? (model.get('tagName') || '').toLowerCase() : '';
-                        if(tag === 'td' || tag === 'th') {
-                            model.set('editable', true);
-                            return;
-                        }
-
-                        // Jika selected adalah teks dalam cell, cari parent TD/TH dan set editable
-                        let parent = model;
-                        while(parent) {
-                            const parentTag = parent.get && parent.get('tagName') ? (parent.get('tagName') || '').toLowerCase() : '';
-                            if(parentTag === 'td' || parentTag === 'th') {
-                                parent.set('editable', true);
-                                break;
+                    domc.addType('iconify-icon', {
+                        model: {
+                            defaults: {
+                                tagName: 'iconify-icon',
+                                droppable: false,
+                                attributes: { icon: 'mdi:home', width: '48', style: 'color:#2563eb' },
+                                traits: [
+                                    { type: 'button', text: '🔍 Pilih Icon', full: true, command: (editor, trait) => window.openIconifyPicker(trait.target) },
+                                    { name: 'width', type: 'number', label: 'Size' },
+                                    { name: 'color', type: 'color', label: 'Color' }
+                                ]
                             }
-                            parent = typeof parent.parent === 'function' ? parent.parent() : null;
                         }
                     });
 
-                    // --- 4. BLOCKS MANAGEMENT (UPDATED TABLE/PRICELIST ONLY) ---
+                    // --- 4. BLOCKS MANAGEMENT (HANYA TABLE & PRICELIST YANG DIUBAH) ---
                     const bm = editor.BlockManager;
                     bm.add('container-fluid', { label: 'Container', category: 'Layout', content: `<div style="width:90%; max-width:1200px; margin:0 auto; padding:20px; min-height:50px;"></div>` });
                     bm.add('section-std', { label: 'Section', category: 'Layout', content: `<section style="padding:60px 0; background-color:#fff;"><div style="width:90%; max-width:1100px; margin:0 auto; padding:0 20px;"></div></section>` });
                     
-                    // PURE TABLE - EDITABLE VERSION
+                    // PURE TABLE - Editable dengan inline text editing
                     bm.add('table-pure', {
                         label: 'Pure Table',
                         category: 'Tables',
                         attributes: { class: 'ph ph-table' },
-                        content: `
-                            <table style="width:100%; border-collapse:collapse; border:1px solid #e2e8f0;">
-                                <thead>
-                                    <tr style="background:#f8fafc;">
-                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;" contenteditable="true">Header 1</th>
-                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;" contenteditable="true">Header 2</th>
-                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;" contenteditable="true">Header 3</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td style="padding:12px; border:1px solid #e2e8f0;" contenteditable="true">Cell 1</td>
-                                        <td style="padding:12px; border:1px solid #e2e8f0;" contenteditable="true">Cell 2</td>
-                                        <td style="padding:12px; border:1px solid #e2e8f0;" contenteditable="true">Cell 3</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding:12px; border:1px solid #e2e8f0;" contenteditable="true">Cell 1</td>
-                                        <td style="padding:12px; border:1px solid #e2e8f0;" contenteditable="true">Cell 2</td>
-                                        <td style="padding:12px; border:1px solid #e2e8f0;" contenteditable="true">Cell 3</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        `
+                        content: `<table style="width:100%; border-collapse:collapse; border:1px solid #e2e8f0;">
+                            <thead>
+                                <tr style="background:#f8fafc;">
+                                    <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 1</th>
+                                    <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 2</th>
+                                    <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 3</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding:12px; border:1px solid #e2e8f0;">Cell 1</td>
+                                    <td style="padding:12px; border:1px solid #e2e8f0;">Cell 2</td>
+                                    <td style="padding:12px; border:1px solid #e2e8f0;">Cell 3</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:12px; border:1px solid #e2e8f0;">Cell 1</td>
+                                    <td style="padding:12px; border:1px solid #e2e8f0;">Cell 2</td>
+                                    <td style="padding:12px; border:1px solid #e2e8f0;">Cell 3</td>
+                                </tr>
+                            </tbody>
+                        </table>`
                     });
 
-                    // PRICELIST / COMPARISON TABLE - FULLY EDITABLE
+                    // PRICELIST - Terpisah 3 kolom
                     bm.add('pricelist-tpl', {
-                        label: 'Pricelist / Comparison',
+                        label: 'Pricelist Cards',
                         category: 'Content',
                         attributes: { class: 'ph ph-tag' },
-                        content: `
-                            <section style="padding:60px 20px;">
-                                <div style="max-width:1000px; margin:0 auto;">
-                                    <table style="width:100%; border-collapse:collapse; border:1px solid #e6edf3;">
-                                        <thead>
-                                            <tr>
-                                                <th style="padding:14px; border:1px solid #e6edf3; background:#f8fafc; text-align:left; font-weight:700;" contenteditable="true">Plan</th>
-                                                <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;" contenteditable="true">Basic</th>
-                                                <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;" contenteditable="true">Pro</th>
-                                                <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;" contenteditable="true">Enterprise</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;" contenteditable="true">Price</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">Rp 99.000</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center; background:#f0f9ff;" contenteditable="true">Rp 199.000</td>
-                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">Custom</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding:12px; border:1px solid #e6edf3;" contenteditable="true">Feature A</td>
-                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✓</td>
-                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✓</td>
-                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✓</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding:12px; border:1px solid #e6edf3;" contenteditable="true">Feature B</td>
-                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✗</td>
-                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✓</td>
-                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✓</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding:12px; border:1px solid #e6edf3;" contenteditable="true">Feature C</td>
-                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✗</td>
-                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✗</td>
-                                                <td style="padding:12px; border:1px solid #e6edf3; text-align:center;" contenteditable="true">✓</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                        content: `<section style="padding:60px 20px; background:#f8fafc;">
+                            <div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(3, 1fr); gap:30px;">
+                                <div style="padding:30px; border:1px solid #e2e8f0; background:#fff; border-radius:8px; text-align:center;">
+                                    <h3 style="font-size:20px; font-weight:700; margin:0 0 15px 0;">Basic Plan</h3>
+                                    <p style="font-size:32px; font-weight:700; color:#2563eb; margin:10px 0;">Rp 99.000</p>
+                                    <p style="font-size:14px; color:#64748b; margin:15px 0;">Per bulan</p>
+                                    <ul style="list-style:none; padding:0; margin:20px 0; text-align:left;">
+                                        <li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature A</li>
+                                        <li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature B</li>
+                                        <li style="padding:8px 0;">✗ Feature C</li>
+                                    </ul>
+                                    <button style="width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Pilih Plan</button>
                                 </div>
-                            </section>
-                        `
+                                <div style="padding:30px; border:2px solid #2563eb; background:#fff; border-radius:8px; text-align:center; transform:scale(1.05);">
+                                    <div style="display:inline-block; background:#2563eb; color:#fff; padding:5px 15px; border-radius:20px; font-size:12px; font-weight:700; margin-bottom:15px;">POPULER</div>
+                                    <h3 style="font-size:20px; font-weight:700; margin:10px 0 15px 0;">Pro Plan</h3>
+                                    <p style="font-size:32px; font-weight:700; color:#2563eb; margin:10px 0;">Rp 199.000</p>
+                                    <p style="font-size:14px; color:#64748b; margin:15px 0;">Per bulan</p>
+                                    <ul style="list-style:none; padding:0; margin:20px 0; text-align:left;">
+                                        <li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature A</li>
+                                        <li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature B</li>
+                                        <li style="padding:8px 0;">✓ Feature C</li>
+                                    </ul>
+                                    <button style="width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Pilih Plan</button>
+                                </div>
+                                <div style="padding:30px; border:1px solid #e2e8f0; background:#fff; border-radius:8px; text-align:center;">
+                                    <h3 style="font-size:20px; font-weight:700; margin:0 0 15px 0;">Enterprise</h3>
+                                    <p style="font-size:32px; font-weight:700; color:#2563eb; margin:10px 0;">Custom</p>
+                                    <p style="font-size:14px; color:#64748b; margin:15px 0;">Hubungi kami</p>
+                                    <ul style="list-style:none; padding:0; margin:20px 0; text-align:left;">
+                                        <li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature A</li>
+                                        <li style="padding:8px 0; border-bottom:1px solid #e2e8f0;">✓ Feature B</li>
+                                        <li style="padding:8px 0;">✓ Feature C</li>
+                                    </ul>
+                                    <button style="width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Hubungi Sales</button>
+                                </div>
+                            </div>
+                        </section>`
+                    });
+
+                    // COMPARISON TABLE - Tabel menyatu
+                    bm.add('comparison-tpl', {
+                        label: 'Comparison Table',
+                        category: 'Content',
+                        attributes: { class: 'ph ph-table' },
+                        content: `<section style="padding:60px 20px;">
+                            <div style="max-width:1000px; margin:0 auto;">
+                                <table style="width:100%; border-collapse:collapse; border:1px solid #e6edf3;">
+                                    <thead>
+                                        <tr>
+                                            <th style="padding:14px; border:1px solid #e6edf3; background:#f8fafc; text-align:left; font-weight:700;">Feature</th>
+                                            <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;">Basic</th>
+                                            <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;">Pro</th>
+                                            <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;">Enterprise</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Feature A</td>
+                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Feature B</td>
+                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
+                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Feature C</td>
+                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
+                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
+                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Priority Support</td>
+                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
+                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>`
                     });
 
                     bm.add('iconify-blk', { label: 'Iconify', category: 'Media', attributes: { class: 'ph ph-star' }, content: { type: 'iconify-icon' } });
