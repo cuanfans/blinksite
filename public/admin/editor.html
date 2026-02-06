@@ -31,20 +31,19 @@
         body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; color: #1e293b; }
         [x-cloak] { display: none !important; }
         
-        /* GRAPESJS UI OVERRIDES - COLOR PICKER MUST BE VISIBLE */
+        /* GRAPESJS UI OVERRIDES */
         .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views { display: none !important; }
         
-        /* PENTING: jangan hide .gjs-pn-panels karena color picker butuh ini untuk render */
-        /* Cukup posisikan di tempat yang tidak terlihat sehingga popover bisa muncul */
+        /* FIX: Pindahkan .gjs-pn-panels ke bawah kanan jauh dari tombol */
         .gjs-pn-panels { 
             position: fixed !important; 
-            bottom: auto !important; 
+            bottom: 10px !important; 
+            right: 330px !important;
+            top: auto !important; 
             left: auto !important;
-            top: 0 !important; 
-            right: 0 !important;
             width: auto !important; 
             height: auto !important; 
-            z-index: 9999 !important; 
+            z-index: 8888 !important; 
             overflow: visible !important;
             background: transparent !important;
             padding: 0 !important;
@@ -53,14 +52,28 @@
             box-shadow: none !important;
         }
         
-        /* Ensure popover/dropdown dapat diklik */
-        .gjs-pn-panels * { pointer-events: auto !important; }
+        /* Ensure all children dapat diklik dan visible */
+        .gjs-pn-panels * { 
+            pointer-events: auto !important; 
+            visibility: visible !important;
+        }
         
-        /* Color picker popover harus visible */
-        .gjs-color-picker-content {
+        /* Color picker popover harus visible dan accessible */
+        .gjs-color-picker-content,
+        .gjs-field-color-picker,
+        .gjs-color-picker {
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
+        }
+        
+        /* Popover/dropdown styling */
+        .gjs-popover {
+            z-index: 10000 !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: fixed !important;
         }
 
         .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f8fafc; }
@@ -271,7 +284,7 @@
       }, 500);
     })();
 
-    // --- 2. MAIN EDITOR APP (UNCHANGED KECUALI BLOCKS SECTION) ---
+    // --- 2. MAIN EDITOR APP ---
     function editorApp() {
         return {
             loading: false, showSettings: false, device: 'desktop', tab: 'blocks',
@@ -319,9 +332,10 @@
                         assetManager: { upload: false, autoAdd: true, uploadFile: async (e) => { /* Upload */ } }
                     });
 
-                    // --- 3. COMPONENT DEFINITIONS (UNCHANGED) ---
+                    // --- 3. COMPONENT DEFINITIONS ---
                     const domc = editor.DomComponents;
 
+                    // TABLE CELL - Make editable
                     domc.addType('cell', {
                         model: {
                             defaults: {
@@ -334,6 +348,7 @@
                         }
                     });
 
+                    // TABLE COMMANDS
                     editor.Commands.add('table-add-row', editor => {
                         const selected = editor.getSelected();
                         const table = selected.closest('table');
@@ -367,6 +382,7 @@
                        }
                     });
 
+                    // TABLE TYPE
                     domc.addType('table', {
                         model: {
                             defaults: {
@@ -381,6 +397,7 @@
                         }
                     });
 
+                    // ICONIFY
                     domc.addType('iconify-icon', {
                         model: {
                             defaults: {
@@ -396,40 +413,42 @@
                         }
                     });
 
-                    // --- 4. BLOCKS MANAGEMENT (HANYA TABLE & PRICELIST YANG DIUBAH) ---
+                    // --- 4. BLOCKS ---
                     const bm = editor.BlockManager;
                     bm.add('container-fluid', { label: 'Container', category: 'Layout', content: `<div style="width:90%; max-width:1200px; margin:0 auto; padding:20px; min-height:50px;"></div>` });
                     bm.add('section-std', { label: 'Section', category: 'Layout', content: `<section style="padding:60px 0; background-color:#fff;"><div style="width:90%; max-width:1100px; margin:0 auto; padding:0 20px;"></div></section>` });
                     
-                    // PURE TABLE - Editable dengan inline text editing
+                    // PURE TABLE - FULLY EDITABLE
                     bm.add('table-pure', {
                         label: 'Pure Table',
                         category: 'Tables',
                         attributes: { class: 'ph ph-table' },
-                        content: `<table style="width:100%; border-collapse:collapse; border:1px solid #e2e8f0;">
-                            <thead>
-                                <tr style="background:#f8fafc;">
-                                    <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 1</th>
-                                    <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 2</th>
-                                    <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 3</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="padding:12px; border:1px solid #e2e8f0;">Cell 1</td>
-                                    <td style="padding:12px; border:1px solid #e2e8f0;">Cell 2</td>
-                                    <td style="padding:12px; border:1px solid #e2e8f0;">Cell 3</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:12px; border:1px solid #e2e8f0;">Cell 1</td>
-                                    <td style="padding:12px; border:1px solid #e2e8f0;">Cell 2</td>
-                                    <td style="padding:12px; border:1px solid #e2e8f0;">Cell 3</td>
-                                </tr>
-                            </tbody>
-                        </table>`
+                        content: `<div style="overflow-x:auto;">
+                            <table style="width:100%; border-collapse:collapse; border:1px solid #e2e8f0;">
+                                <thead>
+                                    <tr style="background:#f8fafc;">
+                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 1</th>
+                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 2</th>
+                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 1</td>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 2</td>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 3</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 1</td>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 2</td>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 3</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>`
                     });
 
-                    // PRICELIST - Terpisah 3 kolom
+                    // PRICELIST - TERPISAH 3 KOLOM
                     bm.add('pricelist-tpl', {
                         label: 'Pricelist Cards',
                         category: 'Content',
@@ -474,49 +493,51 @@
                         </section>`
                     });
 
-                    // COMPARISON TABLE - Tabel menyatu
+                    // COMPARISON TABLE - MENYATU
                     bm.add('comparison-tpl', {
                         label: 'Comparison Table',
                         category: 'Content',
                         attributes: { class: 'ph ph-table' },
                         content: `<section style="padding:60px 20px;">
                             <div style="max-width:1000px; margin:0 auto;">
-                                <table style="width:100%; border-collapse:collapse; border:1px solid #e6edf3;">
-                                    <thead>
-                                        <tr>
-                                            <th style="padding:14px; border:1px solid #e6edf3; background:#f8fafc; text-align:left; font-weight:700;">Feature</th>
-                                            <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;">Basic</th>
-                                            <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;">Pro</th>
-                                            <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;">Enterprise</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Feature A</td>
-                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Feature B</td>
-                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
-                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Feature C</td>
-                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
-                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
-                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Priority Support</td>
-                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
-                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                            <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div style="overflow-x:auto;">
+                                    <table style="width:100%; border-collapse:collapse; border:1px solid #e6edf3;">
+                                        <thead>
+                                            <tr>
+                                                <th style="padding:14px; border:1px solid #e6edf3; background:#f8fafc; text-align:left; font-weight:700;">Feature</th>
+                                                <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;">Basic</th>
+                                                <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;">Pro</th>
+                                                <th style="padding:14px; border:1px solid #e6edf3; background:#fff; text-align:center; font-weight:700;">Enterprise</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Feature A</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Feature B</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Feature C</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:14px; border:1px solid #e6edf3; font-weight:600;">Priority Support</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✗</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                                <td style="padding:14px; border:1px solid #e6edf3; text-align:center;">✓</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </section>`
                     });
