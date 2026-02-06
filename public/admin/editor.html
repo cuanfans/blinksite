@@ -100,6 +100,115 @@
         .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 4px; color: #475569; }
         .gjs-block-category .gjs-title { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 8px 12px; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; }
+
+        /* RESPONSIVE EDITOR - MOBILE ONLY */
+        @media (max-width: 768px) {
+            /* Sidebar menjadi bottom sheet di mobile */
+            .sidebar-panel {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                height: 0;
+                background: white;
+                border-top: 1px solid #e2e8f0;
+                z-index: 30;
+                overflow: hidden;
+                transition: height 0.3s ease;
+            }
+
+            .sidebar-panel.active {
+                height: 70vh;
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            }
+
+            .sidebar-panel .panel-tabs {
+                position: sticky;
+                top: 0;
+                background: white;
+                z-index: 10;
+                display: flex;
+            }
+
+            .sidebar-panel .panel-content {
+                height: calc(70vh - 56px);
+                overflow-y: auto;
+            }
+
+            /* Bottom navigation untuk mobile */
+            .bottom-editor-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 56px;
+                background: white;
+                border-top: 1px solid #e2e8f0;
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                z-index: 25;
+            }
+
+            .bottom-editor-nav button {
+                flex: 1;
+                height: 100%;
+                border: none;
+                background: none;
+                color: #94a3b8;
+                font-size: 20px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .bottom-editor-nav button.active {
+                color: #2563eb;
+                border-top: 2px solid #2563eb;
+            }
+
+            .bottom-editor-nav button:hover {
+                color: #334155;
+            }
+
+            /* Add margin di canvas untuk bottom nav */
+            #gjs {
+                margin-bottom: 56px !important;
+            }
+
+            /* Sembunyikan sidebar desktop di mobile */
+            .sidebar-desktop {
+                display: none !important;
+            }
+
+            /* Simplify header di mobile */
+            .header-slug-section {
+                display: none;
+            }
+
+            .header-device-section {
+                display: none;
+            }
+
+            header .flex.items-center.gap-3 {
+                gap: 8px;
+            }
+
+            header button[class*="px-3"] {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+
+            /* Settings panel responsive */
+            .settings-modal {
+                width: 100vw;
+                max-width: 100vw;
+            }
+
+            .gjs-pn-panels {
+                right: 56px !important;
+            }
+        }
     </style>
 </head>
 
@@ -137,10 +246,10 @@
     <header class="h-14 bg-white border-b border-gray-200 flex justify-between items-center px-4 z-50 relative shrink-0">
         <div class="flex items-center gap-4">
             <a href="/admin/pages" class="text-gray-400 hover:text-blue-600 transition"><i class="ph ph-arrow-left text-xl"></i></a>
-            <div class="h-6 w-px bg-gray-200"></div>
-            <div><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Page Slug</span><input x-model="page.slug" class="bg-transparent font-mono font-bold text-sm text-gray-700 outline-none w-48 placeholder-gray-300" placeholder="nama-halaman"></div>
+            <div class="h-6 w-px bg-gray-200 header-slug-section"></div>
+            <div class="header-slug-section"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Page Slug</span><input x-model="page.slug" class="bg-transparent font-mono font-bold text-sm text-gray-700 outline-none w-48 placeholder-gray-300" placeholder="nama-halaman"></div>
         </div>
-        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
+        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200 header-device-section">
             <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow-sm text-blue-600':'text-gray-400'" class="p-2 rounded-md transition"><i class="ph ph-desktop text-lg"></i></button>
             <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow-sm text-blue-600':'text-gray-400'" class="p-2 rounded-md transition"><i class="ph ph-device-tablet text-lg"></i></button>
             <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow-sm text-blue-600':'text-gray-400'" class="p-2 rounded-md transition"><i class="ph ph-device-mobile text-lg"></i></button>
@@ -150,9 +259,9 @@
             <button @click="cmd('core:redo')" class="text-gray-400 hover:text-gray-700 p-2"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
         </div>
         <div class="flex items-center gap-3">
-            <button @click="cmd('gjs-export-zip')" class="text-gray-500 hover:text-green-600 flex items-center gap-1 text-xs font-bold px-2"><i class="ph ph-download-simple text-lg"></i> ZIP</button>
-            <button @click="showSettings=true" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-2 rounded-md text-xs font-bold flex items-center gap-2 border border-gray-200"><i class="ph ph-gear-six text-lg"></i> Settings</button>
-            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md text-xs font-bold transition flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-500/30"><i x-show="loading" class="ph ph-spinner animate-spin"></i><span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span></button>
+            <button @click="cmd('gjs-export-zip')" class="text-gray-500 hover:text-green-600 flex items-center gap-1 text-xs font-bold px-2 hidden md:flex"><i class="ph ph-download-simple text-lg"></i> ZIP</button>
+            <button @click="showSettings=true" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-2 rounded-md text-xs font-bold flex items-center gap-2 border border-gray-200 hidden md:flex"><i class="ph ph-gear-six text-lg"></i> Settings</button>
+            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-3 md:px-5 py-2 rounded-md text-xs font-bold transition flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-500/30"><i x-show="loading" class="ph ph-spinner animate-spin"></i><span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span></button>
         </div>
     </header>
 
@@ -160,12 +269,13 @@
         <div class="flex-1 relative bg-[#f8fafc] flex flex-col items-center justify-center p-8 overflow-hidden">
             <div id="gjs" class="flex-1 w-full h-full shadow-xl rounded-lg overflow-hidden border border-gray-300 bg-white ring-4 ring-gray-100"></div>
         </div>
-        <div class="w-[320px] bg-white border-l border-gray-200 flex flex-col z-20 shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.05)]">
+        <!-- SIDEBAR DESKTOP - hanya muncul di desktop -->
+        <div class="sidebar-desktop w-[320px] bg-white border-l border-gray-200 flex flex-col z-20 shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.05)]">
             <div class="panel-tabs">
                 <button @click="tab='blocks'" :class="tab=='blocks'?'active':''" title="Elements"><i class="ph ph-plus-square"></i></button>
                 <button @click="tab='styles'" :class="tab=='styles'?'active':''" title="Style"><i class="ph ph-paint-brush"></i></button>
                 <button @click="tab='traits'" :class="tab=='traits'?'active':''" title="Settings"><i class="ph ph-sliders"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'active':''" title="Layers"><i class="ph ph-tree-structure"></i></button>
+                <button @click="tab=='layers'" :class="tab=='layers'?'active':''" title="Layers"><i class="ph ph-tree-structure"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto bg-white relative custom-scroll">
                 <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-20"></div>
@@ -174,10 +284,35 @@
                 <div x-show="tab=='layers'" id="layers-container" class="absolute inset-0 pb-20"></div>
             </div>
         </div>
+
+        <!-- MOBILE BOTTOM SHEET PANEL -->
+        <div class="sidebar-panel" :class="mobileTab ? 'active' : ''">
+            <div class="panel-tabs">
+                <button @click="mobileTab='blocks'" :class="mobileTab=='blocks'?'active':''" title="Elements"><i class="ph ph-plus-square"></i></button>
+                <button @click="mobileTab='styles'" :class="mobileTab=='styles'?'active':''" title="Style"><i class="ph ph-paint-brush"></i></button>
+                <button @click="mobileTab='traits'" :class="mobileTab=='traits'?'active':''" title="Settings"><i class="ph ph-sliders"></i></button>
+                <button @click="mobileTab='layers'" :class="mobileTab=='layers'?'active':''" title="Layers"><i class="ph ph-tree-structure"></i></button>
+            </div>
+            <div class="panel-content">
+                <div x-show="mobileTab=='blocks'" id="blocks-container-mobile" class="p-2"></div>
+                <div x-show="mobileTab=='styles'"><div id="selectors-container-mobile" class="p-3 border-b bg-gray-50"></div><div id="styles-container-mobile" class="pb-20"></div></div>
+                <div x-show="mobileTab=='traits'"><div class="p-3 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b">Settings</div><div id="traits-container-mobile" class="p-2 pb-20"></div></div>
+                <div x-show="mobileTab=='layers'" id="layers-container-mobile" class="p-2"></div>
+            </div>
+        </div>
+
+        <!-- MOBILE BOTTOM NAV -->
+        <div class="bottom-editor-nav">
+            <button @click="mobileTab='blocks'" :class="mobileTab=='blocks'?'active':''"><i class="ph ph-plus-square"></i></button>
+            <button @click="mobileTab='styles'" :class="mobileTab=='styles'?'active':''"><i class="ph ph-paint-brush"></i></button>
+            <button @click="mobileTab='traits'" :class="mobileTab=='traits'?'active':''"><i class="ph ph-sliders"></i></button>
+            <button @click="mobileTab='layers'" :class="mobileTab=='layers'?'active':''"><i class="ph ph-tree-structure"></i></button>
+            <button @click="showSettings=true"><i class="ph ph-gear-six"></i></button>
+        </div>
     </div>
 
     <div x-show="showSettings" x-cloak class="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
-        <div class="w-[400px] h-full bg-white shadow-2xl flex flex-col" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0">
+        <div class="settings-modal w-[400px] h-full bg-white shadow-2xl flex flex-col" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
                 <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-blue-600"></i> Page Configuration</h2>
                 <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
@@ -287,7 +422,7 @@
     // --- 2. MAIN EDITOR APP ---
     function editorApp() {
         return {
-            loading: false, showSettings: false, device: 'desktop', tab: 'blocks',
+            loading: false, showSettings: false, device: 'desktop', tab: 'blocks', mobileTab: 'blocks',
             notifications: [],
             page: { slug: '', title: '', product_type: 'physical', config: { variants:[], shipping:{weight:1000}, order_bump:{active:false, title:'', price:0, desc:''}, coupons:[], settings:{} } },
             cred: { provider: 'midtrans', data: '' },
