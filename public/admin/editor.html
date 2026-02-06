@@ -166,24 +166,28 @@
                 color: #334155;
             }
 
-            /* Bottom sheet panel - HIDDEN by default, show only saat diklik */
+            /* Bottom sheet panel - PENTING: gunakan transform translate bukan max-height */
             .sidebar-panel {
                 position: fixed;
                 bottom: 56px;
                 left: 0;
                 right: 0;
                 width: 100%;
-                max-height: 0;
+                height: calc(100vh - 112px);
                 background: white;
                 border-top: 1px solid #e2e8f0;
                 z-index: 30;
                 overflow: hidden;
-                transition: max-height 0.3s ease-in-out;
+                transform: translateY(100%);
+                transition: transform 0.3s ease-in-out;
                 box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+                display: flex;
+                flex-direction: column;
             }
 
+            /* PENTING: saat .active, transform ke 0 (naik keatas) */
             .sidebar-panel.active {
-                max-height: calc(100vh - 112px);
+                transform: translateY(0);
             }
 
             .sidebar-panel .panel-tabs {
@@ -193,12 +197,14 @@
                 z-index: 10;
                 display: flex;
                 border-bottom: 1px solid #e2e8f0;
+                flex-shrink: 0;
             }
 
             .sidebar-panel .panel-content {
-                max-height: calc(100vh - 168px);
+                flex: 1;
                 overflow-y: auto;
                 padding: 8px;
+                min-height: 0;
             }
 
             /* Adjust canvas untuk bottom nav */
@@ -295,7 +301,7 @@
             </div>
         </div>
 
-        <!-- MOBILE BOTTOM SHEET PANEL - tampil hanya saat di-click dari bottom nav -->
+        <!-- MOBILE BOTTOM SHEET PANEL -->
         <div class="sidebar-panel" :class="mobilePanelOpen ? 'active' : ''">
             <div class="panel-tabs">
                 <button @click="mobileTab='blocks'" :class="mobileTab=='blocks'?'active':''"><i class="ph ph-plus-square"></i></button>
@@ -311,7 +317,7 @@
             </div>
         </div>
 
-        <!-- MOBILE BOTTOM NAV - hanya tombol kecil, tidak panel langsung terbuka -->
+        <!-- MOBILE BOTTOM NAV -->
         <div class="bottom-editor-nav">
             <button @click="toggleMobilePanel('blocks')" :class="mobileTab=='blocks' && mobilePanelOpen ? 'active' : ''"><i class="ph ph-plus-square"></i></button>
             <button @click="toggleMobilePanel('styles')" :class="mobileTab=='styles' && mobilePanelOpen ? 'active' : ''"><i class="ph ph-paint-brush"></i></button>
@@ -432,7 +438,7 @@
     // --- 2. MAIN EDITOR APP ---
     function editorApp() {
         return {
-            loading: false, showSettings: false, device: 'desktop', tab: 'blocks', mobileTab: 'blocks', mobilePanelOpen: false,
+            loading: false, showSettings: false, device: 'desktop', tab: 'blocks', mobileTab: '', mobilePanelOpen: false,
             notifications: [],
             page: { slug: '', title: '', product_type: 'physical', config: { variants:[], shipping:{weight:1000}, order_bump:{active:false, title:'', price:0, desc:''}, coupons:[], settings:{} } },
             cred: { provider: 'midtrans', data: '' },
@@ -446,11 +452,10 @@
             },
 
             toggleMobilePanel(tabName) {
-                // Jika panel sudah terbuka dan tab yang diklik sama, tutup panel
+                // Toggle logic: jika panel SUDAH buka dan TAB SAMA = tutup, selain itu buka
                 if (this.mobilePanelOpen && this.mobileTab === tabName) {
                     this.mobilePanelOpen = false;
                 } else {
-                    // Jika panel tertutup atau tab berbeda, buka panel dengan tab baru
                     this.mobileTab = tabName;
                     this.mobilePanelOpen = true;
                 }
@@ -488,7 +493,7 @@
                         assetManager: { upload: false, autoAdd: true, uploadFile: async (e) => { /* Upload */ } }
                     });
 
-                    // --- 3. COMPONENT DEFINITIONS (UNCHANGED) ---
+                    // --- 3. COMPONENT DEFINITIONS ---
                     const domc = editor.DomComponents;
 
                     domc.addType('cell', {
