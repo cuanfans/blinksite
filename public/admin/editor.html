@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LandingBuilder - Ultimate Editor</title>
+    <title>Editor Pro - Table Fixed</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -23,38 +23,31 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* RESET */
         body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; background: #fff; color: #1e293b; }
         [x-cloak] { display: none !important; }
         
-        /* GRAPESJS UI OVERRIDES */
+        /* UI FIXES */
         .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-panels, .gjs-pn-buttons { display: none !important; }
         .gjs-cv-canvas { width: 100%; height: 100%; top: 0 !important; background-color: #f8fafc; }
         .gjs-selected { outline: 2px solid #2563eb !important; outline-offset: -2px; }
         
-        /* COLOR PICKER FIX */
-        .gjs-field-color-picker { width: 100%; }
-        
-        /* PANEL KANAN */
+        /* Panel Styles */
         .panel-tabs { display: flex; border-bottom: 1px solid #e2e8f0; background: #fff; }
         .panel-tabs button { flex: 1; padding: 12px; color: #94a3b8; font-size: 20px; transition: all 0.2s; }
         .panel-tabs button:hover { color: #334155; background: #f8fafc; }
         .panel-tabs button.active { color: #2563eb; border-bottom: 2px solid #2563eb; background: #eff6ff; }
-
-        /* BLOCKS */
-        .gjs-blocks-c { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
-        .gjs-block { width: 100% !important; min-height: auto !important; padding: 15px 5px !important; margin: 0 !important; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: grab; transition: all 0.15s; }
-        .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 4px; color: #475569; }
-        .gjs-block-category .gjs-title { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 8px 12px; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; }
-
-        /* INPUTS */
+        
+        /* Inputs */
         .input-std { width: 100%; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px; font-size: 12px; outline: none; transition: border-color 0.2s; }
         .input-std:focus { border-color: #2563eb; }
         
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 5px; } 
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        /* Blocks */
+        .gjs-blocks-c { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
+        .gjs-block { width: 100% !important; min-height: auto !important; padding: 15px 5px !important; margin: 0 !important; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: grab; transition: all 0.15s; }
+        .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-2px); }
+        
+        /* TABLE EDITOR SPECIFIC STYLES */
+        .gjs-toolbar-item { border-radius: 3px; margin-right: 2px; }
     </style>
 </head>
 
@@ -62,20 +55,9 @@
 
     <div class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none">
         <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" 
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="translate-y-2 opacity-0"
-                 x-transition:enter-end="translate-y-0 opacity-100"
-                 x-transition:leave="transition ease-in duration-100"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-l-4 min-w-[250px] bg-white"
-                 :class="n.type === 'success' ? 'border-green-500' : 'border-red-500'">
-                <i class="ph text-xl" :class="n.type === 'success' ? 'ph-check-circle text-green-500' : 'ph-warning-circle text-red-500'"></i>
-                <div>
-                    <h4 class="text-xs font-bold text-gray-800" x-text="n.title"></h4>
-                    <p class="text-[10px] text-gray-500" x-text="n.msg"></p>
-                </div>
+            <div x-show="n.show" x-transition.duration.300ms class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-l-4 bg-white min-w-[250px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
+                <i class="ph text-xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
+                <div><h4 class="text-xs font-bold text-gray-800" x-text="n.title"></h4><p class="text-[10px] text-gray-500" x-text="n.msg"></p></div>
             </div>
         </template>
     </div>
@@ -89,7 +71,6 @@
                 <input x-model="page.slug" class="bg-transparent font-mono font-bold text-sm text-gray-700 outline-none w-48 placeholder-gray-300" placeholder="nama-halaman">
             </div>
         </div>
-        
         <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
             <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow-sm text-blue-600':'text-gray-400'" class="p-2 rounded-md transition"><i class="ph ph-desktop text-lg"></i></button>
             <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow-sm text-blue-600':'text-gray-400'" class="p-2 rounded-md transition"><i class="ph ph-device-tablet text-lg"></i></button>
@@ -99,12 +80,10 @@
             <button @click="cmd('core:undo')" class="text-gray-400 hover:text-gray-700 p-2"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
             <button @click="cmd('core:redo')" class="text-gray-400 hover:text-gray-700 p-2"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
         </div>
-
         <div class="flex items-center gap-3">
             <button @click="showSettings=true" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-2 rounded-md text-xs font-bold flex items-center gap-2 border border-gray-200"><i class="ph ph-gear-six text-lg"></i> Settings</button>
             <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md text-xs font-bold transition flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-500/30">
-                <i x-show="loading" class="ph ph-spinner animate-spin"></i> 
-                <span x-text="loading ? 'SAVING...' : 'PUBLISH PAGE'"></span>
+                <i x-show="loading" class="ph ph-spinner animate-spin"></i><span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
             </button>
         </div>
     </header>
@@ -115,27 +94,26 @@
         </div>
         <div class="w-[320px] bg-white border-l border-gray-200 flex flex-col z-20 shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.05)]">
             <div class="panel-tabs">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'active':''" title="Elements"><i class="ph ph-plus-square"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'active':''" title="Design"><i class="ph ph-paint-brush"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'active':''" title="Settings"><i class="ph ph-sliders"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'active':''" title="Navigator"><i class="ph ph-tree-structure"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'active':''"><i class="ph ph-plus-square"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'active':''"><i class="ph ph-paint-brush"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'active':''"><i class="ph ph-sliders"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'active':''"><i class="ph ph-tree-structure"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto bg-white relative custom-scroll">
                 <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-20"></div>
                 <div x-show="tab=='styles'"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="pb-20"></div></div>
-                <div x-show="tab=='traits'"><div class="p-3 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b">PROPERTIES</div><div id="traits-container" class="p-2 pb-20"></div></div>
+                <div x-show="tab=='traits'"><div class="p-3 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b">Settings</div><div id="traits-container" class="p-2 pb-20"></div></div>
                 <div x-show="tab=='layers'" id="layers-container" class="absolute inset-0 pb-20"></div>
             </div>
         </div>
     </div>
 
     <div x-show="showSettings" x-cloak class="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
-        <div class="w-[400px] h-full bg-white shadow-2xl flex flex-col" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full">
+        <div class="w-[400px] h-full bg-white shadow-2xl flex flex-col" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
                 <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-blue-600"></i> Page Configuration</h2>
                 <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
             </div>
-            
             <div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scroll">
                 <div>
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Product Type</h3>
@@ -143,12 +121,8 @@
                         <button @click="page.product_type='physical'" :class="page.product_type=='physical'?'bg-white shadow text-blue-600':''" class="flex-1 py-1.5 text-xs font-bold rounded-md transition">PHYSICAL</button>
                         <button @click="page.product_type='digital'" :class="page.product_type=='digital'?'bg-white shadow text-blue-600':''" class="flex-1 py-1.5 text-xs font-bold rounded-md transition">DIGITAL</button>
                     </div>
-                    <div x-show="page.product_type==='physical'">
-                        <label class="text-[11px] font-bold text-gray-600">Shipping Weight (gram)</label>
-                        <input x-model="page.config.shipping.weight" type="number" class="input-std mt-1">
-                    </div>
+                    <div x-show="page.product_type==='physical'"><label class="text-[11px] font-bold text-gray-600">Weight (gram)</label><input x-model="page.config.shipping.weight" type="number" class="input-std mt-1"></div>
                 </div>
-
                 <div class="border-t pt-6">
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Product Variants</h3>
                     <div class="space-y-2">
@@ -162,39 +136,26 @@
                         <button @click="addVariant" class="w-full border-2 border-dashed border-gray-300 text-gray-500 font-bold text-xs py-2 rounded hover:border-blue-400 hover:text-blue-500 transition">+ Add Variant</button>
                     </div>
                 </div>
-
                 <div class="border-t pt-6">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-xs font-bold text-purple-600 uppercase tracking-wider">Order Bump</h3>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" x-model="page.config.order_bump.active" class="sr-only peer">
-                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-purple-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
-                        </label>
-                    </div>
+                    <h3 class="text-xs font-bold text-purple-600 uppercase tracking-wider mb-3">Order Bump</h3>
+                    <div class="flex items-center gap-2 mb-2"><input type="checkbox" x-model="page.config.order_bump.active"> <span class="text-xs">Aktifkan Bump</span></div>
                     <div x-show="page.config.order_bump.active" class="space-y-3 bg-purple-50 p-4 rounded-lg border border-purple-100">
                         <input x-model="page.config.order_bump.title" class="input-std" placeholder="Bump Title">
                         <input x-model="page.config.order_bump.price" type="number" class="input-std" placeholder="Price">
                         <textarea x-model="page.config.order_bump.desc" class="input-std" rows="2" placeholder="Description"></textarea>
                     </div>
                 </div>
-
                 <div class="border-t pt-6">
                     <h3 class="text-xs font-bold text-red-500 uppercase tracking-wider mb-3">Coupons</h3>
-                    <div class="space-y-3">
-                        <template x-for="(c, i) in page.config.coupons">
-                            <div class="bg-red-50 p-3 rounded-lg border border-red-100 relative group">
-                                <button @click="page.config.coupons.splice(i,1)" class="absolute -top-2 -right-2 bg-white text-red-500 rounded-full p-0.5 shadow border border-red-100"><i class="ph ph-x"></i></button>
-                                <div class="flex gap-2 mb-2">
-                                    <input x-model="c.code" class="input-std font-bold uppercase text-red-600" placeholder="CODE">
-                                    <select x-model="c.type" class="input-std w-20"><option value="percent">%</option><option value="fixed">IDR</option></select>
-                                </div>
-                                <input x-model="c.value" type="number" class="input-std" placeholder="Value">
-                            </div>
-                        </template>
-                        <button @click="page.config.coupons.push({code:'', type:'percent', value:0})" class="w-full py-2 text-xs font-bold text-red-500 border border-red-200 rounded hover:bg-red-50 transition">+ Add Coupon</button>
-                    </div>
+                    <template x-for="(c, i) in page.config.coupons">
+                        <div class="bg-red-50 p-2 mb-2 rounded border border-red-100 flex gap-2">
+                            <input x-model="c.code" class="input-std" placeholder="CODE">
+                            <input x-model="c.value" type="number" class="input-std w-20" placeholder="Val">
+                            <button @click="page.config.coupons.splice(i,1)" class="text-red-500"><i class="ph ph-x"></i></button>
+                        </div>
+                    </template>
+                    <button @click="page.config.coupons.push({code:'', type:'percent', value:0})" class="w-full py-2 text-xs font-bold text-red-500 border border-red-200 rounded hover:bg-red-50 transition">+ Add Coupon</button>
                 </div>
-
                 <div class="border-t pt-6 space-y-4">
                     <h3 class="text-xs font-bold text-green-600 uppercase tracking-wider">SEO & Tracking</h3>
                     <div><label class="text-[10px] font-bold text-gray-500">SEO Title</label><input x-model="page.config.settings.seo_title" class="input-std"></div>
@@ -206,11 +167,10 @@
                     <div><label class="text-[10px] font-bold text-gray-500">Custom Head</label><textarea x-model="page.config.settings.custom_head" class="input-std font-mono text-[10px]" rows="3"></textarea></div>
                     <div><label class="text-[10px] font-bold text-gray-500">Custom Footer</label><textarea x-model="page.config.settings.custom_footer" class="input-std font-mono text-[10px]" rows="3"></textarea></div>
                 </div>
-
                 <div class="border-t pt-6 bg-gray-50 -mx-6 px-6 pb-6">
                     <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3 pt-4">Integrations</h3>
                     <select x-model="cred.provider" class="input-std mb-2 bg-white"><option value="midtrans">Midtrans</option><option value="cloudinary">Cloudinary</option></select>
-                    <textarea x-model="cred.data" class="input-std font-mono text-[10px] bg-white" rows="3" placeholder='{"serverKey": "..."}'></textarea>
+                    <textarea x-model="cred.data" class="input-std font-mono text-[10px] bg-white" rows="3" placeholder='JSON Config'></textarea>
                     <button @click="saveCreds" class="w-full bg-gray-800 text-white py-2 rounded mt-3 text-xs font-bold hover:bg-black transition">Save Credentials</button>
                 </div>
             </div>
@@ -218,94 +178,46 @@
     </div>
 
     <script>
-    // --- 1. SUPER TABLE LOGIC & ICONIFY INTEGRATION ---
-    const addCustomFeatures = (editor) => {
-        
-        // A. ICONIFY COMPONENT (New)
-        editor.DomComponents.addType('iconify-icon', {
-            model: {
-                defaults: {
-                    tagName: 'iconify-icon',
-                    droppable: false,
-                    attributes: { icon: 'mdi:home', width: '32' },
-                    traits: [
-                        { name: 'icon', label: 'Icon Code (e.g. ph:rocket)' },
-                        { name: 'width', label: 'Size (px)', type: 'number' },
-                        { name: 'color', label: 'Color', type: 'color' }
-                    ]
-                }
+    // --- TABLE TOOLBAR HELPER ---
+    // Fungsi ini menambahkan tombol edit baris/kolom langsung di toolbar elemen tabel
+    const setupTablePlugins = (editor) => {
+        // Force semua Cell (TD/TH) supaya bisa diedit (contentEditable)
+        editor.on('component:selected', (model) => {
+            if (model.is('cell') || model.get('tagName') == 'td' || model.get('tagName') == 'th') {
+                model.set('editable', true);
             }
         });
 
-        // B. SUPER TABLE COMPONENT (Working Logic)
-        editor.DomComponents.addType('super-table', {
-            model: {
-                defaults: {
-                    tagName: 'table',
-                    classes: ['w-full', 'border-collapse', 'border', 'border-gray-200'],
-                    traits: [
-                        {
-                            type: 'button',
-                            text: '➕ Tambah Kolom',
-                            full: true,
-                            command: (editor, trait) => {
-                                const table = trait.target;
-                                // Add TH to Thead
-                                const theadRow = table.find('thead tr')[0];
-                                if(theadRow) theadRow.append('<th style="padding:10px; border:1px solid #ddd;">New Header</th>');
-                                // Add TD to Tbody Rows
-                                const tbodyRows = table.find('tbody tr');
-                                tbodyRows.forEach(row => row.append('<td style="padding:10px; border:1px solid #ddd;">New Cell</td>'));
-                            }
-                        },
-                        {
-                            type: 'button',
-                            text: '➖ Hapus Kolom Akhir',
-                            full: true,
-                            command: (editor, trait) => {
-                                const table = trait.target;
-                                const theadRow = table.find('thead tr')[0];
-                                if(theadRow && theadRow.components().length > 0) theadRow.components().at(theadRow.components().length-1).remove();
-                                
-                                const tbodyRows = table.find('tbody tr');
-                                tbodyRows.forEach(row => {
-                                    if(row.components().length > 0) row.components().at(row.components().length-1).remove();
-                                });
-                            }
-                        },
-                        {
-                            type: 'button',
-                            text: '➕ Tambah Baris',
-                            full: true,
-                            command: (editor, trait) => {
-                                const table = trait.target;
-                                const tbody = table.find('tbody')[0];
-                                const rows = tbody.components();
-                                // Clone last row to keep style
-                                if(rows.length > 0) {
-                                    tbody.append(rows.at(rows.length-1).clone());
-                                } else {
-                                    tbody.append('<tr><td>Cell</td></tr>');
-                                }
-                            }
-                        },
-                        {
-                            type: 'button',
-                            text: '➖ Hapus Baris Akhir',
-                            full: true,
-                            command: (editor, trait) => {
-                                const table = trait.target;
-                                const tbody = table.find('tbody')[0];
-                                if(tbody && tbody.components().length > 0) tbody.components().at(tbody.components().length-1).remove();
-                            }
-                        }
-                    ]
-                }
+        // Definisikan Command untuk manipulasi tabel
+        const cmd = editor.Commands;
+        
+        cmd.add('table-insert-row-above', editor => {
+            const selected = editor.getSelected();
+            if(selected && selected.is('row')) {
+                const newRow = selected.clone();
+                selected.collection.add(newRow, { at: selected.index() });
+            }
+        });
+        
+        cmd.add('table-insert-row-below', editor => {
+            const selected = editor.getSelected();
+            if(selected && selected.is('row')) {
+                const newRow = selected.clone();
+                selected.collection.add(newRow, { at: selected.index() + 1 });
+            }
+        });
+
+        cmd.add('table-delete-row', editor => {
+            const selected = editor.getSelected();
+            if(selected && selected.is('row')) {
+                // Jangan hapus jika satu-satunya baris
+                if(selected.collection.length > 1) selected.remove();
+                else alert('Minimal sisakan 1 baris.');
             }
         });
     };
 
-    // --- 2. EDITOR APP (ALPINE) ---
+    // --- MAIN APP ---
     function editorApp() {
         return {
             loading: false, showSettings: false, device: 'desktop', tab: 'blocks',
@@ -336,7 +248,10 @@
             
             async savePage() {
                 this.loading=true;
-                try { await fetch('/api/admin/pages', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({slug:this.page.slug, title:this.page.title, product_type:this.page.product_type, html:editor.getHtml(), css:editor.getCss(), product_config:this.page.config})}); this.notify('Sukses','Halaman tersimpan!'); } catch(e){ this.notify('Error','Gagal simpan data.','error'); }
+                try { 
+                    await fetch('/api/admin/pages', {method:'POST', headers:{'Authorization':this.authPass}, body:JSON.stringify({slug:this.page.slug, title:this.page.title, product_type:this.page.product_type, html:editor.getHtml(), css:editor.getCss(), product_config:this.page.config})}); 
+                    this.notify('Sukses','Halaman tersimpan!'); 
+                } catch(e){ this.notify('Error','Gagal simpan data.','error'); }
                 this.loading=false;
             },
             
@@ -351,7 +266,6 @@
                         layerManager: { appendTo: '#layers-container' },
                         selectorManager: { appendTo: '#selectors-container' },
                         traitManager: { appendTo: '#traits-container' },
-                        // COLOR PICKER FIX: Explicitly define 'color' type
                         styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'], properties: [{ property: 'color', type: 'color' }] }, { name: 'Dimensions', open: false, buildProps: ['width', 'height', 'padding', 'margin'] }, { name: 'Decorations', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'], properties: [{ property: 'background-color', type: 'color' }, { property: 'border-color', type: 'color' }] }] },
                         assetManager: { 
                             upload: false, autoAdd: true,
@@ -373,8 +287,8 @@
                         }
                     });
 
-                    // APPLY CUSTOM FEATURES
-                    addCustomFeatures(window.editor);
+                    // APPLY TABLE PLUGINS
+                    setupTablePlugins(window.editor);
 
                     const bm = editor.BlockManager;
 
@@ -393,37 +307,46 @@
                     bm.add('features-tpl', { label: 'Features Grid', category: 'Templates', attributes:{class:'ph ph-grid-three'}, content: `<section style="padding:60px 20px;"><div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(3, 1fr); gap:30px;"><div style="text-align:center; padding:20px;"><h3>Fitur 1</h3></div><div style="text-align:center; padding:20px;"><h3>Fitur 2</h3></div><div style="text-align:center; padding:20px;"><h3>Fitur 3</h3></div></div></section>` });
                     bm.add('pricelist-tpl', { label: 'Pricelist', category: 'Templates', attributes:{class:'ph ph-tag'}, content: `<section style="padding:60px 20px;"><div style="max-width:1000px; margin:0 auto; display:grid; grid-template-columns:repeat(3,1fr); gap:20px;"><div style="padding:20px; border:1px solid #eee; text-align:center;"><h3>Basic</h3><p>Rp 99rb</p></div><div style="padding:20px; border:1px solid #eee; text-align:center; background:#f0f9ff;"><h3>Pro</h3><p>Rp 199rb</p></div><div style="padding:20px; border:1px solid #eee; text-align:center;"><h3>Expert</h3><p>Rp 499rb</p></div></div></section>` });
 
-                    // 4. SUPER TABLE (PURE & DYNAMIC)
-                    bm.add('super-table', {
-                        label: 'Pure Table', category: 'Tables', attributes: { class: 'ph ph-table' },
-                        content: {
-                            type: 'super-table', // PENTING: Tipe ini yang punya tombol Add Col/Row
-                            content: `
-                            <div style="overflow-x:auto; padding:20px;">
-                                <table style="width:100%; border-collapse:collapse; border:1px solid #ddd;">
-                                    <thead style="background:#f9fafb;">
-                                        <tr>
-                                            <th style="padding:10px; border:1px solid #ddd;">Header 1</th>
-                                            <th style="padding:10px; border:1px solid #ddd;">Header 2</th>
-                                            <th style="padding:10px; border:1px solid #ddd;">Header 3</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding:10px; border:1px solid #ddd;">Data 1</td>
-                                            <td style="padding:10px; border:1px solid #ddd;">Data 2</td>
-                                            <td style="padding:10px; border:1px solid #ddd;">Data 3</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>`
+                    // 4. ICONIFY
+                    bm.add('iconify', {
+                        label: 'Iconify', category: 'Media', attributes: { class: 'ph ph-star' },
+                        content: { type: 'iconify-icon', attributes: { icon: 'ph:heart-fill', width: '48', style:'color:#2563eb' } }
+                    });
+                    editor.DomComponents.addType('iconify-icon', {
+                        model: {
+                            defaults: { tagName: 'iconify-icon', droppable: false, traits: [{ name: 'icon', label: 'Icon Code (e.g. ph:rocket)' }, { name: 'width', label: 'Size', type: 'number' }, { name: 'color', label: 'Color', type: 'color' }] }
                         }
                     });
 
-                    // 5. ICONIFY (NEW)
-                    bm.add('iconify', {
-                        label: 'Iconify Icon', category: 'Media', attributes: { class: 'ph ph-star' },
-                        content: { type: 'iconify-icon', attributes: { icon: 'ph:heart-fill', width: '48', style:'color:#2563eb' } }
+                    // 5. PURE TABLE (NATIVE & STABLE)
+                    bm.add('table-pure', {
+                        label: 'Table (Native)',
+                        category: 'Tables',
+                        attributes: { class: 'ph ph-table' },
+                        content: `
+                        <div style="overflow-x:auto; padding:10px;">
+                            <table style="width:100%; border-collapse:collapse; border:1px solid #e2e8f0;">
+                                <thead>
+                                    <tr style="background:#f8fafc;">
+                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 1</th>
+                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 2</th>
+                                        <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">Header 3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 1</td>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 2</td>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 3</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 1</td>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 2</td>
+                                        <td style="padding:12px; border:1px solid #e2e8f0;">Cell 3</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>`
                     });
 
                     // 6. WIDGETS
